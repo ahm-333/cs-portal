@@ -135,16 +135,9 @@ export function CourseCurriculumClient({
               />
             </div>
 
-            {isGuest && completedLessons > 0 && (
+            {completedLessons > 0 && (
               <p className="text-xs text-slate-400">
-                يتم حفظ تقدمك محلياً على هذا المتصفح.{" "}
-                <Link
-                  href="/login"
-                  className="font-semibold text-indigo-400 hover:text-indigo-300"
-                >
-                  سجّل الدخول
-                </Link>{" "}
-                لمزامنة تقدمك بين أجهزتك.
+                يتم حفظ تقدمك ودرجاتك تلقائياً على هذا الجهاز.
               </p>
             )}
           </div>

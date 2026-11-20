@@ -1,7 +1,8 @@
 export const SITE_CONFIG = {
   name: "CS Portal",
   arabicName: "بوابة حاسبات",
-  tagline: "منصة مذاكرة تفاعلية لطلبة حاسبات ومعلومات — ملخصات، أكواد، معامل تفاعلية، وكويزات",
+  tagline:
+    "منصة مذاكرة تفاعلية لطلبة حاسبات ومعلومات — ملخصات، أكواد، معامل تفاعلية، وكويزات",
   description:
     "منصة تعليمية احترافية لطلبة علوم الحاسب: شروحات فيديو، ملخصات بالأكواد ومعادلات الرياضة، معامل HTML تفاعلية لمحاكاة الخوارزميات، وكويزات فورية بالتفسير.",
   url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
@@ -17,15 +18,3 @@ export const SITE_CONFIG = {
     { value: 2, label: "الترم الثاني" },
   ] as const,
 };
-
-export function isSupabaseConfigured(): boolean {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return Boolean(
-    url &&
-      key &&
-      url.startsWith("http") &&
-      !url.includes("your_supabase_url") &&
-      !key.includes("your_supabase_anon_key")
-  );
-}

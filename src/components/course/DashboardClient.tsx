@@ -7,12 +7,13 @@ import {
   Award,
   BookOpen,
   CheckCircle2,
+  Cpu,
   GraduationCap,
   Lock,
-  LogIn,
+  PencilLine,
   Play,
-  Sparkles,
   TrendingUp,
+  UserCircle2,
 } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/config";
 import type {
@@ -20,6 +21,7 @@ import type {
   DashboardData,
   LessonSummaryItem,
 } from "@/types/database";
+import { useLocalProfile } from "@/components/layout/localProfile";
 import { useGuestProgress } from "./guestProgress";
 
 interface DashboardClientProps {
@@ -44,11 +46,11 @@ export function DashboardClient({
   data,
   courseLessonsMap,
 }: DashboardClientProps) {
-  const isGuestOrDemo = data.isDemoMode || !data.currentUser;
-  const guestProgress = useGuestProgress(isGuestOrDemo);
+  const localProfile = useLocalProfile();
+  const localProgress = useGuestProgress(!data.currentUser);
 
   const computed = useMemo(() => {
-    if (!isGuestOrDemo || Object.keys(guestProgress).length === 0) {
+    if (data.currentUser || Object.keys(localProgress).length === 0) {
       return {
         courses: data.courses,
         totalCompletedLessons: data.totalCompletedLessons,
@@ -74,7 +76,7 @@ export function DashboardClient({
         const courseScores: number[] = [];
 
         for (const lesson of sortedLessons) {
-          const entry = guestProgress[lesson.id];
+          const entry = localProgress[lesson.id];
           if (entry?.is_completed) {
             completedCount += 1;
           }
@@ -93,7 +95,7 @@ export function DashboardClient({
         const pool =
           accessibleLessons.length > 0 ? accessibleLessons : sortedLessons;
         const nextLesson =
-          pool.find((l) => !guestProgress[l.id]?.is_completed) ?? pool[0];
+          pool.find((l) => !localProgress[l.id]?.is_completed) ?? pool[0];
 
         totalCompleted += completedCount;
         totalLessons += lessonCount;
@@ -130,7 +132,7 @@ export function DashboardClient({
       totalLessonsAcrossEnrolled: totalLessons,
       overallAverageQuizScore,
     };
-  }, [data, courseLessonsMap, guestProgress, isGuestOrDemo]);
+  }, [data, courseLessonsMap, localProgress]);
 
   const overallPercent =
     computed.totalLessonsAcrossEnrolled > 0
@@ -146,6 +148,7 @@ export function DashboardClient({
   ).length;
 
   const displayName =
+    localProfile?.full_name ||
     data.currentUser?.full_name?.trim() ||
     data.currentUser?.email?.split("@")[0] ||
     null;
@@ -154,59 +157,63 @@ export function DashboardClient({
     <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       {/* Page Header */}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
+        <div className="space-y-2">
           <span className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-400">
             <TrendingUp className="h-4 w-4" />
             <span>متابعة التقدم الأكاديمي</span>
           </span>
-          <h1 className="mt-1.5 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+          <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
             {displayName ? `أهلاً بك، ${displayName}` : "لوحة مذاكرتي"}
           </h1>
-          <p className="mt-1.5 text-sm text-slate-400">
-            تابع إنجازك في كل مادة، متوسط درجاتك في الكويزات، وأكمل مباشرة من
-            حيث توقفت.
-          </p>
-        </div>
 
-        <Link
-          href="/#courses"
-          className="inline-flex items-center gap-2 self-start rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-xs font-bold text-slate-200 transition-colors hover:border-indigo-500/40 hover:text-white sm:self-auto"
-        >
-          <BookOpen className="h-4 w-4 text-indigo-400" />
-          <span>تصفح كل المواد</span>
-        </Link>
-      </header>
-
-      {/* Demo / Guest Sync Banner */}
-      {isGuestOrDemo && (
-        <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-4 sm:flex-row sm:items-center sm:p-5">
-          <div className="flex items-start gap-3">
-            <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-indigo-400" />
-            <div className="space-y-0.5 text-xs leading-relaxed text-indigo-100/90 sm:text-sm">
-              <p className="font-bold text-white">
-                {data.isDemoMode
-                  ? "وضع العرض التجريبي مفعّل"
-                  : "أنت تتصفح كزائر حالياً"}
-              </p>
-              <p className="text-slate-300">
-                {data.isDemoMode
-                  ? "يتم عرض وحفظ تقدمك في الدروس والكويزات محلياً في متصفحك مباشرة لتجربة المنصة بالكامل."
-                  : "تقدمك الحالي محفوظ على هذا المتصفح فقط. سجّل الدخول لمزامنة درجاتك وإنجازك بين أجهزتك."}
-              </p>
+          {localProfile ? (
+            <div className="flex flex-wrap items-center gap-2 pt-0.5">
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900 px-2.5 py-1 text-xs font-bold text-slate-200">
+                <GraduationCap className="h-3.5 w-3.5 text-indigo-400" />
+                <span>{getYearLabel(localProfile.year_level)}</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-300">
+                <Cpu className="h-3.5 w-3.5 text-emerald-400" />
+                <span dir="ltr" className="font-mono">
+                  {localProfile.department}
+                </span>
+              </span>
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 transition-colors hover:text-indigo-300"
+              >
+                <PencilLine className="h-3.5 w-3.5" />
+                <span>تعديل الملف</span>
+              </Link>
             </div>
-          </div>
-
-          {!data.isDemoMode && (
-            <Link
-              href="/login"
-              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-indigo-500"
-            >
-              <LogIn className="h-4 w-4" />
-              <span>تسجيل الدخول</span>
-            </Link>
+          ) : (
+            <p className="text-sm text-slate-400">
+              تابع إنجازك في كل مادة، متوسط درجاتك في الكويزات، وأكمل مباشرة من
+              حيث توقفت.
+            </p>
           )}
         </div>
-      )}
+
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          {!localProfile && (
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/35 bg-indigo-500/15 px-4 py-2.5 text-xs font-bold text-indigo-200 transition-colors hover:bg-indigo-500/25"
+            >
+              <UserCircle2 className="h-4 w-4 text-indigo-400" />
+              <span>إعداد ملف الطالب</span>
+            </Link>
+          )}
+
+          <Link
+            href="/#courses"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-xs font-bold text-slate-200 transition-colors hover:border-indigo-500/40 hover:text-white"
+          >
+            <BookOpen className="h-4 w-4 text-indigo-400" />
+            <span>تصفح كل المواد</span>
+          </Link>
+        </div>
+      </header>
 
       {/* KPI Summary Cards */}
       <section

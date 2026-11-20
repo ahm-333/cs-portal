@@ -66,7 +66,7 @@ export function Footer() {
                   href="/login"
                   className="text-slate-400 transition-colors hover:text-indigo-300"
                 >
-                  تسجيل الدخول
+                  ملف الطالب
                 </Link>
               </li>
             </ul>

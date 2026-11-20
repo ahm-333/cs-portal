@@ -24,10 +24,6 @@ jobs:
 
     env:
       NEXT_TELEMETRY_DISABLED: "1"
-      # Fallback placeholders keep isSupabaseConfigured() === false so CI builds
-      # cleanly in Demo Mode even before Supabase secrets are configured.
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://your_supabase_url.supabase.co' }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your_supabase_anon_key_ci_fallback' }}
       NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000' }}
 
     steps:
