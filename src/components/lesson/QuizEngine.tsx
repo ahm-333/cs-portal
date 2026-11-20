@@ -47,14 +47,14 @@ export default function QuizEngine({
 
   if (sortedQuestions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/50 px-6 py-14 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-slate-800 bg-slate-950 text-slate-500">
+      <div className="studio-card flex flex-col items-center justify-center px-6 py-14 text-center">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--soft)] text-[var(--accent)]">
           <HelpCircle className="h-6 w-6" />
         </div>
-        <h3 className="text-base font-bold text-slate-200">
+        <h3 className="text-base font-bold text-[var(--ink)]">
           لا توجد أسئلة كويز لهذا الدرس حالياً
         </h3>
-        <p className="mt-1 max-w-sm text-sm text-slate-400">
+        <p className="mt-1 max-w-sm text-sm text-[var(--muted)]">
           ستُضاف أسئلة اختيار من متعدد لتقييم فهمك للدرس قريباً.
         </p>
       </div>
@@ -137,27 +137,27 @@ export default function QuizEngine({
             title: "ممتاز! إتقان رائع للدرس",
             subtitle:
               "إجاباتك دقيقة جداً — أنت جاهز تماماً للانتقال للدرس التالي.",
-            accentClass: "text-emerald-400",
-            ringClass: "border-emerald-500/40 bg-emerald-500/10",
+            accentClass: "text-[var(--pos)]",
+            ringClass: "border-[var(--pos)]/35 bg-[var(--pos-soft)]",
           }
         : lastScore >= 60
           ? {
               title: "أداء جيد جداً!",
               subtitle:
                 "فهمك ممتاز لمعظم المفاهيم، يمكنك مراجعة الأسئلة التي أخطأت فيها لرفع درجتك.",
-              accentClass: "text-indigo-400",
-              ringClass: "border-indigo-500/40 bg-indigo-500/10",
+              accentClass: "text-[var(--accent)]",
+              ringClass: "border-[var(--accent)]/35 bg-[var(--soft)]",
             }
           : {
               title: "بداية جيدة — حاول مرة أخرى",
               subtitle:
                 "ننصحك بمراجعة الملخص وتجربة المعمل التفاعلي ثم إعادة الكويز.",
-              accentClass: "text-amber-400",
-              ringClass: "border-amber-500/40 bg-amber-500/10",
+              accentClass: "text-[var(--warn)]",
+              ringClass: "border-[var(--warn)]/35 bg-[var(--warn-soft)]",
             };
 
     return (
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 sm:p-8">
+      <div className="studio-card p-6 sm:p-8">
         <div className="mx-auto flex max-w-xl flex-col items-center text-center">
           <div
             className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border ${feedbackTier.ringClass}`}
@@ -165,63 +165,68 @@ export default function QuizEngine({
             <Award className={`h-8 w-8 ${feedbackTier.accentClass}`} />
           </div>
 
-          <h3 className="text-2xl font-extrabold text-slate-50">
+          <h3 className="text-2xl font-extrabold text-[var(--ink)]">
             {feedbackTier.title}
           </h3>
-          <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
             {feedbackTier.subtitle}
           </p>
 
-          {/* Score Pill */}
+          {/* Score Cards */}
           <div className="mt-6 grid w-full grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-              <p className="text-xs text-slate-400">نتيجتك الآن</p>
-              <p className={`mt-1 text-2xl font-extrabold ${feedbackTier.accentClass}`}>
+            <div className="rounded-xl border border-[var(--line)] bg-[var(--bg)] p-4">
+              <p className="text-xs font-medium text-[var(--muted)]">
+                نتيجتك الآن
+              </p>
+              <p
+                className={`mt-1 text-2xl font-extrabold ${feedbackTier.accentClass}`}
+              >
                 {lastScore}%
               </p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-              <p className="text-xs text-slate-400">الإجابات الصحيحة</p>
-              <p className="mt-1 text-2xl font-extrabold text-slate-100">
+            <div className="rounded-xl border border-[var(--line)] bg-[var(--bg)] p-4">
+              <p className="text-xs font-medium text-[var(--muted)]">
+                الإجابات الصحيحة
+              </p>
+              <p className="mt-1 text-2xl font-extrabold text-[var(--ink)]">
                 {correctCount} / {sortedQuestions.length}
               </p>
             </div>
-            <div className="col-span-2 rounded-xl border border-slate-800 bg-slate-950/80 p-4 sm:col-span-1">
-              <p className="text-xs text-slate-400">أفضل نتيجة محفوظة</p>
-              <p className="mt-1 text-2xl font-extrabold text-emerald-400">
+            <div className="col-span-2 rounded-xl border border-[var(--line)] bg-[var(--bg)] p-4 sm:col-span-1">
+              <p className="text-xs font-medium text-[var(--muted)]">
+                أفضل نتيجة محفوظة
+              </p>
+              <p className="mt-1 text-2xl font-extrabold text-[var(--pos)]">
                 {Math.max(bestScore ?? 0, lastScore)}%
               </p>
             </div>
           </div>
 
           {/* Per-question summary */}
-          <div className="mt-6 w-full rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-start">
-            <p className="mb-3 text-xs font-bold text-slate-300">
+          <div className="mt-6 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] p-4 text-start">
+            <p className="mb-3 text-xs font-bold text-[var(--ink)]">
               ملخص إجاباتك:
             </p>
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               {sortedQuestions.map((q, idx) => {
                 const picked = selectedAnswers[q.id];
                 const ok = picked === q.correct_index;
                 return (
                   <li
                     key={q.id}
-                    className="flex items-start gap-2.5 text-xs text-slate-300"
+                    className="flex items-start gap-2.5 text-xs text-[var(--ink)]"
                   >
                     {ok ? (
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--pos)]" />
                     ) : (
-                      <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
+                      <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--neg)]" />
                     )}
                     <div className="min-w-0 flex-1">
-                      <span className="font-semibold text-slate-200">
-                        س{idx + 1}:
-                      </span>{" "}
+                      <span className="font-bold">س{idx + 1}:</span>{" "}
                       <span>{q.question_text}</span>
                       {!ok ? (
-                        <p className="mt-0.5 text-[11px] text-emerald-300">
-                          الإجابة الصحيحة:{" "}
-                          {q.options[q.correct_index] ?? "—"}
+                        <p className="mt-0.5 text-[11px] font-semibold text-[var(--pos)]">
+                          الإجابة الصحيحة: {q.options[q.correct_index] ?? "—"}
                         </p>
                       ) : null}
                     </div>
@@ -235,7 +240,7 @@ export default function QuizEngine({
             <button
               type="button"
               onClick={handleRetake}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-indigo-500"
+              className="inline-flex items-center gap-2 rounded-xl bg-[var(--hero)] px-5 py-2.5 text-sm font-bold text-[var(--hero-ink)] transition-colors hover:bg-[var(--hero-deep)]"
             >
               <RotateCcw className="h-4 w-4" />
               <span>إعادة الكويز</span>
@@ -243,7 +248,9 @@ export default function QuizEngine({
           </div>
 
           {isSyncing ? (
-            <p className="mt-3 text-xs text-slate-500">جاري حفظ النتيجة...</p>
+            <p className="mt-3 text-xs text-[var(--muted)]">
+              جاري حفظ النتيجة...
+            </p>
           ) : null}
         </div>
       </div>
@@ -251,46 +258,46 @@ export default function QuizEngine({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-7">
+    <div className="studio-card p-5 sm:p-7">
       {/* Header + progress */}
       <div className="mb-6 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
-          <div className="inline-flex items-center gap-2 font-bold text-slate-200">
-            <ClipboardCheck className="h-4 w-4 text-indigo-400" />
+          <div className="inline-flex items-center gap-2 font-bold text-[var(--ink)]">
+            <ClipboardCheck className="h-4 w-4 text-[var(--accent)]" />
             <span>
               السؤال {currentIndex + 1} من {sortedQuestions.length}
             </span>
           </div>
 
           {bestScore !== null ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--pos)]/30 bg-[var(--pos-soft)] px-3 py-1 text-xs font-bold text-[var(--pos)]">
               <Trophy className="h-3.5 w-3.5" />
               <span>أفضل نتيجة: {bestScore}%</span>
             </span>
           ) : null}
         </div>
 
-        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--soft)]">
           <div
-            className="h-full rounded-full bg-gradient-to-l from-indigo-500 to-emerald-500 transition-all duration-300"
+            className="h-full rounded-full bg-[var(--hero)] transition-all duration-300"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
       </div>
 
       {/* Question text */}
-      <h3 className="text-base font-bold leading-relaxed text-slate-50 sm:text-lg">
+      <h3 className="text-base font-bold leading-relaxed text-[var(--ink)] sm:text-lg">
         {currentQuestion.question_text}
       </h3>
 
-      {/* Optional code snippet */}
+      {/* Optional code snippet (always crisp dark editor surface, LTR) */}
       {currentQuestion.code_snippet ? (
         <div
           dir="ltr"
-          className="mt-4 overflow-hidden rounded-xl border border-slate-800 bg-[#14171f]"
+          className="mt-4 overflow-hidden rounded-xl border border-[var(--code-border)] bg-[var(--code-bg)] text-[#f2f1fc]"
         >
-          <div className="flex items-center gap-2 border-b border-slate-800/90 bg-slate-900/90 px-3.5 py-1.5 text-xs font-semibold text-slate-300">
-            <Code2 className="h-3.5 w-3.5 text-indigo-400" />
+          <div className="flex items-center gap-2 border-b border-[var(--code-border)] bg-[var(--code-header)] px-3.5 py-1.5 text-xs font-semibold text-[#d5d8f0]">
+            <Code2 className="h-3.5 w-3.5 text-[#a5b4fc]" />
             <span className="font-mono uppercase">
               {currentQuestion.code_lang || "cpp"}
             </span>
@@ -324,24 +331,26 @@ export default function QuizEngine({
           const isCorrectOption = optionIndex === currentQuestion.correct_index;
 
           let stateClasses =
-            "border-slate-800 bg-slate-950/70 text-slate-200 hover:border-indigo-500/50 hover:bg-indigo-500/10";
+            "border-[var(--line)] bg-[var(--bg)] text-[var(--ink)] hover:border-[var(--accent)] hover:bg-[var(--soft)]";
           let badgeClasses =
-            "border-slate-700 bg-slate-900 text-slate-300 group-hover:border-indigo-500/50 group-hover:text-indigo-300";
+            "border-[var(--line-strong)] bg-[var(--paper)] text-[var(--ink)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)]";
 
           if (hasAnswered) {
             if (isCorrectOption) {
               stateClasses =
-                "border-emerald-500/60 bg-emerald-500/15 text-emerald-100";
+                "border-[var(--pos)] bg-[var(--pos-soft)] text-[var(--pos)]";
               badgeClasses =
-                "border-emerald-500/60 bg-emerald-500/20 text-emerald-300";
+                "border-[var(--pos)] bg-[var(--paper)] text-[var(--pos)]";
             } else if (isSelected) {
               stateClasses =
-                "border-rose-500/60 bg-rose-500/15 text-rose-100";
-              badgeClasses = "border-rose-500/60 bg-rose-500/20 text-rose-300";
+                "border-[var(--neg)] bg-[var(--neg-soft)] text-[var(--neg)]";
+              badgeClasses =
+                "border-[var(--neg)] bg-[var(--paper)] text-[var(--neg)]";
             } else {
               stateClasses =
-                "border-slate-800/70 bg-slate-950/40 text-slate-500 opacity-60";
-              badgeClasses = "border-slate-800 bg-slate-900/60 text-slate-500";
+                "border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] opacity-60";
+              badgeClasses =
+                "border-[var(--line)] bg-[var(--paper)] text-[var(--muted)]";
             }
           }
 
@@ -351,7 +360,7 @@ export default function QuizEngine({
               type="button"
               disabled={hasAnswered}
               onClick={() => handleSelectOption(optionIndex)}
-              className={`group flex w-full items-center gap-3.5 rounded-xl border px-4 py-3.5 text-start text-sm font-medium transition-all disabled:cursor-default sm:text-[15px] ${stateClasses}`}
+              className={`group flex w-full items-center gap-3.5 rounded-xl border px-4 py-3.5 text-start text-sm font-semibold transition-all disabled:cursor-default sm:text-[15px] ${stateClasses}`}
             >
               <span
                 dir="ltr"
@@ -362,10 +371,10 @@ export default function QuizEngine({
               <span className="flex-1 leading-relaxed">{optionText}</span>
 
               {hasAnswered && isCorrectOption ? (
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-[var(--pos)]" />
               ) : null}
               {hasAnswered && isSelected && !isCorrectOption ? (
-                <XCircle className="h-5 w-5 shrink-0 text-rose-400" />
+                <XCircle className="h-5 w-5 shrink-0 text-[var(--neg)]" />
               ) : null}
             </button>
           );
@@ -377,26 +386,26 @@ export default function QuizEngine({
         <div
           className={`mt-5 rounded-xl border p-4 ${
             isCorrectSelection
-              ? "border-emerald-500/40 bg-emerald-500/10"
-              : "border-rose-500/40 bg-rose-500/10"
+              ? "border-[var(--pos)]/40 bg-[var(--pos-soft)]"
+              : "border-[var(--neg)]/40 bg-[var(--neg-soft)]"
           }`}
         >
           <div className="flex items-center gap-2 text-sm font-bold">
             {isCorrectSelection ? (
               <>
-                <Sparkles className="h-4 w-4 text-emerald-400" />
-                <span className="text-emerald-300">إجابة صحيحة! أحسنت</span>
+                <Sparkles className="h-4 w-4 text-[var(--pos)]" />
+                <span className="text-[var(--pos)]">إجابة صحيحة! أحسنت</span>
               </>
             ) : (
               <>
-                <XCircle className="h-4 w-4 text-rose-400" />
-                <span className="text-rose-300">إجابة غير صحيحة</span>
+                <XCircle className="h-4 w-4 text-[var(--neg)]" />
+                <span className="text-[var(--neg)]">إجابة غير صحيحة</span>
               </>
             )}
           </div>
 
           {currentQuestion.explanation ? (
-            <p className="mt-2 text-sm leading-relaxed text-slate-200">
+            <p className="mt-2 text-sm leading-relaxed text-[var(--ink)]">
               {currentQuestion.explanation}
             </p>
           ) : null}
@@ -409,7 +418,7 @@ export default function QuizEngine({
           type="button"
           onClick={handleNext}
           disabled={!hasAnswered}
-          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+          className="inline-flex items-center gap-2 rounded-xl bg-[var(--hero)] px-5 py-2.5 text-sm font-bold text-[var(--hero-ink)] transition-all hover:bg-[var(--hero-deep)] disabled:cursor-not-allowed disabled:bg-[var(--soft)] disabled:text-[var(--muted)]"
         >
           <span>
             {currentIndex + 1 < sortedQuestions.length

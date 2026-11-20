@@ -8,7 +8,7 @@ export interface GuestLessonProgress {
 }
 
 export const GUEST_PROGRESS_STORAGE_KEY = "cs_portal_progress";
-export const GUEST_PROGRESS_EVENT = "cs-portal-progress-updated";
+export const GUEST_PROGRESS_UPDATED_EVENT = "cs-portal-progress-updated";
 
 const EMPTY_GUEST_PROGRESS: Record<string, GuestLessonProgress> = Object.freeze(
   {}
@@ -91,23 +91,77 @@ function subscribeGuestProgress(callback: () => void): () => void {
       callback();
     }
   };
-  const onSameTabUpdate = () => {
+
+  const onCustomUpdate = () => {
     callback();
   };
 
   window.addEventListener("storage", onStorage);
-  window.addEventListener(GUEST_PROGRESS_EVENT, onSameTabUpdate);
+  window.addEventListener(GUEST_PROGRESS_UPDATED_EVENT, onCustomUpdate);
   return () => {
     window.removeEventListener("storage", onStorage);
-    window.removeEventListener(GUEST_PROGRESS_EVENT, onSameTabUpdate);
+    window.removeEventListener(GUEST_PROGRESS_UPDATED_EVENT, onCustomUpdate);
   };
+}
+
+/**
+ * Toggles a lesson's completion flag in localStorage ("cs_portal_progress")
+ * while preserving any existing best_quiz_score.
+ */
+export function toggleGuestLessonCompletion(lessonId: string): boolean {
+  if (typeof window === "undefined") return false;
+
+  try {
+    const raw = window.localStorage.getItem(GUEST_PROGRESS_STORAGE_KEY);
+    const currentObj: Record<string, unknown> = {};
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (isRecord(parsed)) {
+        Object.assign(currentObj, parsed);
+      }
+    }
+
+    const existing = isRecord(currentObj[lessonId])
+      ? (currentObj[lessonId] as Record<string, unknown>)
+      : {};
+
+    const wasCompleted =
+      typeof existing.is_completed === "boolean"
+        ? existing.is_completed
+        : typeof existing.isCompleted === "boolean"
+          ? existing.isCompleted
+          : false;
+
+    const existingScore =
+      typeof existing.best_quiz_score === "number"
+        ? existing.best_quiz_score
+        : typeof existing.bestQuizScore === "number"
+          ? existing.bestQuizScore
+          : null;
+
+    const nextCompleted = !wasCompleted;
+
+    currentObj[lessonId] = {
+      is_completed: nextCompleted,
+      best_quiz_score: existingScore,
+      updated_at: new Date().toISOString(),
+    };
+
+    const serialized = JSON.stringify(currentObj);
+    window.localStorage.setItem(GUEST_PROGRESS_STORAGE_KEY, serialized);
+    cachedRaw = undefined;
+    window.dispatchEvent(new Event(GUEST_PROGRESS_UPDATED_EVENT));
+    return nextCompleted;
+  } catch {
+    return false;
+  }
 }
 
 /**
  * Hydration-safe hook to read guest progress from localStorage ("cs_portal_progress").
  */
 export function useGuestProgress(
-  enabled: boolean
+  enabled = true
 ): Record<string, GuestLessonProgress> {
   const snapshot = useSyncExternalStore(
     subscribeGuestProgress,

@@ -5,7 +5,7 @@ import type { LessonSummaryItem } from "@/types/database";
 import { DashboardClient } from "@/components/course/DashboardClient";
 
 export const metadata: Metadata = {
-  title: "مذاكرتي",
+  title: "كمّل رحلتك — مذاكرتي",
   description: `تابع تقدمك في المواد الدراسية ومتوسط درجات الكويزات على ${SITE_CONFIG.arabicName}.`,
 };
 

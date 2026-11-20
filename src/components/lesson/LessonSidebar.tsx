@@ -11,6 +11,7 @@ import {
   PlayCircle,
   Trophy,
 } from "lucide-react";
+import { getCourseVisualMeta } from "@/lib/courseTheme";
 import type { Course, LessonSummaryItem, UserProgress } from "@/types/database";
 
 interface LessonSidebarProps {
@@ -35,6 +36,11 @@ export default function LessonSidebar({
   isEnrolled = false,
   onNavigate,
 }: LessonSidebarProps) {
+  const visual = useMemo(
+    () => getCourseVisualMeta(course.slug, course.title, course.year_level),
+    [course.slug, course.title, course.year_level]
+  );
+
   const sortedLessons = useMemo(
     () => [...lessons].sort((a, b) => a.order_index - b.order_index),
     [lessons]
@@ -82,21 +88,34 @@ export default function LessonSidebar({
   return (
     <aside
       aria-label="فهرس دروس المادة"
-      className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900/70"
+      className="studio-card flex flex-col overflow-hidden"
     >
       {/* Course summary + progress */}
-      <div className="border-b border-slate-800 p-4">
+      <div className="border-b border-[var(--line)] p-4">
         <Link
           href={`/courses/${course.slug}`}
           onClick={onNavigate}
-          className="group flex items-start gap-2.5 text-slate-100 transition-colors hover:text-indigo-300"
+          className="group flex items-start gap-2.5 text-[var(--ink)] transition-colors hover:text-[var(--accent)]"
         >
-          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-indigo-500/30 bg-indigo-500/10 text-indigo-400">
+          <div
+            style={{ backgroundColor: visual.tintVar }}
+            className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] text-[var(--tint-ink)]"
+          >
             <BookOpen className="h-4 w-4" />
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-400">فهرس المادة</p>
-            <h2 className="truncate text-sm font-bold leading-snug">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <span
+                dir="ltr"
+                className="rounded-md bg-[var(--soft)] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[var(--accent)]"
+              >
+                {visual.code}
+              </span>
+              <span className="text-[11px] font-medium text-[var(--muted)]">
+                فهرس المادة
+              </span>
+            </div>
+            <h2 className="mt-0.5 truncate text-sm font-bold leading-snug">
               {course.title}
             </h2>
           </div>
@@ -104,16 +123,16 @@ export default function LessonSidebar({
 
         <div className="mt-4">
           <div className="mb-1.5 flex items-center justify-between text-xs">
-            <span className="text-slate-400">
+            <span className="text-[var(--muted)]">
               أنجزت {completedCount} من {sortedLessons.length} دروس
             </span>
-            <span className="font-semibold text-emerald-400">
+            <span className="font-bold text-[var(--pos)]">
               {progressPercent}%
             </span>
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--soft)]">
             <div
-              className="h-full rounded-full bg-gradient-to-l from-emerald-500 to-indigo-500 transition-all duration-300"
+              className="h-full rounded-full bg-[var(--pos)] transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -121,7 +140,7 @@ export default function LessonSidebar({
       </div>
 
       {/* Sections list */}
-      <nav className="divide-y divide-slate-800/80">
+      <nav className="divide-y divide-[var(--line)]">
         {sections.map((section, sectionIdx) => {
           const isCollapsed = Boolean(collapsedSections[section.sectionTitle]);
           const sectionCompleted = section.items.filter(
@@ -134,12 +153,12 @@ export default function LessonSidebar({
                 type="button"
                 onClick={() => toggleSection(section.sectionTitle)}
                 aria-expanded={!isCollapsed}
-                className="flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-start text-xs font-bold text-slate-300 transition-colors hover:bg-slate-800/70 hover:text-slate-100"
+                className="flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-start text-xs font-bold text-[var(--ink)] transition-colors hover:bg-[var(--bg)]"
               >
                 <span className="line-clamp-2 leading-relaxed">
                   {section.sectionTitle}
                 </span>
-                <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-medium text-slate-400">
+                <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-[var(--muted)]">
                   <span>
                     {sectionCompleted}/{section.items.length}
                   </span>
@@ -168,26 +187,26 @@ export default function LessonSidebar({
                           aria-current={isActive ? "page" : undefined}
                           className={`group relative flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-sm transition-all ${
                             isActive
-                              ? "border-indigo-500/50 bg-indigo-500/15 text-indigo-100 shadow-sm"
-                              : "border-transparent text-slate-300 hover:border-slate-800 hover:bg-slate-800/60 hover:text-slate-100"
+                              ? "border-[var(--accent)]/40 bg-[var(--soft)] text-[var(--accent)]"
+                              : "border-transparent text-[var(--ink)] hover:border-[var(--line)] hover:bg-[var(--bg)]"
                           }`}
                         >
                           {isActive ? (
                             <span
                               aria-hidden="true"
-                              className="absolute inset-y-2 start-0 w-1 rounded-e-full bg-indigo-500"
+                              className="absolute inset-y-2 start-0 w-1 rounded-e-full bg-[var(--accent)]"
                             />
                           ) : null}
 
                           <span className="mt-0.5 shrink-0">
                             {isCompleted ? (
-                              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                              <CheckCircle2 className="h-4 w-4 text-[var(--pos)]" />
                             ) : isItemLocked ? (
-                              <Lock className="h-4 w-4 text-amber-400/90" />
+                              <Lock className="h-4 w-4 text-[var(--warn)]" />
                             ) : isActive ? (
-                              <PlayCircle className="h-4 w-4 text-indigo-400" />
+                              <PlayCircle className="h-4 w-4 text-[var(--accent)]" />
                             ) : (
-                              <span className="flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 text-[10px] font-semibold text-slate-400 group-hover:border-slate-500">
+                              <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[var(--line-strong)] font-mono text-[10px] font-bold text-[var(--muted)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)]">
                                 {item.order_index}
                               </span>
                             )}
@@ -202,7 +221,7 @@ export default function LessonSidebar({
                               {item.title}
                             </p>
 
-                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+                            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--muted)]">
                               {item.duration_minutes ? (
                                 <span className="inline-flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
@@ -211,14 +230,14 @@ export default function LessonSidebar({
                               ) : null}
 
                               {course.is_paid && item.is_free_preview ? (
-                                <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300">
+                                <span className="rounded-md bg-[var(--pos-soft)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--pos)]">
                                   معاينة مجانية
                                 </span>
                               ) : null}
 
                               {progress?.best_quiz_score !== null &&
                               progress?.best_quiz_score !== undefined ? (
-                                <span className="inline-flex items-center gap-0.5 rounded-md border border-indigo-500/30 bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-300">
+                                <span className="inline-flex items-center gap-0.5 rounded-md bg-[var(--soft)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--accent)]">
                                   <Trophy className="h-2.5 w-2.5" />
                                   <span>{progress.best_quiz_score}%</span>
                                 </span>

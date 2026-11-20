@@ -21,59 +21,41 @@ type ResourceTypeKey = NonNullable<LessonResource["type"]>;
 interface ResourceTypeStyle {
   label: string;
   Icon: ComponentType<{ className?: string }>;
-  badgeClass: string;
-  iconBoxClass: string;
+  tintVar: string;
 }
 
 const RESOURCE_TYPE_STYLES: Record<ResourceTypeKey, ResourceTypeStyle> = {
   article: {
     label: "مقال / مرجع",
     Icon: BookOpen,
-    badgeClass: "border-indigo-500/30 bg-indigo-500/10 text-indigo-300",
-    iconBoxClass: "border-indigo-500/30 bg-indigo-500/10 text-indigo-400",
+    tintVar: "var(--tint-blue)",
   },
   video: {
     label: "فيديو إضافي",
     Icon: PlayCircle,
-    badgeClass: "border-rose-500/30 bg-rose-500/10 text-rose-300",
-    iconBoxClass: "border-rose-500/30 bg-rose-500/10 text-rose-400",
+    tintVar: "var(--tint-pink)",
   },
   tool: {
     label: "أداة تفاعلية",
     Icon: Wrench,
-    badgeClass: "border-cyan-500/30 bg-cyan-500/10 text-cyan-300",
-    iconBoxClass: "border-cyan-500/30 bg-cyan-500/10 text-cyan-400",
+    tintVar: "var(--tint-sky)",
   },
   sheet: {
     label: "ملخص / شيت",
     Icon: FileSpreadsheet,
-    badgeClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-    iconBoxClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+    tintVar: "var(--tint-mint)",
   },
   problem: {
     label: "مسألة برمجية",
     Icon: Code2,
-    badgeClass: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-    iconBoxClass: "border-amber-500/30 bg-amber-500/10 text-amber-400",
+    tintVar: "var(--tint-peach)",
   },
   other: {
     label: "مصدر خارجي",
     Icon: Link2,
-    badgeClass: "border-slate-700 bg-slate-800/80 text-slate-300",
-    iconBoxClass: "border-slate-700 bg-slate-800/80 text-slate-300",
+    tintVar: "var(--tint-purple)",
   },
 };
-
-function toSafeHttpUrl(raw: string): string | null {
-  try {
-    const parsed = new URL(raw.trim());
-    return parsed.protocol === "https:" || parsed.protocol === "http:"
-      ? parsed.toString()
-      : null;
-  } catch {
-    return null;
-  }
-}
 
 function getHostname(url: string): string {
   try {
@@ -86,14 +68,14 @@ function getHostname(url: string): string {
 export default function ResourcesList({ resources }: ResourcesListProps) {
   if (!resources || resources.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/50 px-6 py-14 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-slate-800 bg-slate-950 text-slate-500">
+      <div className="studio-card flex flex-col items-center justify-center px-6 py-14 text-center">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--soft)] text-[var(--accent)]">
           <Link2 className="h-6 w-6" />
         </div>
-        <h3 className="text-base font-bold text-slate-200">
+        <h3 className="text-base font-bold text-[var(--ink)]">
           لا توجد مصادر إضافية لهذا الدرس
         </h3>
-        <p className="mt-1 max-w-sm text-sm text-slate-400">
+        <p className="mt-1 max-w-sm text-sm text-[var(--muted)]">
           سيتم إضافة المراجع والمسائل المقترحة فور توفرها لهذا الموضوع.
         </p>
       </div>
@@ -103,58 +85,57 @@ export default function ResourcesList({ resources }: ResourcesListProps) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {resources.map((resource, index) => {
-        const safeUrl = toSafeHttpUrl(resource.url);
-        if (!safeUrl) return null;
-
         const typeKey: ResourceTypeKey =
           resource.type && resource.type in RESOURCE_TYPE_STYLES
             ? resource.type
             : "other";
         const style = RESOURCE_TYPE_STYLES[typeKey];
         const Icon = style.Icon;
-        const hostname = getHostname(safeUrl);
+        const hostname = getHostname(resource.url);
 
         return (
           <a
-            key={`${safeUrl}-${index}`}
-            href={safeUrl}
+            key={`${resource.url}-${index}`}
+            href={resource.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/70 p-5 transition-all hover:-translate-y-0.5 hover:border-indigo-500/50 hover:bg-slate-900 hover:shadow-lg hover:shadow-indigo-950/30"
+            className="studio-card studio-card-hover group flex flex-col justify-between p-5"
           >
             <div>
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${style.iconBoxClass}`}
+                  style={{ backgroundColor: style.tintVar }}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] text-[var(--tint-ink)]"
                 >
                   <Icon className="h-5 w-5" />
                 </div>
                 <span
-                  className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${style.badgeClass}`}
+                  style={{ backgroundColor: style.tintVar }}
+                  className="inline-flex items-center rounded-full border border-[var(--line)] px-2.5 py-0.5 text-xs font-bold text-[var(--tint-ink)]"
                 >
                   {style.label}
                 </span>
               </div>
 
-              <h3 className="text-base font-bold text-slate-100 transition-colors group-hover:text-indigo-300">
+              <h3 className="text-base font-bold text-[var(--ink)] transition-colors group-hover:text-[var(--accent)]">
                 {resource.title}
               </h3>
 
               {resource.description ? (
-                <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
                   {resource.description}
                 </p>
               ) : null}
             </div>
 
-            <div className="mt-4 flex items-center justify-between border-t border-slate-800/80 pt-3 text-xs">
+            <div className="mt-4 flex items-center justify-between border-t border-[var(--line)] pt-3 text-xs">
               <span
                 dir="ltr"
-                className="truncate font-mono text-slate-500 group-hover:text-slate-400"
+                className="truncate font-mono text-[var(--muted)]"
               >
                 {hostname}
               </span>
-              <span className="inline-flex shrink-0 items-center gap-1 font-semibold text-indigo-400 group-hover:text-indigo-300">
+              <span className="inline-flex shrink-0 items-center gap-1 font-bold text-[var(--accent)]">
                 <span>فتح المصدر</span>
                 <ExternalLink className="h-3.5 w-3.5" />
               </span>

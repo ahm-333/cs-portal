@@ -57,24 +57,24 @@ export default function CompleteButton({
         onClick={handleClick}
         disabled={isSaving}
         aria-pressed={isCompleted}
-        className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-wait disabled:opacity-80 ${
+        className={`inline-flex min-h-[42px] items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all disabled:cursor-wait disabled:opacity-80 ${
           isCompleted
-            ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
-            : "border-slate-700 bg-slate-900 text-slate-200 hover:border-indigo-500/60 hover:bg-indigo-500/10 hover:text-indigo-200"
+            ? "border-[var(--pos)]/40 bg-[var(--pos-soft)] text-[var(--pos)] hover:border-[var(--pos)]"
+            : "border-[var(--line-strong)] bg-[var(--bg)] text-[var(--ink)] hover:border-[var(--accent)] hover:bg-[var(--soft)] hover:text-[var(--accent)]"
         }`}
       >
         {isSaving ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : isCompleted ? (
-          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+          <CheckCircle2 className="h-4 w-4" />
         ) : (
-          <Circle className="h-4 w-4 text-slate-400" />
+          <Circle className="h-4 w-4 text-[var(--muted)]" />
         )}
         <span>{isCompleted ? "تمت المذاكرة ✓" : "تحديد كمكتمل"}</span>
       </button>
 
       {errorMsg ? (
-        <span className="text-xs text-rose-400" role="alert">
+        <span className="text-xs font-medium text-[var(--neg)]" role="alert">
           {errorMsg}
         </span>
       ) : null}

@@ -1,15 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Cairo, JetBrains_Mono } from "next/font/google";
+import { Alexandria, JetBrains_Mono } from "next/font/google";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 import { SITE_CONFIG } from "@/lib/config";
 import { Navbar } from "@/components/layout/Navbar";
+import { AppNavRail } from "@/components/layout/AppNavRail";
 import { Footer } from "@/components/layout/Footer";
 
-const cairo = Cairo({
+const alexandria = Alexandria({
   subsets: ["arabic", "latin"],
   weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-cairo",
+  variable: "--font-alexandria",
   display: "swap",
 });
 
@@ -19,6 +20,8 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   display: "swap",
 });
+
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("cs_portal_theme");if(t==="light"||t==="reading"||t==="dark"){document.documentElement.dataset.theme=t;if(t==="dark"){document.documentElement.classList.add("dark");}else{document.documentElement.classList.remove("dark");}}}catch(e){}})();`;
 
 function getSafeMetadataBase(): URL {
   try {
@@ -66,8 +69,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#020617",
-  colorScheme: "dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5f6fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#171a2c" },
+  ],
 };
 
 export default function RootLayout({
@@ -79,12 +84,21 @@ export default function RootLayout({
     <html
       lang="ar"
       dir="rtl"
-      className={`dark ${cairo.variable} ${jetbrainsMono.variable}`}
+      data-theme="light"
+      suppressHydrationWarning
+      className={`${alexandria.variable} ${jetbrainsMono.variable}`}
     >
-      <body className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500/30 selection:text-indigo-100">
+      <head>
+        {/* Static anti-flash theme bootstrap script — reads user preference before paint */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--ink)] font-sans antialiased selection:bg-[var(--soft)] selection:text-[var(--accent)]">
         <Navbar />
-        <main className="flex-1 flex flex-col">{children}</main>
-        <Footer />
+        <AppNavRail />
+        <div className="flex min-h-[calc(100vh-72px)] flex-1 flex-col pb-20 lg:pb-0 lg:pr-[224px]">
+          <main className="flex flex-1 flex-col">{children}</main>
+          <Footer />
+        </div>
       </body>
     </html>
   );

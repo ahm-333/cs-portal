@@ -7,6 +7,7 @@ import { CourseCard } from "./CourseCard";
 
 interface CourseFiltersProps {
   courses: CourseWithStats[];
+  courseLessonIdsMap?: Record<string, string[]>;
 }
 
 const YEAR_OPTIONS = [
@@ -23,7 +24,10 @@ const TERM_OPTIONS = [
   { value: 2, label: "ترم 2" },
 ] as const;
 
-export function CourseFilters({ courses }: CourseFiltersProps) {
+export function CourseFilters({
+  courses,
+  courseLessonIdsMap = {},
+}: CourseFiltersProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [selectedTerm, setSelectedTerm] = useState<number | null>(null);
@@ -44,7 +48,8 @@ export function CourseFilters({ courses }: CourseFiltersProps) {
         return false;
       }
       if (query.length > 0) {
-        const haystack = `${course.title} ${course.description ?? ""} ${course.slug}`.toLowerCase();
+        const haystack =
+          `${course.title} ${course.description ?? ""} ${course.slug}`.toLowerCase();
         if (!haystack.includes(query)) {
           return false;
         }
@@ -61,26 +66,26 @@ export function CourseFilters({ courses }: CourseFiltersProps) {
 
   return (
     <div className="space-y-6">
-      {/* Filter Bar */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/70 p-4 sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      {/* Paper Filter Bar */}
+      <div className="studio-card p-4 sm:p-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           {/* Search Input */}
-          <div className="relative flex-1 lg:max-w-md">
-            <Search className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <div className="relative flex-1 xl:max-w-md">
+            <Search className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
             <input
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ابحث باسم المادة (مثلاً: Data Structures، خوارزميات، OS...)"
               aria-label="ابحث عن مادة دراسية"
-              className="w-full rounded-xl border border-slate-800 bg-slate-950/90 py-2.5 pl-10 pr-10 text-sm text-slate-100 placeholder:text-slate-500 transition-colors focus:border-indigo-500/70 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] py-2.5 pl-10 pr-10 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] transition-colors focus:border-[var(--accent)] focus:bg-[var(--paper)] focus:outline-none"
             />
             {searchQuery.length > 0 && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
                 aria-label="مسح البحث"
-                className="absolute left-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
+                className="absolute left-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--muted)] transition-colors hover:bg-[var(--soft)] hover:text-[var(--ink)]"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -91,8 +96,8 @@ export function CourseFilters({ courses }: CourseFiltersProps) {
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             {/* Year Pills */}
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="ml-1 inline-flex items-center gap-1 text-xs font-bold text-slate-400">
-                <SlidersHorizontal className="h-3.5 w-3.5 text-indigo-400" />
+              <span className="ml-1 inline-flex items-center gap-1 text-xs font-bold text-[var(--muted)]">
+                <SlidersHorizontal className="h-3.5 w-3.5 text-[var(--accent)]" />
                 <span>الفرقة:</span>
               </span>
               {YEAR_OPTIONS.map((option) => {
@@ -103,10 +108,10 @@ export function CourseFilters({ courses }: CourseFiltersProps) {
                     type="button"
                     onClick={() => setSelectedYear(option.value)}
                     aria-pressed={active}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
                       active
-                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-950/60"
-                        : "border border-slate-800 bg-slate-950/80 text-slate-300 hover:border-slate-700 hover:text-white"
+                        ? "bg-[var(--hero)] text-white shadow-[var(--shadow-pill)]"
+                        : "border border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--ink)]"
                     }`}
                   >
                     {option.label}
@@ -115,11 +120,11 @@ export function CourseFilters({ courses }: CourseFiltersProps) {
               })}
             </div>
 
-            <div className="hidden h-5 w-px bg-slate-800 sm:block" />
+            <div className="hidden h-5 w-px bg-[var(--line)] sm:block" />
 
             {/* Term Pills */}
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="ml-1 text-xs font-bold text-slate-400">
+              <span className="ml-1 text-xs font-bold text-[var(--muted)]">
                 الترم:
               </span>
               {TERM_OPTIONS.map((option) => {
@@ -130,10 +135,10 @@ export function CourseFilters({ courses }: CourseFiltersProps) {
                     type="button"
                     onClick={() => setSelectedTerm(option.value)}
                     aria-pressed={active}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
                       active
-                        ? "bg-emerald-600 text-white shadow-md shadow-emerald-950/60"
-                        : "border border-slate-800 bg-slate-950/80 text-slate-300 hover:border-slate-700 hover:text-white"
+                        ? "border border-[var(--pos)] bg-[var(--pos-soft)] text-[var(--pos)] shadow-[var(--shadow-pill)]"
+                        : "border border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] hover:border-[var(--pos)] hover:text-[var(--ink)]"
                     }`}
                   >
                     {option.label}
@@ -145,14 +150,14 @@ export function CourseFilters({ courses }: CourseFiltersProps) {
         </div>
 
         {/* Results Meta */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/70 pt-3 text-xs text-slate-400">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--line)] pt-3 text-xs text-[var(--muted)]">
           <span>
             عرض{" "}
-            <strong className="font-mono text-slate-200">
+            <strong className="font-mono text-[var(--ink)]">
               {filteredCourses.length}
             </strong>{" "}
             من أصل{" "}
-            <strong className="font-mono text-slate-200">
+            <strong className="font-mono text-[var(--ink)]">
               {courses.length}
             </strong>{" "}
             مادة
@@ -162,7 +167,7 @@ export function CourseFilters({ courses }: CourseFiltersProps) {
             <button
               type="button"
               onClick={resetFilters}
-              className="inline-flex items-center gap-1.5 font-semibold text-indigo-400 transition-colors hover:text-indigo-300"
+              className="inline-flex items-center gap-1.5 font-bold text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>إعادة ضبط الفلاتر</span>
@@ -171,24 +176,28 @@ export function CourseFilters({ courses }: CourseFiltersProps) {
         </div>
       </div>
 
-      {/* Course Grid or Empty State */}
+      {/* Responsive 2-Column Desktop Grid */}
       {filteredCourses.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {filteredCourses.map((course) => (
-            <CourseCard key={course.id} course={course} />
+            <CourseCard
+              key={course.id}
+              course={course}
+              lessonIds={courseLessonIdsMap[course.id]}
+            />
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 px-6 py-16 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 text-slate-400">
+        <div className="studio-card flex flex-col items-center justify-center border-dashed px-6 py-16 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--soft)] text-[var(--accent)]">
             <BookX className="h-7 w-7" />
           </span>
-          <h3 className="mt-4 text-lg font-bold text-slate-200">
+          <h3 className="mt-4 text-lg font-bold text-[var(--ink)]">
             {courses.length === 0
               ? "لا توجد مواد منشورة حالياً"
               : "لا توجد مواد مطابقة للبحث"}
           </h3>
-          <p className="mt-1.5 max-w-md text-sm text-slate-400">
+          <p className="mt-1.5 max-w-md text-sm text-[var(--muted)]">
             {courses.length === 0
               ? "سيتم إضافة المواد الدراسية قريباً. تابعنا لمعرفة أحدث الشروحات والمعامل التفاعلية."
               : "جرّب تغيير كلمات البحث أو اختيار فرقة دراسية أخرى للوصول للمواد المتاحة."}
@@ -197,7 +206,7 @@ export function CourseFilters({ courses }: CourseFiltersProps) {
             <button
               type="button"
               onClick={resetFilters}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl border border-indigo-500/40 bg-indigo-500/15 px-4 py-2 text-sm font-bold text-indigo-300 transition-colors hover:bg-indigo-500/25"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[var(--soft)] px-4 py-2 text-sm font-bold text-[var(--accent)] transition-colors hover:bg-[var(--soft-hover)]"
             >
               <RotateCcw className="h-4 w-4" />
               <span>عرض جميع المواد</span>

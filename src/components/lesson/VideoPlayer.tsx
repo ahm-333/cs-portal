@@ -106,25 +106,31 @@ export default function VideoPlayer({
 
   if (!embedUrl) {
     return (
-      <div className="relative flex aspect-video w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 p-6 text-center shadow-xl shadow-black/30">
+      <div className="studio-card relative flex aspect-video w-full flex-col items-center justify-center overflow-hidden p-6 text-center">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.14),transparent_60%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,var(--soft),transparent_68%)] opacity-80"
         />
         <div className="relative z-10 flex max-w-md flex-col items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-700/80 bg-slate-950/90 text-slate-400">
+          <div
+            className={`flex h-14 w-14 items-center justify-center rounded-2xl border ${
+              videoId
+                ? "border-[var(--warn)]/30 bg-[var(--warn-soft)] text-[var(--warn)]"
+                : "border-[var(--line)] bg-[var(--soft)] text-[var(--accent)]"
+            }`}
+          >
             {videoId ? (
-              <VideoOff className="h-7 w-7 text-amber-400" />
+              <VideoOff className="h-7 w-7" />
             ) : (
-              <PlayCircle className="h-7 w-7 text-indigo-400" />
+              <PlayCircle className="h-7 w-7" />
             )}
           </div>
-          <h2 className="text-base font-bold text-slate-100 sm:text-lg">
+          <h2 className="text-base font-bold text-[var(--ink)] sm:text-lg">
             {videoId
               ? "تعذّر تحميل رابط الفيديو لهذا الدرس"
               : "لا يوجد فيديو مرفق لهذا الدرس حالياً"}
           </h2>
-          <p className="text-sm leading-relaxed text-slate-400">
+          <p className="text-sm leading-relaxed text-[var(--muted)]">
             يمكنك الاعتماد على الملخص المكتوب والأكواد والمعمل التفاعلي والكويز
             بالأسفل لإتقان الدرس بالكامل.
           </p>
@@ -134,7 +140,7 @@ export default function VideoPlayer({
   }
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl shadow-black/40">
+    <div className="relative aspect-video w-full overflow-hidden rounded-[16px] border border-[var(--line)] bg-[var(--code-bg)] shadow-[var(--shadow-pill)]">
       <iframe
         src={embedUrl}
         title={title}

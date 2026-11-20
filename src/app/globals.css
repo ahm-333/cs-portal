@@ -1,86 +1,261 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: var(--font-cairo), "Cairo", system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+/* ==========================================================================
+   CS Portal — Study Studio 3-Mode Design Token System
+   Inspired by Kernal Study Studio: Light (default) / Reading / Dark
+   ========================================================================== */
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f6fb;
+  --paper: #ffffff;
+  --rail: #ffffff;
+  --ink: #252642;
+  --muted: #64667c;
+  --accent: #4653d6;
+  --accent-hover: #3641b8;
+  --hero: #3d49c8;
+  --hero-deep: #2f3aa8;
+  --hero-ink: #ffffff;
+  --hero-sub: #e7e9ff;
+  --soft: #eaedff;
+  --soft-hover: #dfe4ff;
+  --line: #e0e3ef;
+  --line-strong: #cdd2e6;
+  --focus: #b34e13;
+  --pos: #26714e;
+  --pos-soft: #e2f3eb;
+  --neg: #ae344a;
+  --neg-soft: #fbe8ef;
+  --warn: #805a0d;
+  --warn-soft: #fff0e1;
+
+  /* Subject Pastel Header Tints */
+  --tint-blue: #e7edff;
+  --tint-purple: #eee8fb;
+  --tint-mint: #e2f3eb;
+  --tint-peach: #fff0e1;
+  --tint-pink: #fbe8ef;
+  --tint-sky: #e5f1fc;
+  --tint-ink: #252642;
+
+  /* Code block surface (always crisp dark editor contrast) */
+  --code-bg: #171a2c;
+  --code-header: #1e2238;
+  --code-border: #313756;
+
+  /* Shadows reserved strictly for interactive/elevated layers */
+  --shadow-pill: 0 2px 6px rgba(24, 32, 73, 0.08);
+  --shadow-book: 0 10px 20px rgba(15, 21, 56, 0.18);
+  --shadow-modal: 0 24px 60px rgba(15, 21, 56, 0.22);
 }
 
-:root {
+[data-theme="reading"] {
+  color-scheme: light;
+  --bg: #f1f3eb;
+  --paper: #fcfdf7;
+  --rail: #f8fbf1;
+  --ink: #2b3c35;
+  --muted: #58685d;
+  --accent: #34634d;
+  --accent-hover: #29503e;
+  --hero: #34634d;
+  --hero-deep: #284f3d;
+  --hero-ink: #ffffff;
+  --hero-sub: #e1efe6;
+  --soft: #e0eadc;
+  --soft-hover: #d3e2ce;
+  --line: #ced8c8;
+  --line-strong: #b8c6b1;
+  --focus: #9a4a16;
+  --pos: #236345;
+  --pos-soft: #deeadb;
+  --neg: #9c3344;
+  --neg-soft: #eee1de;
+  --warn: #7d5b12;
+  --warn-soft: #eee7d8;
+
+  --tint-blue: #e2e9df;
+  --tint-purple: #e8e5e9;
+  --tint-mint: #deeadb;
+  --tint-peach: #eee7d8;
+  --tint-pink: #eee1de;
+  --tint-sky: #dde9e6;
+  --tint-ink: #2b3c35;
+
+  --code-bg: #1c2622;
+  --code-header: #24312c;
+  --code-border: #34473f;
+
+  --shadow-pill: 0 2px 6px rgba(25, 45, 34, 0.08);
+  --shadow-book: 0 10px 20px rgba(25, 45, 34, 0.18);
+  --shadow-modal: 0 24px 60px rgba(20, 38, 29, 0.24);
+}
+
+[data-theme="dark"] {
   color-scheme: dark;
-  --background: #020617;
-  --foreground: #f1f5f9;
+  --bg: #171a2c;
+  --paper: #22263c;
+  --rail: #1c2034;
+  --ink: #f2f1fc;
+  --muted: #b6b9d0;
+  --accent: #b8bfff;
+  --accent-hover: #cfd4ff;
+  --hero: #3d49b7;
+  --hero-deep: #2e3792;
+  --hero-ink: #ffffff;
+  --hero-sub: #e7e9ff;
+  --soft: #303653;
+  --soft-hover: #3a4164;
+  --line: #3c425f;
+  --line-strong: #4e5578;
+  --focus: #ffce91;
+  --pos: #a4dfbd;
+  --pos-soft: #24453d;
+  --neg: #ffb2c2;
+  --neg-soft: #4c3344;
+  --warn: #f8d687;
+  --warn-soft: #4e3f31;
+
+  --tint-blue: #303f66;
+  --tint-purple: #44375e;
+  --tint-mint: #284c45;
+  --tint-peach: #534435;
+  --tint-pink: #513849;
+  --tint-sky: #2a455e;
+  --tint-ink: #f2f1fc;
+
+  --code-bg: #111322;
+  --code-header: #191c30;
+  --code-border: #323755;
+
+  --shadow-pill: 0 2px 6px rgba(0, 0, 0, 0.28);
+  --shadow-book: 0 12px 24px rgba(0, 0, 0, 0.36);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.48);
 }
 
-html {
-  scroll-behavior: smooth;
-  background-color: #020617;
-  color: #f1f5f9;
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --font-sans: var(--font-alexandria), "Alexandria", "Cairo", Tahoma, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", Consolas, monospace;
 }
 
-body {
-  background-color: #020617;
-  color: #f1f5f9;
-  font-family: var(--font-cairo), "Cairo", system-ui, -apple-system, sans-serif;
-  overflow-x: hidden;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background-color: var(--bg);
+    color: var(--ink);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.8;
+    letter-spacing: normal;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* High-contrast accessible focus ring */
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  /* Strict LTR isolation for code, math, and numeric scores */
+  pre,
+  code,
+  kbd,
+  samp {
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-family: var(--font-mono);
+  }
+
+  .katex,
+  .katex-display {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
+  .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.75rem 0;
+  }
 }
 
-/* Refined dark scrollbars */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #334155 #020617;
+/* Study Studio Surface Helpers */
+.studio-card {
+  background-color: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  transition: border-color 0.18s ease, transform 0.18s ease;
 }
 
+.studio-card-hover:hover {
+  border-color: var(--accent);
+}
+
+.studio-hero {
+  background: linear-gradient(135deg, var(--hero) 0%, var(--hero-deep) 100%);
+  color: var(--hero-ink);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.studio-hero-network {
+  background-image:
+    radial-gradient(circle at 22% 35%, rgba(255, 255, 255, 0.16) 1px, transparent 1px),
+    radial-gradient(circle at 78% 68%, rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 38px 38px, 52px 52px, 44px 44px, 44px 44px;
+}
+
+.studio-book-card {
+  border-radius: 12px;
+  box-shadow: var(--shadow-book);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease;
+}
+
+.studio-book-card:hover {
+  transform: translateY(-4px) rotate(0deg) scale(1.02) !important;
+}
+
+/* Custom Scrollbar adapting to current theme */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #020617;
+  background: var(--bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #1e293b;
+  background: var(--line-strong);
   border-radius: 9999px;
-  border: 2px solid #020617;
+  border: 2px solid var(--bg);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #334155;
+  background: var(--muted);
 }
 
-/* Subtle architectural grid and radial glow accents */
-.bg-cs-grid {
-  background-image:
-    linear-gradient(to right, rgba(148, 163, 184, 0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
-  background-size: 40px 40px;
+/* Reading Comfort Scaler helper */
+.reading-surface {
+  font-size: calc(15px * var(--reading-scale, 1));
+  line-height: var(--reading-leading, 1.85);
 }
 
-.bg-cs-hero-glow {
-  background-image:
-    radial-gradient(ellipse 65% 50% at 50% -10%, rgba(99, 102, 241, 0.22), transparent 70%),
-    radial-gradient(ellipse 40% 35% at 85% 15%, rgba(16, 185, 129, 0.12), transparent 65%);
-}
-
-/* Strict LTR isolation for code blocks and KaTeX math in RTL pages */
-pre,
-pre code,
-code {
+.ltr-block {
   direction: ltr;
   unicode-bidi: isolate;
-  font-family: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-}
-
-.katex {
-  direction: ltr;
-  unicode-bidi: isolate;
-}
-
-.katex-display {
-  direction: ltr;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 0.75rem 0.5rem;
-  margin: 1rem 0;
+  text-align: left;
 }

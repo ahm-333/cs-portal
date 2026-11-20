@@ -4,7 +4,7 @@ import { LoginForm } from "@/components/layout/LoginForm";
 
 export const metadata: Metadata = {
   title: "ملف الطالب",
-  description: `أعدّ ملفك المحلي في ${SITE_CONFIG.arabicName} (الاسم، الفرقة، والقسم) لتخصيص لوحة مذاكرتك.`,
+  description: `أعدّ ملفك المحلي في ${SITE_CONFIG.arabicName} (الاسم، الفرقة، والقسم) لتخصيص استوديو مذاكرتك.`,
 };
 
 type LoginPageProps = {
@@ -24,14 +24,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const nextPath = sanitizeNextPath(resolvedSearchParams.next);
 
   return (
-    <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-cs-hero-glow px-4 py-12 sm:px-6 lg:px-8">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-cs-grid [mask-image:radial-gradient(ellipse_at_center,white_20%,transparent_75%)]"
-      />
-      <div className="relative z-10 flex w-full justify-center">
-        <LoginForm nextPath={nextPath} />
-      </div>
+    <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6 lg:px-8">
+      <LoginForm nextPath={nextPath} />
     </div>
   );
 }

@@ -54,18 +54,6 @@ function parseInteractiveResponse(
   return null;
 }
 
-function toSafeHttpUrl(raw: string | null | undefined): string {
-  if (!raw) return "";
-  try {
-    const parsed = new URL(raw.trim());
-    return parsed.protocol === "https:" || parsed.protocol === "http:"
-      ? parsed.toString()
-      : "";
-  } catch {
-    return "";
-  }
-}
-
 export default function InteractiveViewer({
   interactives,
 }: InteractiveViewerProps) {
@@ -230,14 +218,14 @@ export default function InteractiveViewer({
 
   if (sortedLabs.length === 0 || !activeLab) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/50 px-6 py-14 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-slate-800 bg-slate-950 text-slate-500">
+      <div className="studio-card flex flex-col items-center justify-center px-6 py-14 text-center">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--soft)] text-[var(--accent)]">
           <FlaskConical className="h-6 w-6" />
         </div>
-        <h3 className="text-base font-bold text-slate-200">
+        <h3 className="text-base font-bold text-[var(--ink)]">
           لا توجد معامل تفاعلية لهذا الدرس حالياً
         </h3>
-        <p className="mt-1 max-w-sm text-sm text-slate-400">
+        <p className="mt-1 max-w-sm text-sm text-[var(--muted)]">
           المعامل التفاعلية تساعدك على محاكاة الخوارزميات وهياكل البيانات خطوة
           بخطوة.
         </p>
@@ -248,9 +236,8 @@ export default function InteractiveViewer({
   const loadedLab = cache[activeLab.id];
   const isLoading = !loadedLab && !activeError;
   const iframeHeight = `${Math.max(activeLab.default_height || 560, 420)}px`;
-  const resolvedExternalUrl = toSafeHttpUrl(
-    loadedLab?.external_url ?? activeLab.external_url
-  );
+  const resolvedExternalUrl =
+    loadedLab?.external_url ?? activeLab.external_url ?? "";
 
   return (
     <div className="space-y-4">
@@ -273,13 +260,19 @@ export default function InteractiveViewer({
                   setSelectedId(lab.id);
                   setResetKey(0);
                 }}
-                className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-all sm:text-sm ${
+                className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold transition-all sm:text-sm ${
                   isSelected
-                    ? "border-indigo-500/60 bg-indigo-500/15 text-indigo-200 shadow-sm"
-                    : "border-slate-800 bg-slate-900/70 text-slate-300 hover:border-slate-700 hover:bg-slate-800/80 hover:text-slate-100"
+                    ? "border-[var(--hero)] bg-[var(--hero)] text-[var(--hero-ink)] shadow-[var(--shadow-pill)]"
+                    : "border-[var(--line)] bg-[var(--paper)] text-[var(--ink)] hover:border-[var(--accent)] hover:bg-[var(--soft)] hover:text-[var(--accent)]"
                 }`}
               >
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-950/70 text-[11px] font-bold text-indigo-300">
+                <span
+                  className={`flex h-5 w-5 items-center justify-center rounded-full font-mono text-[11px] font-bold ${
+                    isSelected
+                      ? "bg-white/20 text-[var(--hero-ink)]"
+                      : "bg-[var(--soft)] text-[var(--accent)]"
+                  }`}
+                >
                   {idx + 1}
                 </span>
                 <span>{lab.title}</span>
@@ -294,37 +287,37 @@ export default function InteractiveViewer({
         ref={containerRef}
         className={
           isFallbackFullscreen
-            ? "fixed inset-0 z-50 flex flex-col bg-slate-950"
+            ? "fixed inset-0 z-50 flex flex-col bg-[var(--bg)]"
             : isNativeFullscreen
-              ? "flex h-screen w-screen flex-col bg-slate-950"
-              : "overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl shadow-black/40"
+              ? "flex h-screen w-screen flex-col bg-[var(--bg)]"
+              : "studio-card overflow-hidden shadow-[var(--shadow-pill)]"
         }
       >
-        {/* Top Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/95 px-4 py-3">
+        {/* Study Studio Top Toolbar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] bg-[var(--paper)] px-4 py-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-indigo-500/30 bg-indigo-500/10 text-indigo-400">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--soft)] text-[var(--accent)]">
               <FlaskConical className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <h3 className="truncate text-sm font-bold text-slate-100">
+              <h3 className="truncate text-sm font-bold text-[var(--ink)]">
                 {activeLab.title}
               </h3>
               {activeLab.description ? (
-                <p className="truncate text-xs text-slate-400">
+                <p className="truncate text-xs text-[var(--muted)]">
                   {activeLab.description}
                 </p>
               ) : null}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {activeLab.source_type === "external_url" && resolvedExternalUrl ? (
               <a
                 href={resolvedExternalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-indigo-500/50 hover:text-indigo-200"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-1.5 text-xs font-bold text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--soft)] hover:text-[var(--accent)]"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 <span>فتح في نافذة جديدة</span>
@@ -336,7 +329,7 @@ export default function InteractiveViewer({
               onClick={handleReset}
               disabled={isLoading || !loadedLab}
               title="إعادة تشغيل المعمل"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-indigo-500/50 hover:bg-slate-800 hover:text-indigo-200 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-1.5 text-xs font-bold text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--soft)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>إعادة تشغيل</span>
@@ -346,7 +339,7 @@ export default function InteractiveViewer({
               type="button"
               onClick={toggleFullscreen}
               title={isFullscreen ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-500/40 bg-indigo-500/15 px-3 py-1.5 text-xs font-semibold text-indigo-200 transition-colors hover:bg-indigo-500/25"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--soft)] px-3 py-1.5 text-xs font-bold text-[var(--accent)] transition-colors hover:bg-[var(--soft-hover)]"
             >
               {isFullscreen ? (
                 <>
@@ -365,7 +358,7 @@ export default function InteractiveViewer({
 
         {/* Body */}
         <div
-          className={`relative w-full bg-slate-950 ${
+          className={`relative w-full bg-[var(--bg)] ${
             isFullscreen ? "flex-1" : ""
           }`}
         >
@@ -374,11 +367,11 @@ export default function InteractiveViewer({
               className="flex flex-col items-center justify-center gap-3 p-8 text-center"
               style={{ height: isFullscreen ? "100%" : iframeHeight }}
             >
-              <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
-              <p className="text-sm font-semibold text-slate-300">
+              <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)]" />
+              <p className="text-sm font-bold text-[var(--ink)]">
                 جاري تحميل المعمل التفاعلي...
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--muted)]">
                 يتم تحميل المعمل عند الطلب فقط للحفاظ على سرعة التصفح
               </p>
             </div>
@@ -387,16 +380,16 @@ export default function InteractiveViewer({
               className="flex flex-col items-center justify-center gap-3 p-8 text-center"
               style={{ height: isFullscreen ? "100%" : "320px" }}
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--neg)]/30 bg-[var(--neg-soft)] text-[var(--neg)]">
                 <AlertTriangle className="h-6 w-6" />
               </div>
-              <p className="max-w-md text-sm font-semibold text-slate-200">
+              <p className="max-w-md text-sm font-bold text-[var(--ink)]">
                 {activeError}
               </p>
               <button
                 type="button"
                 onClick={handleRetry}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-500/40 bg-indigo-500/15 px-4 py-2 text-xs font-semibold text-indigo-200 transition-colors hover:bg-indigo-500/25"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--hero)] px-4 py-2 text-xs font-bold text-[var(--hero-ink)] transition-colors hover:bg-[var(--hero-deep)]"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 <span>إعادة المحاولة</span>
@@ -409,7 +402,7 @@ export default function InteractiveViewer({
                 srcDoc={loadedLab.html_content ?? ""}
                 title={loadedLab.title}
                 sandbox="allow-scripts"
-                className="block w-full border-0 bg-slate-950"
+                className="block w-full border-0 bg-[var(--code-bg)]"
                 style={{
                   height: isFullscreen ? "100%" : iframeHeight,
                 }}
@@ -421,13 +414,13 @@ export default function InteractiveViewer({
                 title={loadedLab.title}
                 sandbox="allow-scripts allow-same-origin"
                 referrerPolicy="no-referrer"
-                className="block w-full border-0 bg-slate-950"
+                className="block w-full border-0 bg-[var(--paper)]"
                 style={{
                   height: isFullscreen ? "100%" : iframeHeight,
                 }}
               />
             ) : (
-              <div className="flex h-64 items-center justify-center text-sm text-slate-400">
+              <div className="flex h-64 items-center justify-center text-sm text-[var(--muted)]">
                 لم يتم تعيين رابط خارجي لهذا المعمل بعد.
               </div>
             )
