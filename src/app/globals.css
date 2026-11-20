@@ -202,20 +202,24 @@
 }
 
 .studio-hero {
-  background: linear-gradient(135deg, var(--hero) 0%, var(--hero-deep) 100%);
+  background-color: var(--hero);
+  background-image: linear-gradient(135deg, var(--hero) 0%, var(--hero-deep) 100%);
   color: var(--hero-ink);
   border-radius: 20px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 14px 32px rgba(37, 45, 140, 0.16);
 }
 
 .studio-hero-network {
+  background-color: var(--hero);
   background-image:
-    radial-gradient(circle at 22% 35%, rgba(255, 255, 255, 0.16) 1px, transparent 1px),
-    radial-gradient(circle at 78% 68%, rgba(255, 255, 255, 0.14) 1px, transparent 1px),
-    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-  background-size: 38px 38px, 52px 52px, 44px 44px, 44px 44px;
+    radial-gradient(circle at 22% 35%, rgba(255, 255, 255, 0.18) 1px, transparent 1px),
+    radial-gradient(circle at 78% 68%, rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(135deg, var(--hero) 0%, var(--hero-deep) 100%);
+  background-size: 38px 38px, 52px 52px, 44px 44px, 44px 44px, 100% 100%;
 }
 
 .studio-book-card {
