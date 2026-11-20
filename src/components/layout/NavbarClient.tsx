@@ -53,11 +53,15 @@ export function NavbarClient() {
           href="/"
           className="group flex shrink-0 items-center gap-2.5 focus:outline-none"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--hero)] text-white shadow-[var(--shadow-pill)] transition-transform group-hover:scale-[1.03]">
+          <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--hero)] text-[var(--hero-ink)] shadow-[var(--shadow-pill)] transition-transform group-hover:scale-[1.03]">
             <BrandChipIcon />
+            <span
+              aria-hidden="true"
+              className="absolute -left-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[var(--signal)] ring-2 ring-[var(--paper)]"
+            />
           </span>
           <div className="flex flex-col leading-tight">
-            <span className="text-sm font-extrabold tracking-tight text-[var(--ink)] sm:text-base">
+            <span className="text-sm font-bold tracking-tight text-[var(--ink)] sm:text-base">
               {SITE_CONFIG.arabicName}
             </span>
             <span
@@ -75,7 +79,7 @@ export function NavbarClient() {
 
           <Link
             href="/login"
-            className="hidden min-h-[44px] items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--bg)] px-3.5 py-1.5 text-xs font-bold text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] sm:inline-flex"
+            className="hidden min-h-[44px] items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--bg)] px-3.5 py-1.5 text-xs font-bold text-[var(--ink)] transition-colors hover:border-[var(--signal)] hover:text-[var(--signal)] sm:inline-flex"
           >
             <UserCircle2 className="h-4 w-4 shrink-0 text-[var(--accent)]" />
             <span className="max-w-[140px] truncate">

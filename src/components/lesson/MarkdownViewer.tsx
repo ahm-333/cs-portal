@@ -105,11 +105,11 @@ function CodeBlock({ code, language }: CodeBlockProps) {
   return (
     <div
       dir="ltr"
-      className="my-5 overflow-hidden rounded-xl border border-[var(--code-border)] bg-[var(--code-bg)] text-[#f2f1fc] shadow-[var(--shadow-pill)]"
+      className="my-5 overflow-hidden rounded-xl border border-[var(--code-border)] bg-[var(--code-bg)] text-[#f2efe9] shadow-[var(--shadow-pill)]"
     >
       <div className="flex items-center justify-between border-b border-[var(--code-border)] bg-[var(--code-header)] px-4 py-2">
-        <div className="flex items-center gap-2 text-xs font-semibold tracking-wide text-[#d5d8f0]">
-          <Terminal className="h-3.5 w-3.5 text-[#a5b4fc]" />
+        <div className="flex items-center gap-2 text-xs font-semibold tracking-wide text-[#d0dbdd]">
+          <Terminal className="h-3.5 w-3.5 text-[#52b7be]" />
           <span className="font-mono">{displayLang}</span>
         </div>
 
@@ -119,13 +119,13 @@ function CodeBlock({ code, language }: CodeBlockProps) {
           dir="rtl"
           className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
             copied
-              ? "border-[#34d399]/50 bg-[#064e3b]/60 text-[#a7f3d0]"
-              : "border-[var(--code-border)] bg-[#252a44] text-[#e2e5f8] hover:border-[#818cf8] hover:text-white"
+              ? "border-[#6dd3a6]/50 bg-[#173026] text-[#6dd3a6]"
+              : "border-[var(--code-border)] bg-[#1c282e] text-[#e7ecee] hover:border-[#e8845b] hover:text-white"
           }`}
         >
           {copied ? (
             <>
-              <Check className="h-3.5 w-3.5 text-[#6ee7b7]" />
+              <Check className="h-3.5 w-3.5 text-[#6dd3a6]" />
               <span>تم النسخ ✓</span>
             </>
           ) : (
@@ -145,7 +145,7 @@ function CodeBlock({ code, language }: CodeBlockProps) {
           lineNumberStyle={{
             minWidth: "2.4em",
             paddingRight: "1em",
-            color: "#6b7394",
+            color: "#60727c",
             userSelect: "none",
           }}
           customStyle={{
@@ -183,7 +183,7 @@ const markdownComponents: Components = {
       <h2 className="mb-3 mt-8 flex items-center gap-2.5 border-b border-[var(--line)] pb-2 text-[1.28em] font-bold leading-snug text-[var(--ink)]">
         <span
           aria-hidden="true"
-          className="h-5 w-1 shrink-0 rounded-full bg-[var(--accent)]"
+          className="h-5 w-1 shrink-0 rounded-full bg-[var(--signal)]"
         />
         <span>{children}</span>
       </h2>
@@ -212,7 +212,7 @@ const markdownComponents: Components = {
   },
   ul({ children }) {
     return (
-      <ul className="my-3.5 list-disc space-y-2 ps-6 text-[1em] leading-[inherit] text-[var(--ink)] marker:text-[var(--accent)]">
+      <ul className="my-3.5 list-disc space-y-2 ps-6 text-[1em] leading-[inherit] text-[var(--ink)] marker:text-[var(--signal)]">
         {children}
       </ul>
     );
@@ -228,14 +228,16 @@ const markdownComponents: Components = {
     return <li className="leading-[inherit]">{children}</li>;
   },
   strong({ children }) {
-    return <strong className="font-extrabold text-[var(--ink)]">{children}</strong>;
+    return (
+      <strong className="font-extrabold text-[var(--ink)]">{children}</strong>
+    );
   },
   em({ children }) {
     return <em className="italic text-[var(--accent)]">{children}</em>;
   },
   blockquote({ children }) {
     return (
-      <blockquote className="my-5 rounded-e-xl border-s-4 border-[var(--accent)] bg-[var(--soft)] px-4 py-3 text-[var(--ink)] [&>p]:my-1.5">
+      <blockquote className="my-5 rounded-e-xl border-s-4 border-[var(--signal)] bg-[var(--soft)] px-4 py-3 text-[var(--ink)] [&>p]:my-1.5">
         {children}
       </blockquote>
     );
@@ -309,7 +311,7 @@ const markdownComponents: Components = {
     return (
       <pre
         dir="ltr"
-        className="my-5 overflow-x-auto rounded-xl border border-[var(--code-border)] bg-[var(--code-bg)] p-4 font-mono text-sm text-[#f2f1fc]"
+        className="my-5 overflow-x-auto rounded-xl border border-[var(--code-border)] bg-[var(--code-bg)] p-4 font-mono text-sm text-[#f2efe9]"
       >
         {children}
       </pre>

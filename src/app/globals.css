@@ -1,144 +1,168 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   CS Portal — Study Studio 3-Mode Design Token System
-   Inspired by Kernal Study Studio: Light (default) / Reading / Dark
+   CS Portal — "Swiss Academic Atelier" 3-Mode Design Token System
+   Original Aesthetic: Warm Alabaster Paper + Deep Petrol Ink + Signal Copper
+   Modes: Light (default) / Reading (Sepia Manuscript) / Dark (Obsidian Lab)
    ========================================================================== */
 
 :root,
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #f5f6fb;
-  --paper: #ffffff;
-  --rail: #ffffff;
-  --ink: #252642;
-  --muted: #64667c;
-  --accent: #4653d6;
-  --accent-hover: #3641b8;
-  --hero: #3d49c8;
-  --hero-deep: #2f3aa8;
-  --hero-ink: #ffffff;
-  --hero-sub: #e7e9ff;
-  --soft: #eaedff;
-  --soft-hover: #dfe4ff;
-  --line: #e0e3ef;
-  --line-strong: #cdd2e6;
-  --focus: #b34e13;
-  --pos: #26714e;
-  --pos-soft: #e2f3eb;
-  --neg: #ae344a;
-  --neg-soft: #fbe8ef;
-  --warn: #805a0d;
-  --warn-soft: #fff0e1;
+  --bg: #f6f4ef;
+  --paper: #fffdf9;
+  --rail: #f0ede5;
+  --ink: #14191f;
+  --muted: #5b6470;
+  --accent: #0f5c63;
+  --accent-hover: #0a464c;
+  --signal: #c85a32;
+  --signal-soft: #f7e7df;
+  --hero: #0f2a2e;
+  --hero-deep: #091c20;
+  --hero-ink: #f8f6f1;
+  --hero-sub: #c6d7d9;
+  --soft: #eae4d9;
+  --soft-hover: #dfd7c8;
+  --line: #dfd9cc;
+  --line-strong: #c8c0af;
+  --focus: #c85a32;
+  --pos: #1e6b4f;
+  --pos-soft: #dff1e8;
+  --neg: #a63244;
+  --neg-soft: #f9e4e8;
+  --warn: #8c5c12;
+  --warn-soft: #f6ecd7;
 
-  /* Subject Pastel Header Tints */
-  --tint-blue: #e7edff;
-  --tint-purple: #eee8fb;
-  --tint-mint: #e2f3eb;
-  --tint-peach: #fff0e1;
-  --tint-pink: #fbe8ef;
-  --tint-sky: #e5f1fc;
-  --tint-ink: #252642;
+  /* Editorial Monograph Spine & Soft Tints */
+  --tint-peach: #f7e7df;
+  --spine-peach: #c85a32;
+  --tint-mint: #dff0ef;
+  --spine-mint: #0f5c63;
+  --tint-pink: #f5eedb;
+  --spine-pink: #9a6b16;
+  --tint-blue: #e3ecf4;
+  --spine-blue: #235380;
+  --tint-purple: #ece6f2;
+  --spine-purple: #5b417a;
+  --tint-sky: #e1eef0;
+  --spine-sky: #1e6570;
+  --tint-ink: #14191f;
 
-  /* Code block surface (always crisp dark editor contrast) */
-  --code-bg: #171a2c;
-  --code-header: #1e2238;
-  --code-border: #313756;
+  /* Code block surface (high-contrast obsidian editor) */
+  --code-bg: #101619;
+  --code-header: #172025;
+  --code-border: #26343c;
 
-  /* Shadows reserved strictly for interactive/elevated layers */
-  --shadow-pill: 0 2px 6px rgba(24, 32, 73, 0.08);
-  --shadow-book: 0 10px 20px rgba(15, 21, 56, 0.18);
-  --shadow-modal: 0 24px 60px rgba(15, 21, 56, 0.22);
+  --shadow-pill: 0 1px 4px rgba(15, 42, 46, 0.08);
+  --shadow-card: 0 10px 28px rgba(15, 42, 46, 0.06);
+  --shadow-modal: 0 24px 60px rgba(10, 24, 27, 0.22);
 }
 
 [data-theme="reading"] {
   color-scheme: light;
-  --bg: #f1f3eb;
-  --paper: #fcfdf7;
-  --rail: #f8fbf1;
-  --ink: #2b3c35;
-  --muted: #58685d;
-  --accent: #34634d;
-  --accent-hover: #29503e;
-  --hero: #34634d;
-  --hero-deep: #284f3d;
-  --hero-ink: #ffffff;
-  --hero-sub: #e1efe6;
-  --soft: #e0eadc;
-  --soft-hover: #d3e2ce;
-  --line: #ced8c8;
-  --line-strong: #b8c6b1;
-  --focus: #9a4a16;
-  --pos: #236345;
-  --pos-soft: #deeadb;
-  --neg: #9c3344;
-  --neg-soft: #eee1de;
-  --warn: #7d5b12;
-  --warn-soft: #eee7d8;
+  --bg: #efe9dc;
+  --paper: #faf6ec;
+  --rail: #e8e0cf;
+  --ink: #26211a;
+  --muted: #63594b;
+  --accent: #3d5a45;
+  --accent-hover: #2d4534;
+  --signal: #9e4b27;
+  --signal-soft: #eedfd3;
+  --hero: #27352b;
+  --hero-deep: #1b261e;
+  --hero-ink: #faf6ec;
+  --hero-sub: #d2dcd3;
+  --soft: #e3dac8;
+  --soft-hover: #d8cdb8;
+  --line: #d5cbb7;
+  --line-strong: #bfb29a;
+  --focus: #9e4b27;
+  --pos: #2c6244;
+  --pos-soft: #dfeadf;
+  --neg: #963542;
+  --neg-soft: #f0dfe0;
+  --warn: #7e5614;
+  --warn-soft: #efe5cf;
 
-  --tint-blue: #e2e9df;
-  --tint-purple: #e8e5e9;
-  --tint-mint: #deeadb;
-  --tint-peach: #eee7d8;
-  --tint-pink: #eee1de;
-  --tint-sky: #dde9e6;
-  --tint-ink: #2b3c35;
+  --tint-peach: #eedfd3;
+  --spine-peach: #9e4b27;
+  --tint-mint: #dfeadf;
+  --spine-mint: #3d5a45;
+  --tint-pink: #efe5cf;
+  --spine-pink: #8a621c;
+  --tint-blue: #e0e6e4;
+  --spine-blue: #365761;
+  --tint-purple: #e7e1e6;
+  --spine-purple: #5c4966;
+  --tint-sky: #dfe7e4;
+  --spine-sky: #2e5d5b;
+  --tint-ink: #26211a;
 
-  --code-bg: #1c2622;
-  --code-header: #24312c;
-  --code-border: #34473f;
+  --code-bg: #1b221e;
+  --code-header: #232c27;
+  --code-border: #334039;
 
-  --shadow-pill: 0 2px 6px rgba(25, 45, 34, 0.08);
-  --shadow-book: 0 10px 20px rgba(25, 45, 34, 0.18);
-  --shadow-modal: 0 24px 60px rgba(20, 38, 29, 0.24);
+  --shadow-pill: 0 1px 4px rgba(38, 33, 26, 0.08);
+  --shadow-card: 0 10px 28px rgba(38, 33, 26, 0.06);
+  --shadow-modal: 0 24px 60px rgba(30, 24, 18, 0.24);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #171a2c;
-  --paper: #22263c;
-  --rail: #1c2034;
-  --ink: #f2f1fc;
-  --muted: #b6b9d0;
-  --accent: #b8bfff;
-  --accent-hover: #cfd4ff;
-  --hero: #3d49b7;
-  --hero-deep: #2e3792;
-  --hero-ink: #ffffff;
-  --hero-sub: #e7e9ff;
-  --soft: #303653;
-  --soft-hover: #3a4164;
-  --line: #3c425f;
-  --line-strong: #4e5578;
-  --focus: #ffce91;
-  --pos: #a4dfbd;
-  --pos-soft: #24453d;
-  --neg: #ffb2c2;
-  --neg-soft: #4c3344;
-  --warn: #f8d687;
-  --warn-soft: #4e3f31;
+  --bg: #0d1114;
+  --paper: #141a1f;
+  --rail: #101519;
+  --ink: #f2efe9;
+  --muted: #96a1ac;
+  --accent: #52b7be;
+  --accent-hover: #70cbd1;
+  --signal: #e8845b;
+  --signal-soft: #2e1f19;
+  --hero: #132c30;
+  --hero-deep: #0b1c1f;
+  --hero-ink: #f5f2ec;
+  --hero-sub: #b5cdd0;
+  --soft: #1c242a;
+  --soft-hover: #242f37;
+  --line: #243038;
+  --line-strong: #354550;
+  --focus: #e8845b;
+  --pos: #6dd3a6;
+  --pos-soft: #173026;
+  --neg: #f38b9d;
+  --neg-soft: #331c22;
+  --warn: #ecc26c;
+  --warn-soft: #2f2617;
 
-  --tint-blue: #303f66;
-  --tint-purple: #44375e;
-  --tint-mint: #284c45;
-  --tint-peach: #534435;
-  --tint-pink: #513849;
-  --tint-sky: #2a455e;
-  --tint-ink: #f2f1fc;
+  --tint-peach: #2e1f19;
+  --spine-peach: #e8845b;
+  --tint-mint: #162e30;
+  --spine-mint: #52b7be;
+  --tint-pink: #2c2518;
+  --spine-pink: #ddb25a;
+  --tint-blue: #182734;
+  --spine-blue: #6aa3d6;
+  --tint-purple: #251f30;
+  --spine-purple: #a78bd1;
+  --tint-sky: #162c30;
+  --spine-sky: #5cc1cc;
+  --tint-ink: #f2efe9;
 
-  --code-bg: #111322;
-  --code-header: #191c30;
-  --code-border: #323755;
+  --code-bg: #0a0e11;
+  --code-header: #12181d;
+  --code-border: #222e36;
 
-  --shadow-pill: 0 2px 6px rgba(0, 0, 0, 0.28);
-  --shadow-book: 0 12px 24px rgba(0, 0, 0, 0.36);
-  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.48);
+  --shadow-pill: 0 2px 6px rgba(0, 0, 0, 0.32);
+  --shadow-card: 0 12px 30px rgba(0, 0, 0, 0.24);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.56);
 }
 
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--ink);
-  --font-sans: var(--font-alexandria), "Alexandria", "Cairo", Tahoma, sans-serif;
+  --font-sans: var(--font-ibm-arabic), "IBM Plex Sans Arabic", Tahoma, sans-serif;
   --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", Consolas, monospace;
 }
 
@@ -157,16 +181,14 @@
     line-height: 1.8;
     letter-spacing: normal;
     -webkit-font-smoothing: antialiased;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.22s ease, color 0.22s ease;
   }
 
-  /* High-contrast accessible focus ring */
   :focus-visible {
-    outline: 3px solid var(--focus);
+    outline: 2.5px solid var(--focus);
     outline-offset: 2px;
   }
 
-  /* Strict LTR isolation for code, math, and numeric scores */
   pre,
   code,
   kbd,
@@ -189,50 +211,90 @@
   }
 }
 
-/* Study Studio Surface Helpers */
+/* ==========================================================================
+   Swiss Academic Atelier — Surfaces, Blueprint Grids & Design Spells
+   ========================================================================== */
+
 .studio-card {
   background-color: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  transition: border-color 0.18s ease, transform 0.18s ease;
+  border-radius: 16px;
+  transition: border-color 0.22s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease;
 }
 
 .studio-card-hover:hover {
-  border-color: var(--accent);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
 }
 
+/* Signature Petrol-Slate Architectural Hero */
 .studio-hero {
   background-color: var(--hero);
-  background-image: linear-gradient(135deg, var(--hero) 0%, var(--hero-deep) 100%);
+  background-image:
+    radial-gradient(ellipse 65% 80% at 12% 18%, rgba(200, 90, 50, 0.16), transparent 60%),
+    radial-gradient(ellipse 60% 70% at 90% 85%, rgba(82, 183, 190, 0.18), transparent 62%),
+    linear-gradient(140deg, var(--hero) 0%, var(--hero-deep) 100%);
   color: var(--hero-ink);
-  border-radius: 20px;
+  border-radius: 22px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 14px 32px rgba(37, 45, 140, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .studio-hero-network {
   background-color: var(--hero);
   background-image:
-    radial-gradient(circle at 22% 35%, rgba(255, 255, 255, 0.18) 1px, transparent 1px),
-    radial-gradient(circle at 78% 68%, rgba(255, 255, 255, 0.15) 1px, transparent 1px),
-    linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-    linear-gradient(135deg, var(--hero) 0%, var(--hero-deep) 100%);
-  background-size: 38px 38px, 52px 52px, 44px 44px, 44px 44px, 100% 100%;
+    radial-gradient(ellipse 65% 80% at 12% 18%, rgba(200, 90, 50, 0.17), transparent 60%),
+    radial-gradient(ellipse 58% 68% at 88% 82%, rgba(82, 183, 190, 0.16), transparent 62%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(140deg, var(--hero) 0%, var(--hero-deep) 100%);
+  background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px, 100% 100%;
 }
 
-.studio-book-card {
-  border-radius: 12px;
-  box-shadow: var(--shadow-book);
-  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease;
+/* Subtle archival dot-paper canvas texture */
+.atelier-canvas {
+  background-image: radial-gradient(color-mix(in srgb, var(--line-strong) 55%, transparent) 1px, transparent 1px);
+  background-size: 26px 26px;
 }
 
-.studio-book-card:hover {
-  transform: translateY(-4px) rotate(0deg) scale(1.02) !important;
+/* Editorial Monograph Spine Spell: widens smoothly on card hover */
+.monograph-card {
+  position: relative;
+  overflow: hidden;
 }
 
-/* Custom Scrollbar adapting to current theme */
+.monograph-spine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  inset-inline-start: 0;
+  width: 5px;
+  transition: width 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.monograph-card:hover .monograph-spine {
+  width: 8px;
+}
+
+/* Entrance stagger (sparse, crisp, GPU-accelerated) */
+@keyframes atelierRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.atelier-enter {
+  animation: atelierRise 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 9px;
   height: 9px;
@@ -252,7 +314,7 @@
   background: var(--muted);
 }
 
-/* Reading Comfort Scaler helper */
+/* Reading Comfort Scaler */
 .reading-surface {
   font-size: calc(15px * var(--reading-scale, 1));
   line-height: var(--reading-leading, 1.85);

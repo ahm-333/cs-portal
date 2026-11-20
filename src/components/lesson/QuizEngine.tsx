@@ -152,8 +152,8 @@ export default function QuizEngine({
               title: "بداية جيدة — حاول مرة أخرى",
               subtitle:
                 "ننصحك بمراجعة الملخص وتجربة المعمل التفاعلي ثم إعادة الكويز.",
-              accentClass: "text-[var(--warn)]",
-              ringClass: "border-[var(--warn)]/35 bg-[var(--warn-soft)]",
+              accentClass: "text-[var(--signal)]",
+              ringClass: "border-[var(--signal)]/35 bg-[var(--signal-soft)]",
             };
 
     return (
@@ -179,7 +179,7 @@ export default function QuizEngine({
                 نتيجتك الآن
               </p>
               <p
-                className={`mt-1 text-2xl font-extrabold ${feedbackTier.accentClass}`}
+                className={`mt-1 font-mono text-2xl font-extrabold ${feedbackTier.accentClass}`}
               >
                 {lastScore}%
               </p>
@@ -188,7 +188,7 @@ export default function QuizEngine({
               <p className="text-xs font-medium text-[var(--muted)]">
                 الإجابات الصحيحة
               </p>
-              <p className="mt-1 text-2xl font-extrabold text-[var(--ink)]">
+              <p className="mt-1 font-mono text-2xl font-extrabold text-[var(--ink)]">
                 {correctCount} / {sortedQuestions.length}
               </p>
             </div>
@@ -196,7 +196,7 @@ export default function QuizEngine({
               <p className="text-xs font-medium text-[var(--muted)]">
                 أفضل نتيجة محفوظة
               </p>
-              <p className="mt-1 text-2xl font-extrabold text-[var(--pos)]">
+              <p className="mt-1 font-mono text-2xl font-extrabold text-[var(--pos)]">
                 {Math.max(bestScore ?? 0, lastScore)}%
               </p>
             </div>
@@ -270,16 +270,16 @@ export default function QuizEngine({
           </div>
 
           {bestScore !== null ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--pos)]/30 bg-[var(--pos-soft)] px-3 py-1 text-xs font-bold text-[var(--pos)]">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--pos)]/30 bg-[var(--pos-soft)] px-3 py-1 font-mono text-xs font-bold text-[var(--pos)]">
               <Trophy className="h-3.5 w-3.5" />
               <span>أفضل نتيجة: {bestScore}%</span>
             </span>
           ) : null}
         </div>
 
-        <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--soft)]">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--soft)]">
           <div
-            className="h-full rounded-full bg-[var(--hero)] transition-all duration-300"
+            className="h-full rounded-full bg-[var(--signal)] transition-all duration-300"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -290,14 +290,14 @@ export default function QuizEngine({
         {currentQuestion.question_text}
       </h3>
 
-      {/* Optional code snippet (always crisp dark editor surface, LTR) */}
+      {/* Optional code snippet (always crisp obsidian editor surface, LTR) */}
       {currentQuestion.code_snippet ? (
         <div
           dir="ltr"
-          className="mt-4 overflow-hidden rounded-xl border border-[var(--code-border)] bg-[var(--code-bg)] text-[#f2f1fc]"
+          className="mt-4 overflow-hidden rounded-xl border border-[var(--code-border)] bg-[var(--code-bg)] text-[#f2efe9]"
         >
-          <div className="flex items-center gap-2 border-b border-[var(--code-border)] bg-[var(--code-header)] px-3.5 py-1.5 text-xs font-semibold text-[#d5d8f0]">
-            <Code2 className="h-3.5 w-3.5 text-[#a5b4fc]" />
+          <div className="flex items-center gap-2 border-b border-[var(--code-border)] bg-[var(--code-header)] px-3.5 py-1.5 text-xs font-semibold text-[#d0dbdd]">
+            <Code2 className="h-3.5 w-3.5 text-[#52b7be]" />
             <span className="font-mono uppercase">
               {currentQuestion.code_lang || "cpp"}
             </span>

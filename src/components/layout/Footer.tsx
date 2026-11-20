@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Cpu, MessageSquarePlus } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/config";
+import { FounderBadge } from "@/components/layout/FounderBadge";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -9,13 +10,13 @@ export function Footer() {
     <footer className="mt-auto border-t border-[var(--line)] bg-[var(--paper)]">
       <div className="mx-auto max-w-6xl px-4 py-9 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-12 md:items-start">
-          {/* Brand */}
-          <div className="md:col-span-6">
+          {/* Brand + Quiet Colophon */}
+          <div className="space-y-4 md:col-span-5">
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--soft)] text-[var(--accent)]">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--hero)] text-[var(--hero-ink)]">
                 <Cpu className="h-4 w-4" />
               </span>
-              <span className="text-base font-extrabold text-[var(--ink)]">
+              <span className="text-base font-bold text-[var(--ink)]">
                 {SITE_CONFIG.arabicName}
               </span>
               <span
@@ -25,24 +26,25 @@ export function Footer() {
                 {SITE_CONFIG.name}
               </span>
             </Link>
-            <p className="mt-3 max-w-md text-sm leading-relaxed text-[var(--muted)]">
-              {SITE_CONFIG.tagline}. استوديو مذاكرة هادئ لطلبة علوم الحاسب
-              بملخصات واضحة، معامل تفاعلية، وكويزات فورية.
+            <p className="max-w-sm text-sm leading-relaxed text-[var(--muted)]">
+              {SITE_CONFIG.tagline}. مساحة مذاكرة هندسية هادئة لطلبة علوم
+              الحاسب.
             </p>
+            <div>
+              <FounderBadge variant="footer-colophon" />
+            </div>
           </div>
 
           {/* Quick Links */}
           <div className="md:col-span-3">
-            <h3 className="text-xs font-extrabold text-[var(--ink)]">
-              روابط سريعة
-            </h3>
+            <h3 className="text-xs font-bold text-[var(--ink)]">روابط سريعة</h3>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
                 <Link
                   href="/"
                   className="text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
                 >
-                  المواد الدراسية
+                  المقررات الدراسية
                 </Link>
               </li>
               <li>
@@ -65,18 +67,19 @@ export function Footer() {
           </div>
 
           {/* Feedback / Suggestions */}
-          <div className="md:col-span-3">
-            <h3 className="text-xs font-extrabold text-[var(--ink)]">
+          <div className="md:col-span-4">
+            <h3 className="text-xs font-bold text-[var(--ink)]">
               شاركنا التطوير
             </h3>
             <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
-              تحتاج شرح لمادة معينة أو لاحظت خطأ في ملخص أو كود؟
+              تحتاج شرحاً لمادة معينة أو لاحظت خطأً في ملخص أو كود؟ يسعدنا
+              تواصلك.
             </p>
             <a
               href={SITE_CONFIG.feedbackUrl}
-              className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3.5 py-2 text-xs font-bold text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--soft)] hover:text-[var(--accent)]"
+              className="mt-3.5 inline-flex items-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3.5 py-2 text-xs font-bold text-[var(--ink)] transition-colors hover:border-[var(--signal)] hover:bg-[var(--signal-soft)] hover:text-[var(--signal)]"
             >
-              <MessageSquarePlus className="h-4 w-4 text-[var(--accent)]" />
+              <MessageSquarePlus className="h-4 w-4 text-[var(--signal)]" />
               <span>اقترح مادة / بلغ عن خطأ</span>
             </a>
           </div>
@@ -88,7 +91,7 @@ export function Footer() {
             محفوظة.
           </p>
           <p className="font-mono text-[11px]" dir="ltr">
-            Study Studio • Light / Reading / Dark
+            CS PORTAL // SWISS ACADEMIC ATELIER
           </p>
         </div>
       </div>

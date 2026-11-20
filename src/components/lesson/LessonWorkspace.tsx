@@ -25,7 +25,7 @@ import {
   X,
 } from "lucide-react";
 import { useReadingPrefs } from "@/components/layout/themeStore";
-import { getCourseVisualMeta } from "@/lib/courseTheme";
+import { getCourseVisualMeta, splitBilingualTitle } from "@/lib/courseTheme";
 import type {
   Course,
   CurrentUser,
@@ -179,6 +179,11 @@ export default function LessonWorkspace({
     [course.slug, course.title, course.year_level]
   );
 
+  const lessonTitleParts = useMemo(
+    () => splitBilingualTitle(lesson.title),
+    [lesson.title]
+  );
+
   const isGuestMode = currentUser === null;
   const isEnrolled = !course.is_paid || !lesson.is_free_preview;
 
@@ -254,6 +259,15 @@ export default function LessonWorkspace({
     currentLessonIndex >= 0 && currentLessonIndex < sortedLessons.length - 1
       ? sortedLessons[currentLessonIndex + 1]
       : null;
+
+  const prevTitleParts = useMemo(
+    () => (prevLesson ? splitBilingualTitle(prevLesson.title) : null),
+    [prevLesson]
+  );
+  const nextTitleParts = useMemo(
+    () => (nextLesson ? splitBilingualTitle(nextLesson.title) : null),
+    [nextLesson]
+  );
 
   const currentProgress = progressMap[lesson.id];
   const isCompleted = Boolean(currentProgress?.is_completed);
@@ -339,11 +353,12 @@ export default function LessonWorkspace({
         courseSlug={course.slug}
         lessonNumber={lessonNumber}
         tintVar={visual.tintVar}
+        spineVar={visual.spineVar}
         nextLesson={
           nextLesson
             ? {
                 id: nextLesson.id,
-                title: nextLesson.title,
+                title: nextTitleParts?.primary ?? nextLesson.title,
                 isLocked:
                   course.is_paid && !nextLesson.is_free_preview && !isEnrolled,
               }
@@ -355,7 +370,7 @@ export default function LessonWorkspace({
       <div className="studio-card flex items-center justify-between gap-3 px-3.5 py-2.5 lg:hidden">
         <div className="min-w-0">
           <p className="truncate text-xs font-bold text-[var(--ink)]">
-            {course.title}
+            {visual.arabicSubtitle}
           </p>
           <p className="text-[11px] text-[var(--muted)]">
             أنجزت {completedTotal} من {sortedLessons.length} دروس
@@ -443,16 +458,22 @@ export default function LessonWorkspace({
               href={`/courses/${course.slug}`}
               className="truncate transition-colors hover:text-[var(--accent)]"
             >
-              {course.title}
+              {visual.arabicSubtitle}
             </Link>
             <ChevronLeft className="h-3.5 w-3.5 opacity-60" />
             <span className="truncate font-bold text-[var(--ink)]">
-              {lesson.title}
+              {lessonTitleParts.primary}
             </span>
           </nav>
 
-          {/* Lesson Header + Complete Toggle */}
-          <header className="studio-card flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center">
+          {/* Editorial Monograph Lesson Header + Complete Toggle */}
+          <header className="studio-card monograph-card atelier-enter flex flex-col justify-between gap-4 p-5 ps-6 sm:flex-row sm:items-center">
+            <div
+              aria-hidden="true"
+              className="monograph-spine"
+              style={{ backgroundColor: visual.spineVar }}
+            />
+
             <div className="min-w-0 space-y-2">
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <span
@@ -482,9 +503,19 @@ export default function LessonWorkspace({
                 ) : null}
               </div>
 
-              <h1 className="text-xl font-extrabold leading-snug text-[var(--ink)] sm:text-2xl">
-                {lesson.title}
-              </h1>
+              <div>
+                <h1 className="text-xl font-extrabold leading-snug text-[var(--ink)] sm:text-2xl">
+                  {lessonTitleParts.primary}
+                </h1>
+                {lessonTitleParts.secondaryEn ? (
+                  <p
+                    dir="ltr"
+                    className="mt-1 inline-block rounded-md bg-[var(--bg)] px-2 py-0.5 font-mono text-xs font-medium text-[var(--muted)]"
+                  >
+                    {lessonTitleParts.secondaryEn}
+                  </p>
+                ) : null}
+              </div>
             </div>
 
             <div className="shrink-0">
@@ -503,7 +534,7 @@ export default function LessonWorkspace({
             title={lesson.title}
           />
 
-          {/* 4-Tab Study Studio Pill Bar */}
+          {/* 4-Tab Architectural Workbench Bar */}
           <section aria-label="أدوات مذاكرة الدرس" className="space-y-4">
             <div
               role="tablist"
@@ -520,7 +551,7 @@ export default function LessonWorkspace({
                 className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
                   activeTab === "summary"
                     ? "bg-[var(--hero)] text-[var(--hero-ink)] shadow-[var(--shadow-pill)]"
-                    : "text-[var(--muted)] hover:bg-[var(--soft)] hover:text-[var(--accent)]"
+                    : "text-[var(--muted)] hover:bg-[var(--soft)] hover:text-[var(--ink)]"
                 }`}
               >
                 <FileText className="h-4 w-4" />
@@ -537,17 +568,17 @@ export default function LessonWorkspace({
                 className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
                   activeTab === "lab"
                     ? "bg-[var(--hero)] text-[var(--hero-ink)] shadow-[var(--shadow-pill)]"
-                    : "text-[var(--muted)] hover:bg-[var(--soft)] hover:text-[var(--accent)]"
+                    : "text-[var(--muted)] hover:bg-[var(--soft)] hover:text-[var(--ink)]"
                 }`}
               >
-                <FlaskConical className="h-4 w-4" />
+                <FlaskConical className="h-4 w-4 text-[var(--signal)]" />
                 <span>الشرح التفاعلي (Lab)</span>
                 {interactives.length > 0 ? (
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                    className={`rounded-full px-2 py-0.5 font-mono text-[11px] font-bold ${
                       activeTab === "lab"
-                        ? "bg-white/20 text-[var(--hero-ink)]"
-                        : "bg-[var(--soft)] text-[var(--accent)]"
+                        ? "bg-[var(--signal)] text-white"
+                        : "bg-[var(--signal-soft)] text-[var(--signal)]"
                     }`}
                   >
                     {interactives.length}
@@ -565,14 +596,14 @@ export default function LessonWorkspace({
                 className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
                   activeTab === "resources"
                     ? "bg-[var(--hero)] text-[var(--hero-ink)] shadow-[var(--shadow-pill)]"
-                    : "text-[var(--muted)] hover:bg-[var(--soft)] hover:text-[var(--accent)]"
+                    : "text-[var(--muted)] hover:bg-[var(--soft)] hover:text-[var(--ink)]"
                 }`}
               >
                 <Bookmark className="h-4 w-4" />
                 <span>المصادر</span>
                 {resourcesCount > 0 ? (
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                    className={`rounded-full px-2 py-0.5 font-mono text-[11px] font-bold ${
                       activeTab === "resources"
                         ? "bg-white/20 text-[var(--hero-ink)]"
                         : "bg-[var(--bg)] text-[var(--muted)]"
@@ -593,14 +624,14 @@ export default function LessonWorkspace({
                 className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
                   activeTab === "quiz"
                     ? "bg-[var(--hero)] text-[var(--hero-ink)] shadow-[var(--shadow-pill)]"
-                    : "text-[var(--muted)] hover:bg-[var(--soft)] hover:text-[var(--accent)]"
+                    : "text-[var(--muted)] hover:bg-[var(--soft)] hover:text-[var(--ink)]"
                 }`}
               >
                 <ClipboardCheck className="h-4 w-4" />
                 <span>الكويز</span>
                 {questions.length > 0 ? (
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                    className={`rounded-full px-2 py-0.5 font-mono text-[11px] font-bold ${
                       activeTab === "quiz"
                         ? "bg-white/20 text-[var(--hero-ink)]"
                         : "bg-[var(--bg)] text-[var(--muted)]"
@@ -611,7 +642,7 @@ export default function LessonWorkspace({
                 ) : null}
                 {currentBestScore !== null ? (
                   <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[11px] font-bold ${
                       activeTab === "quiz"
                         ? "bg-white/20 text-[var(--hero-ink)]"
                         : "bg-[var(--pos-soft)] text-[var(--pos)]"
@@ -683,26 +714,34 @@ export default function LessonWorkspace({
             aria-label="التنقل بين الدروس"
             className="grid grid-cols-1 gap-3 border-t border-[var(--line)] pt-6 sm:grid-cols-2"
           >
-            {prevLesson ? (
+            {prevLesson && prevTitleParts ? (
               <Link
                 href={`/courses/${course.slug}/${prevLesson.id}`}
                 className="studio-card studio-card-hover group flex items-center gap-3 p-4"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] transition-colors group-hover:border-[var(--accent)] group-hover:bg-[var(--soft)] group-hover:text-[var(--accent)]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] transition-all group-hover:translate-x-0.5 group-hover:border-[var(--accent)] group-hover:bg-[var(--soft)] group-hover:text-[var(--accent)]">
                   <ArrowRight className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs text-[var(--muted)]">الدرس السابق</p>
                   <p className="truncate text-sm font-bold text-[var(--ink)] group-hover:text-[var(--accent)]">
-                    {prevLesson.title}
+                    {prevTitleParts.primary}
                   </p>
+                  {prevTitleParts.secondaryEn ? (
+                    <p
+                      dir="ltr"
+                      className="truncate text-right font-mono text-[11px] text-[var(--muted)]"
+                    >
+                      {prevTitleParts.secondaryEn}
+                    </p>
+                  ) : null}
                 </div>
               </Link>
             ) : (
               <div className="hidden sm:block" />
             )}
 
-            {nextLesson ? (
+            {nextLesson && nextTitleParts ? (
               <Link
                 href={`/courses/${course.slug}/${nextLesson.id}`}
                 className="studio-card studio-card-hover group flex items-center justify-between gap-3 p-4 text-end"
@@ -717,10 +756,18 @@ export default function LessonWorkspace({
                     ) : null}
                   </p>
                   <p className="truncate text-sm font-bold text-[var(--ink)] group-hover:text-[var(--accent)]">
-                    {nextLesson.title}
+                    {nextTitleParts.primary}
                   </p>
+                  {nextTitleParts.secondaryEn ? (
+                    <p
+                      dir="ltr"
+                      className="truncate text-left font-mono text-[11px] text-[var(--muted)]"
+                    >
+                      {nextTitleParts.secondaryEn}
+                    </p>
+                  ) : null}
                 </div>
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] transition-colors group-hover:border-[var(--accent)] group-hover:bg-[var(--soft)] group-hover:text-[var(--accent)]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] transition-all group-hover:-translate-x-0.5 group-hover:border-[var(--accent)] group-hover:bg-[var(--soft)] group-hover:text-[var(--accent)]">
                   <ArrowLeft className="h-4 w-4" />
                 </div>
               </Link>

@@ -72,20 +72,24 @@ export function LoginForm({ nextPath }: LoginFormProps) {
   }
 
   return (
-    <div className="w-full max-w-lg space-y-5">
+    <div className="atelier-enter w-full max-w-lg space-y-5">
       {/* Header */}
       <div className="text-center">
         <Link
           href="/"
-          className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--hero)] text-white shadow-[var(--shadow-pill)]"
+          className="relative mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--hero)] text-[var(--hero-ink)] shadow-[var(--shadow-pill)]"
         >
           <GraduationCap className="h-6 w-6" />
+          <span
+            aria-hidden="true"
+            className="absolute -left-0.5 -top-0.5 h-3 w-3 rounded-full bg-[var(--signal)] ring-2 ring-[var(--bg)]"
+          />
         </Link>
-        <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-[var(--ink)] sm:text-3xl">
+        <h1 className="mt-4 text-2xl font-bold tracking-tight text-[var(--ink)] sm:text-3xl">
           ملف الطالب
         </h1>
         <p className="mt-1.5 text-sm text-[var(--muted)]">
-          إعداد حسابك المحلي في 5 ثوانٍ لتخصيص استوديو مذاكرتك في{" "}
+          إعداد حسابك المحلي في 5 ثوانٍ لتخصيص مساحة مذاكرتك في{" "}
           <span className="font-bold text-[var(--ink)]">
             {SITE_CONFIG.arabicName}
           </span>
@@ -93,8 +97,14 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         </p>
       </div>
 
-      {/* Study Studio Paper Card */}
-      <div className="studio-card p-6 sm:p-7">
+      {/* Atelier Paper Card */}
+      <div className="studio-card monograph-card p-6 pr-7 sm:p-7 sm:pr-8">
+        <div
+          aria-hidden="true"
+          className="monograph-spine"
+          style={{ backgroundColor: "var(--signal)" }}
+        />
+
         {/* Local Privacy Notice */}
         <div className="mb-5 flex items-start gap-3 rounded-xl border border-[var(--pos)]/25 bg-[var(--pos-soft)] p-3.5 text-xs leading-relaxed text-[var(--pos)]">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
@@ -131,7 +141,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
           <div>
             <label
               htmlFor="student-name"
-              className="mb-2 block text-xs font-extrabold text-[var(--ink)]"
+              className="mb-2 block text-xs font-bold text-[var(--ink)]"
             >
               الاسم
             </label>
@@ -156,7 +166,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
 
           {/* Academic Year */}
           <div>
-            <span className="mb-2 flex items-center gap-1.5 text-xs font-extrabold text-[var(--ink)]">
+            <span className="mb-2 flex items-center gap-1.5 text-xs font-bold text-[var(--ink)]">
               <GraduationCap className="h-4 w-4 text-[var(--accent)]" />
               <span>الفرقة الدراسية</span>
             </span>
@@ -171,7 +181,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
                     aria-pressed={active}
                     className={`rounded-xl border px-3.5 py-2.5 text-xs font-bold transition-all ${
                       active
-                        ? "border-[var(--accent)] bg-[var(--soft)] text-[var(--accent)] shadow-[var(--shadow-pill)]"
+                        ? "border-[var(--hero)] bg-[var(--hero)] text-[var(--hero-ink)] shadow-[var(--shadow-pill)]"
                         : "border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] hover:border-[var(--line-strong)] hover:text-[var(--ink)]"
                     }`}
                   >
@@ -184,8 +194,8 @@ export function LoginForm({ nextPath }: LoginFormProps) {
 
           {/* Department */}
           <div>
-            <span className="mb-2 flex items-center gap-1.5 text-xs font-extrabold text-[var(--ink)]">
-              <Cpu className="h-4 w-4 text-[var(--pos)]" />
+            <span className="mb-2 flex items-center gap-1.5 text-xs font-bold text-[var(--ink)]">
+              <Cpu className="h-4 w-4 text-[var(--signal)]" />
               <span>القسم / التخصص</span>
             </span>
             <div className="grid grid-cols-2 gap-2.5">
@@ -199,7 +209,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
                     aria-pressed={active}
                     className={`flex items-center justify-between gap-2 rounded-xl border px-3.5 py-2.5 text-xs font-bold transition-all ${
                       active
-                        ? "border-[var(--pos)] bg-[var(--pos-soft)] text-[var(--pos)] shadow-[var(--shadow-pill)]"
+                        ? "border-[var(--signal)] bg-[var(--signal-soft)] text-[var(--signal)] shadow-[var(--shadow-pill)]"
                         : "border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] hover:border-[var(--line-strong)] hover:text-[var(--ink)]"
                     }`}
                   >
@@ -208,7 +218,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
                       dir="ltr"
                       className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] ${
                         active
-                          ? "bg-[var(--paper)]/80 text-[var(--pos)]"
+                          ? "bg-[var(--paper)]/85 text-[var(--signal)]"
                           : "bg-[var(--paper)] text-[var(--muted)]"
                       }`}
                     >
@@ -224,7 +234,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
           <div className="space-y-2.5 pt-2">
             <button
               type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--hero)] px-4 py-3 text-sm font-extrabold text-white shadow-[var(--shadow-pill)] transition-colors hover:bg-[var(--hero-deep)]"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--signal)] px-4 py-3 text-sm font-bold text-white shadow-[var(--shadow-pill)] transition-all hover:brightness-110"
             >
               <Save className="h-4 w-4" />
               <span>

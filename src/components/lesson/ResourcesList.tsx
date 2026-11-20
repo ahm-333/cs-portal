@@ -22,6 +22,7 @@ interface ResourceTypeStyle {
   label: string;
   Icon: ComponentType<{ className?: string }>;
   tintVar: string;
+  spineVar: string;
 }
 
 const RESOURCE_TYPE_STYLES: Record<ResourceTypeKey, ResourceTypeStyle> = {
@@ -29,31 +30,37 @@ const RESOURCE_TYPE_STYLES: Record<ResourceTypeKey, ResourceTypeStyle> = {
     label: "مقال / مرجع",
     Icon: BookOpen,
     tintVar: "var(--tint-blue)",
+    spineVar: "var(--spine-blue)",
   },
   video: {
     label: "فيديو إضافي",
     Icon: PlayCircle,
     tintVar: "var(--tint-pink)",
+    spineVar: "var(--spine-pink)",
   },
   tool: {
     label: "أداة تفاعلية",
     Icon: Wrench,
     tintVar: "var(--tint-sky)",
+    spineVar: "var(--spine-sky)",
   },
   sheet: {
     label: "ملخص / شيت",
     Icon: FileSpreadsheet,
     tintVar: "var(--tint-mint)",
+    spineVar: "var(--spine-mint)",
   },
   problem: {
     label: "مسألة برمجية",
     Icon: Code2,
     tintVar: "var(--tint-peach)",
+    spineVar: "var(--spine-peach)",
   },
   other: {
     label: "مصدر خارجي",
     Icon: Link2,
     tintVar: "var(--tint-purple)",
+    spineVar: "var(--spine-purple)",
   },
 };
 
@@ -99,8 +106,14 @@ export default function ResourcesList({ resources }: ResourcesListProps) {
             href={resource.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="studio-card studio-card-hover group flex flex-col justify-between p-5"
+            className="studio-card studio-card-hover monograph-card group flex flex-col justify-between p-5 ps-6"
           >
+            <div
+              aria-hidden="true"
+              className="monograph-spine"
+              style={{ backgroundColor: style.spineVar }}
+            />
+
             <div>
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div
@@ -135,7 +148,7 @@ export default function ResourcesList({ resources }: ResourcesListProps) {
               >
                 {hostname}
               </span>
-              <span className="inline-flex shrink-0 items-center gap-1 font-bold text-[var(--accent)]">
+              <span className="inline-flex shrink-0 items-center gap-1 font-bold text-[var(--accent)] transition-transform group-hover:-translate-x-0.5">
                 <span>فتح المصدر</span>
                 <ExternalLink className="h-3.5 w-3.5" />
               </span>

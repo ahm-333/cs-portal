@@ -219,7 +219,7 @@ export default function InteractiveViewer({
   if (sortedLabs.length === 0 || !activeLab) {
     return (
       <div className="studio-card flex flex-col items-center justify-center px-6 py-14 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--soft)] text-[var(--accent)]">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--signal-soft)] text-[var(--signal)]">
           <FlaskConical className="h-6 w-6" />
         </div>
         <h3 className="text-base font-bold text-[var(--ink)]">
@@ -269,8 +269,8 @@ export default function InteractiveViewer({
                 <span
                   className={`flex h-5 w-5 items-center justify-center rounded-full font-mono text-[11px] font-bold ${
                     isSelected
-                      ? "bg-white/20 text-[var(--hero-ink)]"
-                      : "bg-[var(--soft)] text-[var(--accent)]"
+                      ? "bg-[var(--signal)] text-white"
+                      : "bg-[var(--signal-soft)] text-[var(--signal)]"
                   }`}
                 >
                   {idx + 1}
@@ -293,10 +293,10 @@ export default function InteractiveViewer({
               : "studio-card overflow-hidden shadow-[var(--shadow-pill)]"
         }
       >
-        {/* Study Studio Top Toolbar */}
+        {/* Swiss Atelier Top Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] bg-[var(--paper)] px-4 py-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--soft)] text-[var(--accent)]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[var(--signal)]/30 bg-[var(--signal-soft)] text-[var(--signal)]">
               <FlaskConical className="h-4 w-4" />
             </div>
             <div className="min-w-0">
@@ -339,7 +339,7 @@ export default function InteractiveViewer({
               type="button"
               onClick={toggleFullscreen}
               title={isFullscreen ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--soft)] px-3 py-1.5 text-xs font-bold text-[var(--accent)] transition-colors hover:bg-[var(--soft-hover)]"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--accent)]/35 bg-[var(--soft)] px-3 py-1.5 text-xs font-bold text-[var(--accent)] transition-colors hover:bg-[var(--soft-hover)]"
             >
               {isFullscreen ? (
                 <>
@@ -367,7 +367,7 @@ export default function InteractiveViewer({
               className="flex flex-col items-center justify-center gap-3 p-8 text-center"
               style={{ height: isFullscreen ? "100%" : iframeHeight }}
             >
-              <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)]" />
+              <Loader2 className="h-8 w-8 animate-spin text-[var(--signal)]" />
               <p className="text-sm font-bold text-[var(--ink)]">
                 جاري تحميل المعمل التفاعلي...
               </p>

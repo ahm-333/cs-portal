@@ -66,7 +66,7 @@ export function CourseFilters({
 
   return (
     <div className="space-y-6">
-      {/* Paper Filter Bar */}
+      {/* Swiss Segmented Filter Bar */}
       <div className="studio-card p-4 sm:p-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           {/* Search Input */}
@@ -76,7 +76,7 @@ export function CourseFilters({
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ابحث باسم المادة (مثلاً: Data Structures، خوارزميات، OS...)"
+              placeholder="ابحث باسم المقرر (مثلاً: Data Structures، خوارزميات، OS...)"
               aria-label="ابحث عن مادة دراسية"
               className="w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] py-2.5 pl-10 pr-10 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] transition-colors focus:border-[var(--accent)] focus:bg-[var(--paper)] focus:outline-none"
             />
@@ -110,8 +110,8 @@ export function CourseFilters({
                     aria-pressed={active}
                     className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
                       active
-                        ? "bg-[var(--hero)] text-white shadow-[var(--shadow-pill)]"
-                        : "border border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--ink)]"
+                        ? "bg-[var(--hero)] text-[var(--hero-ink)] shadow-[var(--shadow-pill)]"
+                        : "border border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] hover:border-[var(--line-strong)] hover:text-[var(--ink)]"
                     }`}
                   >
                     {option.label}
@@ -137,8 +137,8 @@ export function CourseFilters({
                     aria-pressed={active}
                     className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
                       active
-                        ? "border border-[var(--pos)] bg-[var(--pos-soft)] text-[var(--pos)] shadow-[var(--shadow-pill)]"
-                        : "border border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] hover:border-[var(--pos)] hover:text-[var(--ink)]"
+                        ? "border border-[var(--signal)] bg-[var(--signal-soft)] text-[var(--signal)] shadow-[var(--shadow-pill)]"
+                        : "border border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] hover:border-[var(--line-strong)] hover:text-[var(--ink)]"
                     }`}
                   >
                     {option.label}
@@ -160,14 +160,14 @@ export function CourseFilters({
             <strong className="font-mono text-[var(--ink)]">
               {courses.length}
             </strong>{" "}
-            مادة
+            مقرر
           </span>
 
           {hasActiveFilters && (
             <button
               type="button"
               onClick={resetFilters}
-              className="inline-flex items-center gap-1.5 font-bold text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
+              className="inline-flex items-center gap-1.5 font-bold text-[var(--signal)] transition-colors hover:brightness-110"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>إعادة ضبط الفلاتر</span>
@@ -194,22 +194,22 @@ export function CourseFilters({
           </span>
           <h3 className="mt-4 text-lg font-bold text-[var(--ink)]">
             {courses.length === 0
-              ? "لا توجد مواد منشورة حالياً"
-              : "لا توجد مواد مطابقة للبحث"}
+              ? "لا توجد مقررات منشورة حالياً"
+              : "لا توجد مقررات مطابقة للبحث"}
           </h3>
           <p className="mt-1.5 max-w-md text-sm text-[var(--muted)]">
             {courses.length === 0
-              ? "سيتم إضافة المواد الدراسية قريباً. تابعنا لمعرفة أحدث الشروحات والمعامل التفاعلية."
-              : "جرّب تغيير كلمات البحث أو اختيار فرقة دراسية أخرى للوصول للمواد المتاحة."}
+              ? "سيتم إضافة المقررات الدراسية قريباً. تابعنا لمعرفة أحدث الشروحات والمعامل التفاعلية."
+              : "جرّب تغيير كلمات البحث أو اختيار فرقة دراسية أخرى للوصول للمقررات المتاحة."}
           </p>
           {hasActiveFilters && (
             <button
               type="button"
               onClick={resetFilters}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[var(--soft)] px-4 py-2 text-sm font-bold text-[var(--accent)] transition-colors hover:bg-[var(--soft-hover)]"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[var(--signal-soft)] px-4 py-2 text-sm font-bold text-[var(--signal)] transition-opacity hover:opacity-90"
             >
               <RotateCcw className="h-4 w-4" />
-              <span>عرض جميع المواد</span>
+              <span>عرض جميع المقررات</span>
             </button>
           )}
         </div>

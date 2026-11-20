@@ -22,6 +22,7 @@ interface ReadingComfortBarProps {
   courseSlug: string;
   lessonNumber: number;
   tintVar: string;
+  spineVar: string;
   nextLesson: {
     id: string;
     title: string;
@@ -43,6 +44,7 @@ export default function ReadingComfortBar({
   courseSlug,
   lessonNumber,
   tintVar,
+  spineVar,
   nextLesson,
 }: ReadingComfortBarProps) {
   const themeMode = useThemeMode();
@@ -50,33 +52,39 @@ export default function ReadingComfortBar({
 
   const canDecrease = fontScale > 85;
   const canIncrease = fontScale < 125;
+  const formattedLessonNum = String(lessonNumber).padStart(2, "0");
 
   return (
     <div
       aria-label="شريط راحة القراءة والتحكم بالدرس"
       className="studio-card sticky top-[76px] z-30 flex flex-wrap items-center justify-between gap-2.5 bg-[var(--paper)]/95 px-3 py-2.5 backdrop-blur-md shadow-[var(--shadow-pill)] sm:px-4"
     >
-      {/* Right side (RTL start): Back to course + Lesson number pill */}
+      {/* Right side (RTL start): Back to course + Architectural Lesson Index Pill */}
       <div className="flex items-center gap-2">
         <Link
           href={`/courses/${courseSlug}`}
-          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-1.5 text-xs font-bold text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--soft)] hover:text-[var(--accent)]"
+          className="group inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-1.5 text-xs font-bold text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--soft)] hover:text-[var(--accent)]"
         >
-          <ArrowRight className="h-3.5 w-3.5" />
-          <span>الرجوع للمقرر</span>
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          <span className="whitespace-nowrap">الرجوع للمقرر</span>
         </Link>
 
         <span
           dir="ltr"
           style={{ backgroundColor: tintVar }}
-          className="inline-flex min-h-[36px] items-center justify-center rounded-xl border border-[var(--line)] px-2.5 py-1 font-mono text-xs font-extrabold text-[var(--tint-ink)]"
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-[var(--line)] px-2.5 py-1 font-mono text-xs font-bold text-[var(--tint-ink)]"
           title={`الدرس رقم ${lessonNumber}`}
         >
-          L{lessonNumber}
+          <span
+            aria-hidden="true"
+            style={{ backgroundColor: spineVar }}
+            className="h-2 w-2 rounded-full"
+          />
+          <span>L{formattedLessonNum}</span>
         </span>
       </div>
 
-      {/* Center / Left controls: Font scaler, spacing toggle, 3-mode theme switcher, next lesson */}
+      {/* Left side (RTL end): Font scaler, spacing toggle, 3-mode theme switcher, next lesson */}
       <div className="flex flex-wrap items-center gap-2">
         {/* Font size scaler */}
         <div
@@ -128,12 +136,14 @@ export default function ReadingComfortBar({
           aria-pressed={relaxedSpacing}
           className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-colors ${
             relaxedSpacing
-              ? "border-[var(--accent)] bg-[var(--soft)] text-[var(--accent)]"
+              ? "border-[var(--signal)]/50 bg-[var(--signal-soft)] text-[var(--signal)]"
               : "border-[var(--line)] bg-[var(--bg)] text-[var(--ink)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
           }`}
         >
           <AlignJustify className="h-3.5 w-3.5" />
-          <span>{relaxedSpacing ? "تباعد: مريح جداً" : "تباعد: عادي"}</span>
+          <span className="whitespace-nowrap">
+            {relaxedSpacing ? "تباعد: مريح جداً" : "تباعد: عادي"}
+          </span>
         </button>
 
         {/* Inline 3-way theme pill switcher */}
@@ -168,13 +178,13 @@ export default function ReadingComfortBar({
           <Link
             href={`/courses/${courseSlug}/${nextLesson.id}`}
             title={nextLesson.title}
-            className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl bg-[var(--hero)] px-3 py-1.5 text-xs font-bold text-[var(--hero-ink)] transition-colors hover:bg-[var(--hero-deep)]"
+            className="group inline-flex min-h-[36px] items-center gap-1.5 rounded-xl bg-[var(--hero)] px-3 py-1.5 text-xs font-bold text-[var(--hero-ink)] transition-colors hover:bg-[var(--hero-deep)]"
           >
-            <span>الدرس التالي</span>
+            <span className="whitespace-nowrap">الدرس التالي</span>
             {nextLesson.isLocked ? (
               <Lock className="h-3 w-3 opacity-90" />
             ) : (
-              <ArrowLeft className="h-3.5 w-3.5" />
+              <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
             )}
           </Link>
         ) : null}

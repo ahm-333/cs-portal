@@ -158,13 +158,20 @@ export function DashboardClient({
   return (
     <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-7 sm:px-6 sm:py-10 lg:px-8">
       {/* Page Header */}
-      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      <header className="atelier-enter flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div className="space-y-2">
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent)]">
-            <TrendingUp className="h-4 w-4" />
-            <span>كمّل رحلتك الدراسية</span>
-          </span>
-          <h1 className="text-2xl font-extrabold tracking-tight text-[var(--ink)] sm:text-3xl">
+          <div className="inline-flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              className="h-2 w-2 rounded-full bg-[var(--signal)]"
+            />
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent)]">
+              <TrendingUp className="h-3.5 w-3.5" />
+              <span>كمّل رحلتك الدراسية</span>
+            </span>
+          </div>
+
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--ink)] sm:text-3xl">
             {displayName ? `أهلاً بك، ${displayName}` : "لوحة مذاكرتي"}
           </h1>
 
@@ -174,7 +181,7 @@ export function DashboardClient({
                 <GraduationCap className="h-3.5 w-3.5 text-[var(--accent)]" />
                 <span>{getYearLabel(localProfile.year_level)}</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--pos-soft)] px-2.5 py-1 text-xs font-bold text-[var(--pos)]">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--signal-soft)] px-2.5 py-1 text-xs font-bold text-[var(--signal)]">
                 <Cpu className="h-3.5 w-3.5" />
                 <span dir="ltr" className="font-mono">
                   {localProfile.department}
@@ -182,7 +189,7 @@ export function DashboardClient({
               </span>
               <Link
                 href="/login"
-                className="inline-flex items-center gap-1 text-xs font-bold text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
+                className="inline-flex items-center gap-1 text-xs font-bold text-[var(--muted)] transition-colors hover:text-[var(--signal)]"
               >
                 <PencilLine className="h-3.5 w-3.5" />
                 <span>تعديل الملف</span>
@@ -190,7 +197,7 @@ export function DashboardClient({
             </div>
           ) : (
             <p className="text-sm text-[var(--muted)]">
-              تابع إنجازك في كل مادة، متوسط درجاتك في الكويزات، وأكمل مباشرة من
+              تابع إنجازك في كل مقرر، متوسط درجاتك في الكويزات، وأكمل مباشرة من
               حيث توقفت.
             </p>
           )}
@@ -200,7 +207,7 @@ export function DashboardClient({
           {!localProfile && (
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 rounded-xl bg-[var(--soft)] px-4 py-2.5 text-xs font-bold text-[var(--accent)] transition-colors hover:bg-[var(--soft-hover)]"
+              className="inline-flex items-center gap-2 rounded-xl bg-[var(--signal-soft)] px-4 py-2.5 text-xs font-bold text-[var(--signal)] transition-opacity hover:opacity-90"
             >
               <UserCircle2 className="h-4 w-4" />
               <span>إعداد ملف الطالب</span>
@@ -212,7 +219,7 @@ export function DashboardClient({
             className="inline-flex items-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--paper)] px-4 py-2.5 text-xs font-bold text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
           >
             <BookOpen className="h-4 w-4 text-[var(--accent)]" />
-            <span>تصفح كل المواد</span>
+            <span>تصفح كل المقررات</span>
           </Link>
         </div>
       </header>
@@ -235,7 +242,7 @@ export function DashboardClient({
           <div className="mt-3 flex items-baseline gap-2">
             <span
               dir="ltr"
-              className="font-mono text-3xl font-extrabold text-[var(--ink)]"
+              className="font-mono text-3xl font-bold text-[var(--ink)]"
             >
               {computed.totalCompletedLessons}
             </span>
@@ -257,14 +264,14 @@ export function DashboardClient({
             <span className="text-xs font-bold text-[var(--muted)]">
               متوسط درجات الكويزات
             </span>
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--soft)] text-[var(--accent)]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--signal-soft)] text-[var(--signal)]">
               <Award className="h-5 w-5" />
             </span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
             <span
               dir="ltr"
-              className="font-mono text-3xl font-extrabold text-[var(--ink)]"
+              className="font-mono text-3xl font-bold text-[var(--ink)]"
             >
               {computed.overallAverageQuizScore !== null
                 ? `${computed.overallAverageQuizScore}%`
@@ -285,21 +292,21 @@ export function DashboardClient({
         <div className="studio-card p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[var(--muted)]">
-              المواد الدراسية
+              المقررات الدراسية
             </span>
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--tint-sky)] text-[var(--accent)]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--tint-mint)] text-[var(--accent)]">
               <GraduationCap className="h-5 w-5" />
             </span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
             <span
               dir="ltr"
-              className="font-mono text-3xl font-extrabold text-[var(--ink)]"
+              className="font-mono text-3xl font-bold text-[var(--ink)]"
             >
               {activeCoursesCount}
             </span>
             <span className="text-xs font-semibold text-[var(--muted)]">
-              قيد المذاكرة من أصل {computed.courses.length} مادة
+              قيد المذاكرة من أصل {computed.courses.length} مقرر
             </span>
           </div>
           <p className="mt-3 text-xs text-[var(--muted)]">
@@ -311,15 +318,15 @@ export function DashboardClient({
         </div>
       </section>
 
-      {/* Per-Course Progress List */}
+      {/* Per-Course Monograph Progress List */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-extrabold text-[var(--ink)]">
-            تقدمك في المواد
+          <h2 className="text-xl font-bold text-[var(--ink)]">
+            تقدمك في المقررات
           </h2>
-          <span className="text-xs font-bold text-[var(--muted)]">
+          <span className="font-mono text-xs font-bold text-[var(--muted)]">
             {computed.courses.length}{" "}
-            {computed.courses.length === 1 ? "مادة" : "مواد"}
+            {computed.courses.length === 1 ? "مقرر" : "مقررات"}
           </span>
         </div>
 
@@ -329,16 +336,17 @@ export function DashboardClient({
               <BookOpen className="h-7 w-7" />
             </span>
             <h3 className="mt-4 text-lg font-bold text-[var(--ink)]">
-              لا توجد مواد في لوحة مذاكرتك بعد
+              لا توجد مقررات في لوحة مذاكرتك بعد
             </h3>
             <p className="mt-1.5 max-w-md text-sm text-[var(--muted)]">
-              ابدأ بتصفح المواد الدراسية المتاحة واختر أول درس لتسجيل تقدمك هنا.
+              ابدأ بتصفح المقررات الدراسية المتاحة واختر أول درس لتسجيل تقدمك
+              هنا.
             </p>
             <Link
               href="/#courses"
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[var(--hero)] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[var(--hero-deep)]"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[var(--signal)] px-5 py-2.5 text-sm font-bold text-white transition-all hover:brightness-110"
             >
-              <span>تصفح المواد</span>
+              <span>تصفح المقررات</span>
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </div>
@@ -368,51 +376,56 @@ export function DashboardClient({
                 item.completedLessons === 0
                   ? "ابدأ المذاكرة"
                   : percent >= 100
-                    ? "مراجعة المادة"
+                    ? "مراجعة المقرر"
                     : "أكمل من حيث توقفت";
 
               return (
                 <article
                   key={item.course.id}
-                  className="studio-card studio-card-hover flex flex-col justify-between overflow-hidden"
+                  className="studio-card studio-card-hover monograph-card flex flex-col justify-between"
                 >
-                  {/* Pastel Header Strip */}
+                  {/* Editorial Spine */}
                   <div
-                    style={{
-                      backgroundColor: visual.tintVar,
-                      color: "var(--tint-ink)",
-                    }}
-                    className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] px-5 py-3.5"
-                  >
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span
-                        dir="ltr"
-                        className="rounded-md bg-[var(--paper)]/85 px-2 py-0.5 font-mono text-[11px] font-extrabold text-[var(--ink)]"
-                      >
-                        {visual.code}
-                      </span>
-                      <span className="rounded-md bg-[var(--paper)]/65 px-2 py-0.5 text-[11px] font-bold text-[var(--ink)]">
-                        {getYearLabel(item.course.year_level)} •{" "}
-                        {getTermLabel(item.course.term)}
-                      </span>
-                    </div>
-
-                    {!item.course.is_paid ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--pos-soft)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--pos)]">
-                        <Sparkles className="h-3 w-3" />
-                        <span>مجاني</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--warn-soft)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--warn)]">
-                        <Lock className="h-3 w-3" />
-                        <span>{item.course.price} ج.م</span>
-                      </span>
-                    )}
-                  </div>
+                    aria-hidden="true"
+                    className="monograph-spine"
+                    style={{ backgroundColor: visual.spineVar }}
+                  />
 
                   {/* Body */}
-                  <div className="flex flex-1 flex-col p-5">
-                    <h3 className="text-lg font-extrabold text-[var(--ink)]">
+                  <div className="flex flex-1 flex-col p-5 pr-6">
+                    {/* Top Row */}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          dir="ltr"
+                          style={{
+                            backgroundColor: visual.tintVar,
+                            color: "var(--tint-ink)",
+                          }}
+                          className="rounded-lg border border-[var(--line)] px-2.5 py-0.5 font-mono text-[11px] font-bold"
+                        >
+                          {visual.code}
+                        </span>
+                        <span className="text-[11px] font-semibold text-[var(--muted)]">
+                          {getYearLabel(item.course.year_level)} ·{" "}
+                          {getTermLabel(item.course.term)}
+                        </span>
+                      </div>
+
+                      {!item.course.is_paid ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--pos-soft)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--pos)]">
+                          <Sparkles className="h-3 w-3" />
+                          <span>مجاني</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--warn-soft)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--warn)]">
+                          <Lock className="h-3 w-3" />
+                          <span>{item.course.price} ج.م</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="mt-3 text-lg font-bold text-[var(--ink)]">
                       <Link
                         href={`/courses/${item.course.slug}`}
                         className="transition-colors hover:text-[var(--accent)]"
@@ -422,12 +435,12 @@ export function DashboardClient({
                         </span>
                       </Link>
                     </h3>
-                    <p className="mt-0.5 text-xs font-bold text-[var(--muted)]">
+                    <p className="mt-0.5 text-xs font-semibold text-[var(--muted)]">
                       {visual.arabicSubtitle}
                     </p>
 
                     {/* Progress Bar */}
-                    <div className="mt-4 space-y-2 rounded-xl border border-[var(--line)] bg-[var(--bg)] p-3.5">
+                    <div className="mt-4 space-y-2 rounded-xl border border-[var(--line)] bg-[var(--bg)]/80 p-3.5">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-[var(--ink)]">
                           {item.completedLessons} من {item.totalLessons} دروس
@@ -435,30 +448,26 @@ export function DashboardClient({
                         </span>
                         <span
                           dir="ltr"
-                          className={`font-mono font-extrabold ${
-                            percent === 100
-                              ? "text-[var(--pos)]"
-                              : "text-[var(--accent)]"
-                          }`}
+                          className="font-mono font-bold text-[var(--ink)]"
                         >
                           {percent}%
                         </span>
                       </div>
                       <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--line)]">
                         <div
-                          className={`h-full rounded-full transition-all duration-300 ${
-                            percent === 100
-                              ? "bg-[var(--pos)]"
-                              : "bg-[var(--accent)]"
-                          }`}
-                          style={{ width: `${percent}%` }}
+                          className="h-full rounded-full transition-all duration-300"
+                          style={{
+                            width: `${percent}%`,
+                            backgroundColor:
+                              percent === 100 ? "var(--pos)" : visual.spineVar,
+                          }}
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Card Footer */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--bg)]/55 px-5 py-3.5">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--bg)]/45 px-5 py-3.5 pr-6">
                     <div className="text-xs font-bold text-[var(--muted)]">
                       {item.averageQuizScore !== null ? (
                         <span className="inline-flex items-center gap-1.5 text-[var(--pos)]">
@@ -479,7 +488,7 @@ export function DashboardClient({
                       </Link>
                       <Link
                         href={resumeHref}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--hero)] px-3.5 py-2 text-xs font-extrabold text-white transition-colors hover:bg-[var(--hero-deep)]"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--hero)] px-3.5 py-2 text-xs font-bold text-[var(--hero-ink)] transition-colors hover:bg-[var(--hero-deep)]"
                       >
                         <Play className="h-3.5 w-3.5 fill-current" />
                         <span>{ctaText}</span>

@@ -11,7 +11,7 @@ import {
   PlayCircle,
   Trophy,
 } from "lucide-react";
-import { getCourseVisualMeta } from "@/lib/courseTheme";
+import { getCourseVisualMeta, splitBilingualTitle } from "@/lib/courseTheme";
 import type { Course, LessonSummaryItem, UserProgress } from "@/types/database";
 
 interface LessonSidebarProps {
@@ -88,8 +88,15 @@ export default function LessonSidebar({
   return (
     <aside
       aria-label="فهرس دروس المادة"
-      className="studio-card flex flex-col overflow-hidden"
+      className="studio-card relative flex flex-col overflow-hidden"
     >
+      {/* Editorial top spine band */}
+      <div
+        aria-hidden="true"
+        style={{ backgroundColor: visual.spineVar }}
+        className="h-1 w-full"
+      />
+
       {/* Course summary + progress */}
       <div className="border-b border-[var(--line)] p-4">
         <Link
@@ -107,17 +114,24 @@ export default function LessonSidebar({
             <div className="flex items-center gap-1.5">
               <span
                 dir="ltr"
-                className="rounded-md bg-[var(--soft)] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[var(--accent)]"
+                style={{ backgroundColor: visual.tintVar }}
+                className="rounded-md px-1.5 py-0.5 font-mono text-[10px] font-bold text-[var(--tint-ink)]"
               >
                 {visual.code}
               </span>
-              <span className="text-[11px] font-medium text-[var(--muted)]">
-                فهرس المادة
+              <span className="font-mono text-[10px] font-semibold text-[var(--muted)]">
+                #{visual.monographNumber}
               </span>
             </div>
             <h2 className="mt-0.5 truncate text-sm font-bold leading-snug">
-              {course.title}
+              {visual.arabicSubtitle}
             </h2>
+            <p
+              dir="ltr"
+              className="truncate text-right font-mono text-[11px] text-[var(--muted)]"
+            >
+              {visual.englishTitle}
+            </p>
           </div>
         </Link>
 
@@ -126,14 +140,18 @@ export default function LessonSidebar({
             <span className="text-[var(--muted)]">
               أنجزت {completedCount} من {sortedLessons.length} دروس
             </span>
-            <span className="font-bold text-[var(--pos)]">
+            <span className="font-mono font-bold text-[var(--pos)]">
               {progressPercent}%
             </span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--soft)]">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--soft)]">
             <div
-              className="h-full rounded-full bg-[var(--pos)] transition-all duration-300"
-              style={{ width: `${progressPercent}%` }}
+              className="h-full rounded-full transition-all duration-300"
+              style={{
+                width: `${progressPercent}%`,
+                backgroundColor:
+                  progressPercent === 100 ? "var(--pos)" : visual.spineVar,
+              }}
             />
           </div>
         </div>
@@ -158,7 +176,7 @@ export default function LessonSidebar({
                 <span className="line-clamp-2 leading-relaxed">
                   {section.sectionTitle}
                 </span>
-                <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-[var(--muted)]">
+                <span className="flex shrink-0 items-center gap-1.5 font-mono text-[11px] font-semibold text-[var(--muted)]">
                   <span>
                     {sectionCompleted}/{section.items.length}
                   </span>
@@ -178,6 +196,9 @@ export default function LessonSidebar({
                     const isCompleted = Boolean(progress?.is_completed);
                     const isItemLocked =
                       course.is_paid && !item.is_free_preview && !isEnrolled;
+                    const { primary, secondaryEn } = splitBilingualTitle(
+                      item.title
+                    );
 
                     return (
                       <li key={item.id}>
@@ -187,14 +208,14 @@ export default function LessonSidebar({
                           aria-current={isActive ? "page" : undefined}
                           className={`group relative flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-sm transition-all ${
                             isActive
-                              ? "border-[var(--accent)]/40 bg-[var(--soft)] text-[var(--accent)]"
+                              ? "border-[var(--line-strong)] bg-[var(--soft)] text-[var(--ink)]"
                               : "border-transparent text-[var(--ink)] hover:border-[var(--line)] hover:bg-[var(--bg)]"
                           }`}
                         >
                           {isActive ? (
                             <span
                               aria-hidden="true"
-                              className="absolute inset-y-2 start-0 w-1 rounded-e-full bg-[var(--accent)]"
+                              className="absolute inset-y-2 start-0 w-[3px] rounded-e-full bg-[var(--signal)]"
                             />
                           ) : null}
 
@@ -204,7 +225,7 @@ export default function LessonSidebar({
                             ) : isItemLocked ? (
                               <Lock className="h-4 w-4 text-[var(--warn)]" />
                             ) : isActive ? (
-                              <PlayCircle className="h-4 w-4 text-[var(--accent)]" />
+                              <PlayCircle className="h-4 w-4 text-[var(--signal)]" />
                             ) : (
                               <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[var(--line-strong)] font-mono text-[10px] font-bold text-[var(--muted)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)]">
                                 {item.order_index}
@@ -215,13 +236,24 @@ export default function LessonSidebar({
                           <div className="min-w-0 flex-1">
                             <p
                               className={`leading-snug ${
-                                isActive ? "font-bold" : "font-medium"
+                                isActive
+                                  ? "font-bold text-[var(--accent)]"
+                                  : "font-medium"
                               }`}
                             >
-                              {item.title}
+                              {primary}
                             </p>
 
-                            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--muted)]">
+                            {secondaryEn ? (
+                              <p
+                                dir="ltr"
+                                className="mt-0.5 truncate text-right font-mono text-[11px] text-[var(--muted)]"
+                              >
+                                {secondaryEn}
+                              </p>
+                            ) : null}
+
+                            <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--muted)]">
                               {item.duration_minutes ? (
                                 <span className="inline-flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
@@ -237,7 +269,7 @@ export default function LessonSidebar({
 
                               {progress?.best_quiz_score !== null &&
                               progress?.best_quiz_score !== undefined ? (
-                                <span className="inline-flex items-center gap-0.5 rounded-md bg-[var(--soft)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--accent)]">
+                                <span className="inline-flex items-center gap-0.5 rounded-md bg-[var(--signal-soft)] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[var(--signal)]">
                                   <Trophy className="h-2.5 w-2.5" />
                                   <span>{progress.best_quiz_score}%</span>
                                 </span>

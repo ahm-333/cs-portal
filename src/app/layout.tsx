@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Alexandria, JetBrains_Mono } from "next/font/google";
+import { IBM_Plex_Sans_Arabic, JetBrains_Mono } from "next/font/google";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 import { SITE_CONFIG } from "@/lib/config";
@@ -7,10 +7,10 @@ import { Navbar } from "@/components/layout/Navbar";
 import { AppNavRail } from "@/components/layout/AppNavRail";
 import { Footer } from "@/components/layout/Footer";
 
-const alexandria = Alexandria({
+const ibmPlexArabic = IBM_Plex_Sans_Arabic({
   subsets: ["arabic", "latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-alexandria",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-ibm-arabic",
   display: "swap",
 });
 
@@ -70,8 +70,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f6fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#171a2c" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f4ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d1114" },
   ],
 };
 
@@ -86,16 +86,16 @@ export default function RootLayout({
       dir="rtl"
       data-theme="light"
       suppressHydrationWarning
-      className={`${alexandria.variable} ${jetbrainsMono.variable}`}
+      className={`${ibmPlexArabic.variable} ${jetbrainsMono.variable}`}
     >
       <head>
         {/* Static anti-flash theme bootstrap script — reads user preference before paint */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--ink)] font-sans antialiased selection:bg-[var(--soft)] selection:text-[var(--accent)]">
+      <body className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--ink)] font-sans antialiased selection:bg-[var(--signal-soft)] selection:text-[var(--signal)]">
         <Navbar />
         <AppNavRail />
-        <div className="flex min-h-[calc(100vh-72px)] flex-1 flex-col pb-20 lg:pb-0 lg:pr-[224px]">
+        <div className="atelier-canvas flex min-h-[calc(100vh-72px)] flex-1 flex-col pb-20 lg:pb-0 lg:pr-[224px]">
           <main className="flex flex-1 flex-col">{children}</main>
           <Footer />
         </div>
