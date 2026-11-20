@@ -16,14 +16,18 @@ import {
   ChevronLeft,
   ClipboardCheck,
   Clock,
+  Eye,
+  EyeOff,
   FileText,
   FlaskConical,
   Home,
   ListTree,
   Lock,
+  PlaySquare,
   Trophy,
   X,
 } from "lucide-react";
+import { saveLastLesson } from "@/components/course/lastLessonStore";
 import { useReadingPrefs } from "@/components/layout/themeStore";
 import { getCourseVisualMeta, splitBilingualTitle } from "@/lib/courseTheme";
 import type {
@@ -168,6 +172,8 @@ export default function LessonWorkspace({
   const [activeTab, setActiveTab] = useState<StudyTab>("summary");
   const [hasOpenedLab, setHasOpenedLab] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+  const [videoCollapsed, setVideoCollapsed] = useState(false);
   const [optimisticOverrides, setOptimisticOverrides] = useState<
     Record<string, UserProgress>
   >({});
@@ -220,6 +226,25 @@ export default function LessonWorkspace({
 
     return merged;
   }, [initialProgressMap, isGuestMode, rawLocalProgress, optimisticOverrides]);
+
+  // Track last visited lesson for the smart "كمّل من حيث وقفت" Home banner
+  useEffect(() => {
+    saveLastLesson({
+      slug: course.slug,
+      courseTitle: visual.arabicSubtitle,
+      courseCode: visual.code,
+      lessonId: lesson.id,
+      lessonTitle: lessonTitleParts.primary,
+      sectionTitle: lesson.section_title,
+    });
+  }, [
+    course.slug,
+    visual.arabicSubtitle,
+    visual.code,
+    lesson.id,
+    lessonTitleParts.primary,
+    lesson.section_title,
+  ]);
 
   // Close mobile drawer on Escape
   useEffect(() => {
@@ -354,6 +379,8 @@ export default function LessonWorkspace({
         lessonNumber={lessonNumber}
         tintVar={visual.tintVar}
         spineVar={visual.spineVar}
+        focusMode={focusMode}
+        onToggleFocusMode={() => setFocusMode((prev) => !prev)}
         nextLesson={
           nextLesson
             ? {
@@ -426,18 +453,26 @@ export default function LessonWorkspace({
         </div>
       ) : null}
 
-      {/* Main 2-column study grid */}
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[290px_minmax(0,1fr)] xl:grid-cols-[310px_minmax(0,1fr)]">
-        {/* Desktop sticky sidebar */}
-        <div className="hidden lg:sticky lg:top-[142px] lg:block lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto">
-          <LessonSidebar
-            course={course}
-            lessons={sortedLessons}
-            activeLessonId={lesson.id}
-            progressMap={progressMap}
-            isEnrolled={isEnrolled}
-          />
-        </div>
+      {/* Main study layout (2-column or centered full-width in Focus Mode) */}
+      <div
+        className={
+          focusMode
+            ? "mx-auto max-w-4xl space-y-6"
+            : "grid grid-cols-1 items-start gap-6 lg:grid-cols-[290px_minmax(0,1fr)] xl:grid-cols-[310px_minmax(0,1fr)]"
+        }
+      >
+        {/* Desktop sticky sidebar (hidden in Focus Mode) */}
+        {!focusMode ? (
+          <div className="hidden lg:sticky lg:top-[142px] lg:block lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto">
+            <LessonSidebar
+              course={course}
+              lessons={sortedLessons}
+              activeLessonId={lesson.id}
+              progressMap={progressMap}
+              isEnrolled={isEnrolled}
+            />
+          </div>
+        ) : null}
 
         {/* Main study column */}
         <div className="min-w-0 space-y-6">
@@ -527,12 +562,41 @@ export default function LessonWorkspace({
             </div>
           </header>
 
-          {/* Video Player */}
-          <VideoPlayer
-            provider={lesson.video_provider}
-            videoId={lesson.video_id}
-            title={lesson.title}
-          />
+          {/* Collapsible Video Player (visible by default, 1-click hide for reading/lab focus) */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between gap-2 px-1">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--muted)]">
+                <PlaySquare className="h-3.5 w-3.5 text-[var(--accent)]" />
+                <span>فيديو الشرح</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setVideoCollapsed((prev) => !prev)}
+                aria-expanded={!videoCollapsed}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--line)] bg-[var(--paper)] px-2.5 py-1 text-[11px] font-bold text-[var(--muted)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              >
+                {videoCollapsed ? (
+                  <>
+                    <Eye className="h-3.5 w-3.5" />
+                    <span>إظهار الفيديو</span>
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="h-3.5 w-3.5" />
+                    <span>إخفاء الفيديو للقراءة</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {!videoCollapsed ? (
+              <VideoPlayer
+                provider={lesson.video_provider}
+                videoId={lesson.video_id}
+                title={lesson.title}
+              />
+            ) : null}
+          </div>
 
           {/* 4-Tab Architectural Workbench Bar */}
           <section aria-label="أدوات مذاكرة الدرس" className="space-y-4">

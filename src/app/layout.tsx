@@ -5,6 +5,7 @@ import "./globals.css";
 import { SITE_CONFIG } from "@/lib/config";
 import { Navbar } from "@/components/layout/Navbar";
 import { AppNavRail } from "@/components/layout/AppNavRail";
+import { MainShell } from "@/components/layout/MainShell";
 import { Footer } from "@/components/layout/Footer";
 
 const ibmPlexArabic = IBM_Plex_Sans_Arabic({
@@ -70,8 +71,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f4ef" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d1114" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f6f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c0f12" },
   ],
 };
 
@@ -95,10 +96,10 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--ink)] font-sans antialiased selection:bg-[var(--signal-soft)] selection:text-[var(--signal)]">
         <Navbar />
         <AppNavRail />
-        <div className="atelier-canvas flex min-h-[calc(100vh-72px)] flex-1 flex-col pb-20 lg:pb-0 lg:pr-[224px]">
+        <MainShell>
           <main className="flex flex-1 flex-col">{children}</main>
           <Footer />
-        </div>
+        </MainShell>
       </body>
     </html>
   );

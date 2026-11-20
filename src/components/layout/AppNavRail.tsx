@@ -2,15 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  BookOpen,
-  Compass,
-  GraduationCap,
-  Sparkles,
-  UserCircle2,
-} from "lucide-react";
-import { SITE_CONFIG } from "@/lib/config";
-import { useLocalProfile } from "@/components/layout/localProfile";
+import { BookOpen, Compass, Terminal } from "lucide-react";
+import { isLessonPathname } from "@/components/layout/MainShell";
 
 const RAIL_ITEMS = [
   {
@@ -25,24 +18,15 @@ const RAIL_ITEMS = [
     subtitle: "التقدم والكويزات",
     icon: Compass,
   },
-  {
-    href: "/login",
-    label: "ملف الطالب",
-    subtitle: "الاسم والفرقة",
-    icon: UserCircle2,
-  },
 ] as const;
-
-function getYearLabel(yearLevel: number): string {
-  return (
-    SITE_CONFIG.years.find((y) => y.value === yearLevel)?.label ??
-    `الفرقة ${yearLevel}`
-  );
-}
 
 export function AppNavRail() {
   const pathname = usePathname();
-  const profile = useLocalProfile();
+
+  // Auto-hide the global navigation rail inside Lesson pages for distraction-free study
+  if (isLessonPathname(pathname)) {
+    return null;
+  }
 
   const isActive = (href: string): boolean => {
     if (href === "/") {
@@ -65,7 +49,7 @@ export function AppNavRail() {
               dir="ltr"
               className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]"
             >
-              ATELIER // NAV
+              CS // WORKSPACE
             </p>
           </div>
 
@@ -80,13 +64,13 @@ export function AppNavRail() {
                   className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all ${
                     active
                       ? "border-r-[3px] border-[var(--signal)] bg-[var(--paper)] font-bold text-[var(--ink)] shadow-[var(--shadow-pill)]"
-                      : "border-r-[3px] border-transparent text-[var(--muted)] hover:bg-[var(--paper)]/65 hover:text-[var(--ink)]"
+                      : "border-r-[3px] border-transparent text-[var(--muted)] hover:bg-[var(--paper)]/70 hover:text-[var(--ink)]"
                   }`}
                 >
                   <span
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
                       active
-                        ? "bg-[var(--signal-soft)] text-[var(--signal)]"
+                        ? "bg-[var(--signal-soft)] text-[var(--accent)]"
                         : "bg-[var(--soft)]/80 text-[var(--muted)] group-hover:text-[var(--ink)]"
                     }`}
                   >
@@ -106,42 +90,24 @@ export function AppNavRail() {
           </nav>
         </div>
 
-        {/* Bottom Profile / Atelier Note */}
+        {/* Quiet Study Mode Tip (no duplicate profile CTA) */}
         <div className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-3.5">
-          {profile ? (
-            <Link href="/login" className="block space-y-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-[var(--ink)]">
-                <GraduationCap className="h-4 w-4 shrink-0 text-[var(--accent)]" />
-                <span className="truncate">{profile.full_name}</span>
-              </div>
-              <div className="flex items-center justify-between text-[11px] text-[var(--muted)]">
-                <span>{getYearLabel(profile.year_level)}</span>
-                <span
-                  dir="ltr"
-                  className="rounded-md bg-[var(--signal-soft)] px-1.5 py-0.5 font-mono font-bold text-[var(--signal)]"
-                >
-                  {profile.department}
-                </span>
-              </div>
-            </Link>
-          ) : (
-            <Link href="/login" className="block space-y-1.5">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--signal)]">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>خصّص مساحتك</span>
-              </div>
-              <p className="text-[11px] leading-relaxed text-[var(--muted)]">
-                أضف اسمك وفرقتك في 5 ثوانٍ لتخصيص لوحة مذاكرتك.
-              </p>
-            </Link>
-          )}
+          <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--ink)]">
+            <Terminal className="h-3.5 w-3.5 text-[var(--accent)]" />
+            <span>نصيحة مذاكرة</span>
+          </div>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--muted)]">
+            استخدم <strong className="text-[var(--ink)]">مؤقت التركيز</strong> مع{" "}
+            <strong className="text-[var(--ink)]">وضع القراءة</strong> لجلسات
+            مذاكرة هادئة بدون إجهاد.
+          </p>
         </div>
       </aside>
 
       {/* Mobile Sticky Bottom Tab Bar */}
       <nav
         aria-label="التنقل السفلي"
-        className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-[var(--line)] bg-[var(--rail)]/95 px-2 backdrop-blur-md lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-[var(--line)] bg-[var(--rail)]/95 px-4 backdrop-blur-md lg:hidden"
       >
         {RAIL_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = isActive(href);
@@ -150,7 +116,7 @@ export function AppNavRail() {
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`relative flex min-w-[88px] flex-col items-center justify-center gap-1 rounded-xl px-3 py-1.5 text-[11px] transition-colors ${
+              className={`relative flex min-w-[120px] flex-col items-center justify-center gap-1 rounded-xl px-4 py-1.5 text-xs transition-colors ${
                 active
                   ? "bg-[var(--paper)] font-bold text-[var(--ink)] shadow-[var(--shadow-pill)]"
                   : "font-medium text-[var(--muted)] hover:text-[var(--ink)]"
@@ -159,11 +125,11 @@ export function AppNavRail() {
               {active && (
                 <span
                   aria-hidden="true"
-                  className="absolute top-0 h-[2.5px] w-8 rounded-full bg-[var(--signal)]"
+                  className="absolute top-0 h-[2.5px] w-10 rounded-full bg-[var(--signal)]"
                 />
               )}
               <Icon
-                className={`h-4 w-4 ${active ? "text-[var(--signal)]" : ""}`}
+                className={`h-4 w-4 ${active ? "text-[var(--accent)]" : ""}`}
               />
               <span>{label}</span>
             </Link>

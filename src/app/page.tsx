@@ -2,8 +2,12 @@ import Link from "next/link";
 import {
   ArrowDown,
   ArrowLeft,
+  Binary,
+  BookOpen,
   Compass,
+  Cpu,
   FlaskConical,
+  GitBranch,
   GraduationCap,
   Sparkles,
 } from "lucide-react";
@@ -11,7 +15,15 @@ import { getCourseVisualMeta } from "@/lib/courseTheme";
 import { getCourseDetailBySlug, getPublishedCourses } from "@/lib/data";
 import { FounderBadge } from "@/components/layout/FounderBadge";
 import { HomeGreetingClient } from "@/components/course/HomeGreetingClient";
+import { ContinueStudyingBanner } from "@/components/course/ContinueStudyingBanner";
 import { CourseFilters } from "@/components/course/CourseFilters";
+
+function getHeroCourseIcon(slug: string) {
+  if (slug.includes("data")) return GitBranch;
+  if (slug.includes("algo")) return Binary;
+  if (slug.includes("operating")) return Cpu;
+  return BookOpen;
+}
 
 export default async function HomePage() {
   const courses = await getPublishedCourses();
@@ -121,10 +133,9 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Left Side (40%): Interactive Syllabus Workbench Blueprint Index Panel */}
+          {/* Left Side (40%): Clean, Airy Syllabus Index Panel with Icons & Lesson Counts */}
           <div className="lg:col-span-5">
-            <div className="rounded-2xl border border-white/12 bg-black/25 p-4 backdrop-blur-sm sm:p-5">
-              {/* Blueprint Header */}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm sm:p-5">
               <div className="mb-3.5 flex items-center justify-between border-b border-white/10 pb-3">
                 <div className="flex items-center gap-2">
                   <span
@@ -132,21 +143,17 @@ export default async function HomePage() {
                     className="h-2 w-2 rounded-full bg-[var(--signal)]"
                   />
                   <span className="text-xs font-bold text-white">
-                    <span dir="ltr" className="font-mono text-[11px] text-white/65">
-                      INDEX //{" "}
-                    </span>
                     المقررات النشطة
                   </span>
                 </div>
                 <span
                   dir="ltr"
-                  className="rounded border border-white/12 bg-white/[0.05] px-2 py-0.5 font-mono text-[10px] text-white/70"
+                  className="rounded-md bg-white/[0.07] px-2 py-0.5 font-mono text-[10px] font-semibold text-emerald-300"
                 >
-                  {String(courses.length).padStart(2, "0")} VOLS
+                  {courses.length} COURSES · {totalLessons} LESSONS
                 </span>
               </div>
 
-              {/* Clean Horizontal Ledger Rows (Zero Truncation) */}
               <div className="space-y-2">
                 {courses.map((course) => {
                   const visual = getCourseVisualMeta(
@@ -154,25 +161,21 @@ export default async function HomePage() {
                     course.title,
                     course.year_level
                   );
+                  const CourseIcon = getHeroCourseIcon(course.slug);
                   return (
                     <Link
                       key={course.id}
                       href={`/courses/${course.slug}`}
-                      className="group flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-3 transition-all hover:border-white/25 hover:bg-white/[0.10]"
+                      className="group flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3.5 py-3 transition-all hover:border-emerald-400/40 hover:bg-white/[0.08]"
                     >
-                      <div className="flex items-center gap-3">
-                        <span
-                          dir="ltr"
-                          className="font-mono text-xs font-bold text-white/55 transition-colors group-hover:text-white"
-                        >
-                          {visual.monographNumber}
-                        </span>
+                      <div className="flex min-w-0 items-center gap-3">
                         <span
                           aria-hidden="true"
-                          style={{ backgroundColor: visual.spineVar }}
-                          className="h-8 w-1 shrink-0 rounded-full"
-                        />
-                        <div className="leading-snug">
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] text-emerald-300 transition-colors group-hover:bg-emerald-500/20 group-hover:text-emerald-200"
+                        >
+                          <CourseIcon className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0 leading-snug">
                           <div className="flex flex-wrap items-center gap-2">
                             <span
                               dir="ltr"
@@ -187,28 +190,31 @@ export default async function HomePage() {
                               {visual.code}
                             </span>
                           </div>
-                          <p className="mt-0.5 text-[11px] text-[var(--hero-sub)]/85">
-                            {visual.arabicSubtitle}
-                          </p>
+                          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[var(--hero-sub)]/85">
+                            <span className="truncate">
+                              {visual.arabicSubtitle}
+                            </span>
+                            <span className="text-white/25">·</span>
+                            <span className="shrink-0 font-semibold text-emerald-300/90">
+                              {course.lesson_count}{" "}
+                              {course.lesson_count === 2 ? "درسان" : "دروس"}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
-                      <ArrowLeft className="h-4 w-4 shrink-0 text-white/55 transition-all group-hover:-translate-x-1 group-hover:text-white" />
+                      <ArrowLeft className="h-4 w-4 shrink-0 text-white/50 transition-all group-hover:-translate-x-1 group-hover:text-emerald-300" />
                     </Link>
                   );
                 })}
-              </div>
-
-              <div className="mt-3.5 flex items-center justify-between border-t border-white/10 pt-3 text-[11px] text-white/60">
-                <span>اختر مقرراً للبدء الفوري</span>
-                <span dir="ltr" className="font-mono">
-                  READY
-                </span>
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Smart Resume Studying Banner (auto-appears once a student visits any lesson) */}
+      <ContinueStudyingBanner />
 
       {/* Courses Catalog Section */}
       <section id="courses" className="scroll-mt-24 space-y-5">

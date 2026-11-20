@@ -7,6 +7,8 @@ import {
   ArrowRight,
   BookOpen,
   Lock,
+  Maximize2,
+  Minimize2,
   Moon,
   Sun,
 } from "lucide-react";
@@ -23,6 +25,8 @@ interface ReadingComfortBarProps {
   lessonNumber: number;
   tintVar: string;
   spineVar: string;
+  focusMode: boolean;
+  onToggleFocusMode: () => void;
   nextLesson: {
     id: string;
     title: string;
@@ -45,6 +49,8 @@ export default function ReadingComfortBar({
   lessonNumber,
   tintVar,
   spineVar,
+  focusMode,
+  onToggleFocusMode,
   nextLesson,
 }: ReadingComfortBarProps) {
   const themeMode = useThemeMode();
@@ -172,6 +178,28 @@ export default function ReadingComfortBar({
             );
           })}
         </div>
+
+        {/* Focus Mode toggle (hides lesson sidebar for full-width distraction-free study) */}
+        <button
+          type="button"
+          onClick={onToggleFocusMode}
+          aria-pressed={focusMode}
+          title="وضع التركيز — إخفاء القائمة الجانبية للمادة"
+          className={`hidden min-h-[36px] items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-colors lg:inline-flex ${
+            focusMode
+              ? "border-[var(--accent)]/50 bg-[var(--signal-soft)] text-[var(--accent)]"
+              : "border-[var(--line)] bg-[var(--bg)] text-[var(--ink)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+          }`}
+        >
+          {focusMode ? (
+            <Minimize2 className="h-3.5 w-3.5" />
+          ) : (
+            <Maximize2 className="h-3.5 w-3.5" />
+          )}
+          <span className="whitespace-nowrap">
+            {focusMode ? "إظهار الفهرس" : "وضع التركيز"}
+          </span>
+        </button>
 
         {/* Next lesson quick-jump */}
         {nextLesson ? (
