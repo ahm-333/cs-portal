@@ -126,6 +126,7 @@ export interface LessonPageData {
   course: Course;
   lesson: Lesson | null;
   isLocked: boolean;
+  isEnrolled?: boolean;
   allLessons: LessonSummaryItem[];
   interactives: LessonInteractiveMeta[];
   questions: Question[];

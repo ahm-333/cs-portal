@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مُحاكاة خوارزميات الترتيب — Sorting Visualizer Lab</title>
+  <style>
+    :root {
+      --bg-root: #020617;
+      --bg-card: #0f172a;
+      --bg-elev: #1e293b;
+      --border: #1e293b;
+      --border-strong: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --indigo: #6366f1;
+      --indigo-soft: rgba(99, 102, 241, 0.16);
+      --emerald: #10b981;
+      --emerald-soft: rgba(16, 185, 129, 0.16);
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --sky: #38bdf8;
+      --radius: 14px;
+      --font-ar: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+      --font-mono: ui-monospace, "Cascadia Code", "Fira Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.12), transparent 45%),
+                  radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.08), transparent 40%),
+                  var(--bg-root);
+      color: var(--text-main);
+      font-family: var(--font-ar);
+      min-height: 100vh;
+      padding: 16px;
+      line-height: 1.5;
+    }
+
+    .app {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .header {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .title-group h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .title-group p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .algo-tabs {
+      display: inline-flex;
+      background: var(--bg-root);
+      border: 1px solid var(--border-strong);
+      border-radius: 11px;
+      padding: 4px;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 7px 13px;
+      border-radius: 8px;
+      font-family: var(--font-ar);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .tab-btn:hover { color: var(--text-main); }
+    .tab-btn.active {
+      background: var(--indigo);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 15px 16px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button.ctrl {
+      font-family: var(--font-ar);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 8px 13px;
+      border-radius: 10px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-elev);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: background 0.18s, transform 0.1s, opacity 0.18s;
+    }
+
+    button.ctrl:hover:not(:disabled) { background: #293548; }
+    button.ctrl:active:not(:disabled) { transform: scale(0.97); }
+    button.ctrl:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    button.ctrl-play {
+      background: var(--emerald);
+      border-color: #34d399;
+      color: #022c22;
+    }
+    button.ctrl-play:hover:not(:disabled) { background: #059669; color: #fff; }
+
+    button.ctrl-primary {
+      background: var(--indigo);
+      border-color: #818cf8;
+      color: #fff;
+    }
+    button.ctrl-primary:hover:not(:disabled) { background: #4f46e5; }
+
+    .sliders {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .slider-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .slider-val {
+      font-family: var(--font-mono);
+      color: #e2e8f0;
+      min-width: 28px;
+      text-align: center;
+      direction: ltr;
+    }
+
+    input[type="range"] {
+      accent-color: var(--indigo);
+      width: 96px;
+      cursor: pointer;
+    }
+
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 11px;
+      border-top: 1px dashed var(--border-strong);
+      justify-content: space-between;
+    }
+
+    .preset-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip {
+      font-family: var(--font-ar);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-root);
+      color: #cbd5e1;
+      cursor: pointer;
+    }
+
+    .chip:hover { border-color: var(--indigo); color: #fff; }
+
+    .complexity-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      direction: ltr;
+    }
+
+    .c-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 8px;
+      background: var(--bg-root);
+      border: 1px solid var(--border-strong);
+      color: #cbd5e1;
+    }
+
+    .c-badge b { color: #a5b4fc; }
+    .c-badge.good b { color: #34d399; }
+
+    /* Bar Chart Stage */
+    .stage-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .leg {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    .bars-stage {
+      height: 248px;
+      background: var(--bg-root);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 12px 10px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 6px;
+      direction: ltr;
+      overflow: hidden;
+    }
+
+    .bar-col {
+      flex: 1;
+      max-width: 54px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bar-val {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+
+    .bar {
+      width: 100%;
+      border-radius: 7px 7px 3px 3px;
+      background: linear-gradient(180deg, #6366f1 0%, #3730a3 100%);
+      transition: height 0.16s ease, background 0.16s ease, transform 0.16s ease;
+      min-height: 14px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    .bar.comparing {
+      background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+      transform: scaleY(1.02);
+    }
+
+    .bar.swapping {
+      background: linear-gradient(180deg, #fb7185 0%, #e11d48 100%);
+      transform: scaleY(1.04);
+    }
+
+    .bar.pivot {
+      background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+    }
+
+    .bar.sorted {
+      background: linear-gradient(180deg, #34d399 0%, #059669 100%);
+    }
+
+    .bar-idx {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+    }
+
+    .explain-bar {
+      margin-top: 12px;
+      padding: 11px 14px;
+      border-radius: 11px;
+      background: rgba(30, 41, 59, 0.55);
+      border: 1px solid var(--border-strong);
+      border-right: 4px solid var(--indigo);
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .explain-bar.done {
+      border-right-color: var(--emerald);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .step-pill {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #94a3b8;
+      direction: ltr;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 13px;
+    }
+
+    .stat-label {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .stat-val {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-top: 2px;
+      direction: ltr;
+      text-align: right;
+    }
+
+    .c-amber { color: #fbbf24; }
+    .c-rose { color: #fb7185; }
+    .c-emerald { color: #34d399; }
+    .c-indigo { color: #a5b4fc; }
+
+    .progress-track {
+      height: 5px;
+      background: var(--bg-root);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--indigo), var(--emerald));
+      transition: width 0.15s ease;
+    }
+
+    @media (max-width: 720px) {
+      body { padding: 10px; }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .bars-stage { height: 205px; gap: 3px; padding: 12px 6px 8px; }
+      .bar-val { font-size: 0.62rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="title-group">
+        <h1>مُحاكاة خوارزميات الترتيب التفاعلية</h1>
+        <p id="algoSubtitle">قارن بصرياً بين الترتيب الفقاعي والاختيار والإدراج مع عداد المقارنات والتبديلات.</p>
+      </div>
+      <div class="algo-tabs" role="tablist">
+        <button class="tab-btn active" data-algo="bubble">Bubble Sort</button>
+        <button class="tab-btn" data-algo="selection">Selection Sort</button>
+        <button class="tab-btn" data-algo="insertion">Insertion Sort</button>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="toolbar">
+        <div class="btn-row">
+          <button id="btnPlay" class="ctrl ctrl-play">تشغيل</button>
+          <button id="btnPrev" class="ctrl">السابق</button>
+          <button id="btnNext" class="ctrl ctrl-primary">خطوة</button>
+          <button id="btnReset" class="ctrl">إعادة</button>
+          <button id="btnShuffle" class="ctrl">خلط عشوائي</button>
+        </div>
+
+        <div class="sliders">
+          <label class="slider-item">
+            <span>الحجم</span>
+            <input id="sizeRange" type="range" min="6" max="20" value="12" />
+            <span class="slider-val" id="sizeVal">12</span>
+          </label>
+          <label class="slider-item">
+            <span>السرعة</span>
+            <input id="speedRange" type="range" min="1" max="10" value="6" />
+            <span class="slider-val" id="speedVal">6x</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="presets">
+        <div class="preset-group">
+          <span style="font-size:0.76rem;color:#94a3b8;">شكل البيانات:</span>
+          <button class="chip" data-pattern="random">عشوائي</button>
+          <button class="chip" data-pattern="nearly">شبه مرتّبة (أفضل حالة)</button>
+          <button class="chip" data-pattern="reversed">معكوسة (أسوأ حالة)</button>
+        </div>
+        <div class="complexity-badges" id="complexityBadges"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="stage-top">
+        <div class="legend">
+          <span class="leg"><span class="swatch" style="background:#6366f1"></span> غير مرتّب</span>
+          <span class="leg"><span class="swatch" style="background:#f59e0b"></span> مقارنة</span>
+          <span class="leg"><span class="swatch" style="background:#f43f5e"></span> تبديل / إزاحة</span>
+          <span class="leg"><span class="swatch" style="background:#38bdf8"></span> العنصر المختار / المفتاح</span>
+          <span class="leg"><span class="swatch" style="background:#10b981"></span> في موضعه النهائي</span>
+        </div>
+      </div>
+
+      <div class="bars-stage" id="barsStage"></div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+      <div class="explain-bar" id="explainBar">
+        <span id="explainText">اضغط «تشغيل» أو «خطوة» لبدء المحاكاة.</span>
+        <span class="step-pill" id="stepCounter">0 / 0</span>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <div class="stat">
+        <div class="stat-label">عدد المقارنات (Comparisons)</div>
+        <div class="stat-val c-amber" id="statComp">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">التبديلات / النقلات (Swaps)</div>
+        <div class="stat-val c-rose" id="statSwap">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">العناصر المرتّبة</div>
+        <div class="stat-val c-emerald" id="statSorted">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">الحالة الحالية</div>
+        <div class="stat-val c-indigo" id="statStatus" style="font-size:0.95rem;font-family:var(--font-ar);">جاهز</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var ALGO_INFO = {
+        bubble: {
+          name: "الترتيب الفقاعي (Bubble Sort)",
+          desc: "يقارن كل عنصرين متجاورين ويبدّلهما إذا كانا بترتيب خاطئ، فتصعد القيم الكبرى لنهاية المصفوفة.",
+          best: "O(n)",
+          avg: "O(n²)",
+          worst: "O(n²)",
+          space: "O(1)",
+          stable: "Stable"
+        },
+        selection: {
+          name: "ترتيب الاختيار (Selection Sort)",
+          desc: "يبحث في كل دورة عن أصغر عنصر في الجزء غير المرتّب ويضعه مباشرة في موضعه الصحيح بأقل عدد تبديلات.",
+          best: "O(n²)",
+          avg: "O(n²)",
+          worst: "O(n²)",
+          space: "O(1)",
+          stable: "Unstable"
+        },
+        insertion: {
+          name: "الترتيب بالإدراج (Insertion Sort)",
+          desc: "يبني المصفوفة المرتّبة عنصراً تلو الآخر بإدراج كل «مفتاح» في موضعه الصحيح — ممتاز للمصفوفات شبه المرتّبة!",
+          best: "O(n)",
+          avg: "O(n²)",
+          worst: "O(n²)",
+          space: "O(1)",
+          stable: "Stable"
+        }
+      };
+
+      var state = {
+        algo: "bubble",
+        size: 12,
+        speed: 6,
+        baseArray: [],
+        frames: [],
+        frameIdx: 0,
+        timer: null
+      };
+
+      var elStage = document.getElementById("barsStage");
+      var elExplainBar = document.getElementById("explainBar");
+      var elExplainText = document.getElementById("explainText");
+      var elStepCounter = document.getElementById("stepCounter");
+      var elProgress = document.getElementById("progressFill");
+      var elBadges = document.getElementById("complexityBadges");
+      var elSubtitle = document.getElementById("algoSubtitle");
+
+      var statComp = document.getElementById("statComp");
+      var statSwap = document.getElementById("statSwap");
+      var statSorted = document.getElementById("statSorted");
+      var statStatus = document.getElementById("statStatus");
+
+      var btnPlay = document.getElementById("btnPlay");
+      var btnPrev = document.getElementById("btnPrev");
+      var btnNext = document.getElementById("btnNext");
+      var btnReset = document.getElementById("btnReset");
+      var btnShuffle = document.getElementById("btnShuffle");
+      var sizeRange = document.getElementById("sizeRange");
+      var sizeVal = document.getElementById("sizeVal");
+      var speedRange = document.getElementById("speedRange");
+      var speedVal = document.getElementById("speedVal");
+
+      function makeArray(size, pattern) {
+        var arr = [];
+        if (pattern === "reversed") {
+          for (var i = 0; i < size; i++) {
+            arr.push(Math.round(95 - (i * (80 / Math.max(1, size - 1)))));
+          }
+        } else if (pattern === "nearly") {
+          for (var j = 0; j < size; j++) {
+            arr.push(Math.round(15 + (j * (80 / Math.max(1, size - 1)))));
+          }
+          // Swap 2 adjacent pairs
+          if (size >= 4) {
+            var a = Math.floor(size / 3);
+            var tmp = arr[a]; arr[a] = arr[a + 1]; arr[a + 1] = tmp;
+            var b = Math.max(1, size - 3);
+            var tmp2 = arr[b]; arr[b] = arr[b + 1]; arr[b + 1] = tmp2;
+          }
+        } else {
+          for (var k = 0; k < size; k++) {
+            arr.push(Math.floor(Math.random() * 82) + 14);
+          }
+        }
+        return arr;
+      }
+
+      function cloneSorted(setObj) {
+        var out = {};
+        for (var k in setObj) {
+          if (Object.prototype.hasOwnProperty.call(setObj, k)) out[k] = true;
+        }
+        return out;
+      }
+
+      function buildBubbleFrames(input) {
+        var arr = input.slice();
+        var n = arr.length;
+        var frames = [];
+        var sorted = {};
+        var comp = 0;
+        var swaps = 0;
+
+        frames.push({
+          arr: arr.slice(), comparing: [], swapping: [], pivot: [], sorted: {},
+          comp: 0, swaps: 0, done: false,
+          msg: "البداية: سنمر على المصفوفة ونقارن كل عنصرين متجاورين."
+        });
+
+        for (var i = 0; i < n - 1; i++) {
+          var swappedInPass = false;
+          for (var j = 0; j < n - i - 1; j++) {
+            comp++;
+            frames.push({
+              arr: arr.slice(), comparing: [j, j + 1], swapping: [], pivot: [],
+              sorted: cloneSorted(sorted), comp: comp, swaps: swaps, done: false,
+              msg: "مقارنة arr[" + j + "]=" + arr[j] + " مع arr[" + (j + 1) + "]=" + arr[j + 1]
+            });
+
+            if (arr[j] > arr[j + 1]) {
+              var t = arr[j]; arr[j] = arr[j + 1]; arr[j + 1] = t;
+              swaps++;
+              swappedInPass = true;
+              frames.push({
+                arr: arr.slice(), comparing: [], swapping: [j, j + 1], pivot: [],
+                sorted: cloneSorted(sorted), comp: comp, swaps: swaps, done: false,
+                msg: "تبديل! لأن " + arr[j + 1] + " > " + arr[j] + " ننقله لليمين."
+              });
+            }
+          }
+          sorted[n - 1 - i] = true;
+          if (!swappedInPass) {
+            for (var k = 0; k < n; k++) sorted[k] = true;
+            frames.push({
+              arr: arr.slice(), comparing: [], swapping: [], pivot: [],
+              sorted: cloneSorted(sorted), comp: comp, swaps: swaps, done: true,
+              msg: "تحسين مبكّر (Early Exit): لم يحدث أي تبديل في هذه الدورة، إذن المصفوفة مرتّبة بالكامل!"
+            });
+            return frames;
+          }
+        }
+        for (var m = 0; m < n; m++) sorted[m] = true;
+        frames.push({
+          arr: arr.slice(), comparing: [], swapping: [], pivot: [],
+          sorted: cloneSorted(sorted), comp: comp, swaps: swaps, done: true,
+          msg: "اكتمل الترتيب الفقاعي بنجاح!"
+        });
+        return frames;
+      }
+
+      function buildSelectionFrames(input) {
+        var arr = input.slice();
+        var n = arr.length;
+        var frames = [];
+        var sorted = {};
+        var comp = 0;
+        var swaps = 0;
+
+        frames.push({
+          arr: arr.slice(), comparing: [], swapping: [], pivot: [], sorted: {},
+          comp: 0, swaps: 0, done: false,
+          msg: "البداية: في كل دورة نبحث عن أصغر عنصر ونضعه في بداية الجزء غير المرتّب."
+        });
+
+        for (var i = 0; i < n - 1; i++) {
+          var minIdx = i;
+          frames.push({
+            arr: arr.slice(), comparing: [], swapping: [], pivot: [minIdx],
+            sorted: cloneSorted(sorted), comp: comp, swaps: swaps, done: false,
+            msg: "الدورة " + (i + 1) + ": نفترض أن الأصغر هو arr[" + minIdx + "]=" + arr[minIdx]
+          });
+
+          for (var j = i + 1; j < n; j++) {
+            comp++;
+            frames.push({
+              arr: arr.slice(), comparing: [j], swapping: [], pivot: [minIdx],
+              sorted: cloneSorted(sorted), comp: comp, swaps: swaps, done: false,
+              msg: "مقارنة arr[" + j + "]=" + arr[j] + " مع الأصغر الحالي arr[" + minIdx + "]=" + arr[minIdx]
+            });
+            if (arr[j] < arr[minIdx]) {
+              minIdx = j;
+              frames.push({
+                arr: arr.slice(), comparing: [], swapping: [], pivot: [minIdx],
+                sorted: cloneSorted(sorted), comp: comp, swaps: swaps, done: false,
+                msg: "وجدنا قيمة أصغر! الأصغر الجديد هو arr[" + minIdx + "]=" + arr[minIdx]
+              });
+            }
+          }
+
+          if (minIdx !== i) {
+            var tmp = arr[i]; arr[i] = arr[minIdx]; arr[minIdx] = tmp;
+            swaps++;
+            frames.push({
+              arr: arr.slice(), comparing: [], swapping: [i, minIdx], pivot: [],
+              sorted: cloneSorted(sorted), comp: comp, swaps: swaps, done: false,
+              msg: "نبدّل الأصغر (" + arr[i] + ") إلى الموضع النهائي index " + i
+            });
+          }
+          sorted[i] = true;
+        }
+        for (var m = 0; m < n; m++) sorted[m] = true;
+        frames.push({
+          arr: arr.slice(), comparing: [], swapping: [], pivot: [],
+          sorted: cloneSorted(sorted), comp: comp, swaps: swaps, done: true,
+          msg: "اكتمل ترتيب الاختيار بنجاح! لاحظ قلة عدد التبديلات (" + swaps + " فقط)."
+        });
+        return frames;
+      }
+
+      function buildInsertionFrames(input) {
+        var arr = input.slice();
+        var n = arr.length;
+        var frames = [];
+        var sorted = { 0: true };
+        var comp = 0;
+        var swaps = 0;
+
+        frames.push({
+          arr: arr.slice(), comparing: [], swapping: [], pivot: [], sorted: cloneSorted(sorted),
+          comp: 0, swaps: 0, done: false,
+          msg: "البداية: نعتبر العنصر الأول arr[0]=" + arr[0] + " مرتّباً، ثم نُدرج باقي العناصر تباعاً."
+        });
+
+        for (var i = 1; i < n; i++) {
+          var key = arr[i];
+          var j = i - 1;
+          frames.push({
+            arr: arr.slice(), comparing: [], swapping: [], pivot: [i],
+            sorted: cloneSorted(sorted), comp: comp, swaps: swaps, done: false,
+            msg: "نختار المفتاح key = arr[" + i + "] = " + key + " لإدراجه في الجزء المرتّب."
+          });
+
+          while (j >= 0) {
+            comp++;
+            frames.push({
+              arr: arr.slice(), comparing: [j], swapping: [], pivot: [j + 1],
+              sorted: cloneSorted(sorted), comp: comp, swaps: swaps, done: false,
+              msg: "مقارنة key=" + key + " مع arr[" + j + "]=" + arr[j]
+            });
+
+            if (arr[j] > key) {
+              arr[j + 1] = arr[j];
+              arr[j] = key;
+              swaps++;
+              frames.push({
+                arr: arr.slice(), comparing: [], swapping: [j, j + 1], pivot: [],
+                sorted: cloneSorted(sorted), comp: comp, swaps: swaps, done: false,
+                msg: "إزاحة " + arr[j + 1] + " لليمين لفتح مكان للمفتاح " + key
+              });
+              j--;
+            } else {
+              break;
+            }
+          }
+          for (var k = 0; k <= i; k++) sorted[k] = true;
+        }
+
+        for (var m = 0; m < n; m++) sorted[m] = true;
+        frames.push({
+          arr: arr.slice(), comparing: [], swapping: [], pivot: [],
+          sorted: cloneSorted(sorted), comp: comp, swaps: swaps, done: true,
+          msg: "اكتمل الترتيب بالإدراج بنجاح!"
+        });
+        return frames;
+      }
+
+      function stopPlay() {
+        if (state.timer) {
+          clearInterval(state.timer);
+          state.timer = null;
+        }
+        btnPlay.textContent = "تشغيل";
+      }
+
+      function renderComplexity() {
+        var info = ALGO_INFO[state.algo];
+        elSubtitle.textContent = info.desc;
+        elBadges.innerHTML =
+          '<span class="c-badge good">Best: <b>' + info.best + '</b></span>' +
+          '<span class="c-badge">Avg: <b>' + info.avg + '</b></span>' +
+          '<span class="c-badge">Worst: <b>' + info.worst + '</b></span>' +
+          '<span class="c-badge good">Space: <b>' + info.space + '</b></span>' +
+          '<span class="c-badge">' + info.stable + '</span>';
+      }
+
+      function renderFrame() {
+        var f = state.frames[state.frameIdx];
+        var maxVal = Math.max.apply(null, f.arr.concat([100]));
+
+        elStage.innerHTML = "";
+        for (var i = 0; i < f.arr.length; i++) {
+          var col = document.createElement("div");
+          col.className = "bar-col";
+
+          var val = document.createElement("div");
+          val.className = "bar-val";
+          val.textContent = f.arr[i];
+
+          var bar = document.createElement("div");
+          var cls = "bar";
+          if (f.swapping.indexOf(i) !== -1) cls += " swapping";
+          else if (f.comparing.indexOf(i) !== -1) cls += " comparing";
+          else if (f.pivot.indexOf(i) !== -1) cls += " pivot";
+          else if (f.sorted[i]) cls += " sorted";
+          bar.className = cls;
+          bar.style.height = Math.max(10, Math.round((f.arr[i] / maxVal) * 185)) + "px";
+
+          var idx = document.createElement("div");
+          idx.className = "bar-idx";
+          idx.textContent = i;
+
+          col.appendChild(val);
+          col.appendChild(bar);
+          col.appendChild(idx);
+          elStage.appendChild(col);
+        }
+
+        elExplainText.textContent = f.msg;
+        elExplainBar.className = "explain-bar" + (f.done ? " done" : "");
+        elStepCounter.textContent = state.frameIdx + " / " + (state.frames.length - 1);
+
+        var pct = state.frames.length <= 1 ? 100 : (state.frameIdx / (state.frames.length - 1)) * 100;
+        elProgress.style.width = pct + "%";
+
+        statComp.textContent = f.comp;
+        statSwap.textContent = f.swaps;
+        statSorted.textContent = Object.keys(f.sorted).length + " / " + f.arr.length;
+        statStatus.textContent = f.done ? "مرتّبة ✓" : (state.frameIdx === 0 ? "جاهز" : "جاري الترتيب...");
+
+        btnPrev.disabled = state.frameIdx === 0;
+        btnNext.disabled = state.frameIdx >= state.frames.length - 1;
+        if (state.frameIdx >= state.frames.length - 1) stopPlay();
+      }
+
+      function rebuildFrames() {
+        stopPlay();
+        if (state.algo === "bubble") state.frames = buildBubbleFrames(state.baseArray);
+        else if (state.algo === "selection") state.frames = buildSelectionFrames(state.baseArray);
+        else state.frames = buildInsertionFrames(state.baseArray);
+        state.frameIdx = 0;
+        renderComplexity();
+        renderFrame();
+      }
+
+      function getDelayMs() {
+        // speed 1 -> 950ms, speed 10 -> 45ms
+        return Math.max(45, Math.round(1050 - state.speed * 100));
+      }
+
+      function startPlay() {
+        if (state.frameIdx >= state.frames.length - 1) {
+          state.frameIdx = 0;
+          renderFrame();
+        }
+        btnPlay.textContent = "إيقاف";
+        state.timer = setInterval(function () {
+          if (state.frameIdx < state.frames.length - 1) {
+            state.frameIdx += 1;
+            renderFrame();
+          } else {
+            stopPlay();
+          }
+        }, getDelayMs());
+      }
+
+      // Bindings
+      var tabBtns = document.querySelectorAll(".tab-btn");
+      tabBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          tabBtns.forEach(function (b) { b.classList.remove("active"); });
+          btn.classList.add("active");
+          state.algo = btn.getAttribute("data-algo");
+          rebuildFrames();
+        });
+      });
+
+      document.querySelectorAll(".chip[data-pattern]").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+          var pat = chip.getAttribute("data-pattern");
+          state.baseArray = makeArray(state.size, pat);
+          rebuildFrames();
+        });
+      });
+
+      btnPlay.addEventListener("click", function () {
+        if (state.timer) stopPlay();
+        else startPlay();
+      });
+
+      btnPrev.addEventListener("click", function () {
+        stopPlay();
+        if (state.frameIdx > 0) {
+          state.frameIdx -= 1;
+          renderFrame();
+        }
+      });
+
+      btnNext.addEventListener("click", function () {
+        stopPlay();
+        if (state.frameIdx < state.frames.length - 1) {
+          state.frameIdx += 1;
+          renderFrame();
+        }
+      });
+
+      btnReset.addEventListener("click", function () {
+        stopPlay();
+        state.frameIdx = 0;
+        renderFrame();
+      });
+
+      btnShuffle.addEventListener("click", function () {
+        state.baseArray = makeArray(state.size, "random");
+        rebuildFrames();
+      });
+
+      sizeRange.addEventListener("input", function () {
+        state.size = parseInt(sizeRange.value, 10);
+        sizeVal.textContent = state.size;
+        state.baseArray = makeArray(state.size, "random");
+        rebuildFrames();
+      });
+
+      speedRange.addEventListener("input", function () {
+        state.speed = parseInt(speedRange.value, 10);
+        speedVal.textContent = state.speed + "x";
+        if (state.timer) {
+          stopPlay();
+          startPlay();
+        }
+      });
+
+      state.baseArray = makeArray(state.size, "random");
+      rebuildFrames();
+    })();
+  </script>
+</body>
+</html>

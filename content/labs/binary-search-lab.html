@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مختبر البحث الثنائي التفاعلي — Binary Search Lab</title>
+  <style>
+    :root {
+      --bg-root: #020617;
+      --bg-card: #0f172a;
+      --bg-elev: #1e293b;
+      --border: #1e293b;
+      --border-strong: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --indigo: #6366f1;
+      --indigo-soft: rgba(99, 102, 241, 0.16);
+      --emerald: #10b981;
+      --emerald-soft: rgba(16, 185, 129, 0.16);
+      --amber: #f59e0b;
+      --amber-soft: rgba(245, 158, 11, 0.18);
+      --sky: #38bdf8;
+      --sky-soft: rgba(56, 189, 248, 0.16);
+      --rose: #f43f5e;
+      --rose-soft: rgba(244, 63, 94, 0.16);
+      --radius: 14px;
+      --font-ar: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+      --font-mono: ui-monospace, "Cascadia Code", "Fira Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.12), transparent 42%),
+                  radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.08), transparent 40%),
+                  var(--bg-root);
+      color: var(--text-main);
+      font-family: var(--font-ar);
+      min-height: 100vh;
+      padding: 16px;
+      line-height: 1.55;
+    }
+
+    .app {
+      max-width: 980px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+    }
+
+    .title-group h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .title-group p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      direction: ltr;
+    }
+
+    .badge-indigo {
+      background: var(--indigo-soft);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.35);
+    }
+
+    .badge-emerald {
+      background: var(--emerald-soft);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .controls-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+
+    .control-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field label {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    input[type="number"], select {
+      background: var(--bg-root);
+      border: 1px solid var(--border-strong);
+      color: var(--text-main);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      font-family: var(--font-mono);
+      direction: ltr;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="number"] { width: 108px; }
+    input[type="number"]:focus, select:focus {
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button {
+      font-family: var(--font-ar);
+      font-size: 0.83rem;
+      font-weight: 700;
+      padding: 8px 13px;
+      border-radius: 10px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-elev);
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.12s, background 0.18s, border-color 0.18s, opacity 0.18s;
+      user-select: none;
+    }
+
+    button:hover:not(:disabled) {
+      background: #273549;
+      border-color: #475569;
+    }
+
+    button:active:not(:disabled) { transform: scale(0.97); }
+    button:disabled { opacity: 0.42; cursor: not-allowed; }
+
+    .btn-primary {
+      background: var(--indigo);
+      border-color: #818cf8;
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) { background: #4f46e5; border-color: #818cf8; }
+
+    .btn-success {
+      background: var(--emerald);
+      border-color: #34d399;
+      color: #022c22;
+    }
+    .btn-success:hover:not(:disabled) { background: #059669; color: #fff; }
+
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border-strong);
+    }
+
+    .presets-label {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+
+    .chip {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--bg-root);
+      border: 1px solid var(--border-strong);
+      color: #cbd5e1;
+      direction: ltr;
+    }
+
+    .chip.active {
+      background: var(--indigo-soft);
+      border-color: var(--indigo);
+      color: #c7d2fe;
+    }
+
+    .chip.miss {
+      border-style: dashed;
+      color: #fda4af;
+    }
+
+    .speed-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    input[type="range"] {
+      accent-color: var(--indigo);
+      width: 96px;
+      cursor: pointer;
+    }
+
+    /* Array Visualization Stage */
+    .stage-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .stage-hint {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .array-scroll {
+      overflow-x: auto;
+      padding: 8px 4px 12px;
+      direction: ltr;
+    }
+
+    .array-track {
+      display: flex;
+      justify-content: center;
+      gap: 7px;
+      min-width: max-content;
+      margin: 0 auto;
+    }
+
+    .cell-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 52px;
+      transition: opacity 0.28s ease, transform 0.25s ease;
+    }
+
+    .cell-wrap.discarded {
+      opacity: 0.24;
+      transform: scale(0.94);
+    }
+
+    .cell-wrap.discarded .cell-box {
+      text-decoration: line-through;
+      border-style: dashed;
+    }
+
+    .ptr-top {
+      height: 24px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 2px;
+      margin-bottom: 4px;
+    }
+
+    .ptr-bottom {
+      height: 24px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 3px;
+      margin-top: 4px;
+    }
+
+    .ptr-tag {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 6px;
+      line-height: 1.4;
+      letter-spacing: 0.02em;
+    }
+
+    .ptr-low { background: var(--sky-soft); color: var(--sky); border: 1px solid rgba(56, 189, 248, 0.45); }
+    .ptr-high { background: rgba(168, 85, 247, 0.18); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.45); }
+    .ptr-mid { background: var(--amber-soft); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.55); }
+    .ptr-found { background: var(--emerald-soft); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.65); }
+
+    .cell-box {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: var(--bg-elev);
+      border: 2px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.22s ease;
+      position: relative;
+    }
+
+    .cell-box:hover {
+      border-color: var(--indigo);
+      transform: translateY(-2px);
+    }
+
+    .cell-wrap.in-range .cell-box {
+      background: rgba(99, 102, 241, 0.14);
+      border-color: rgba(99, 102, 241, 0.55);
+    }
+
+    .cell-wrap.is-mid .cell-box {
+      background: var(--amber-soft);
+      border-color: var(--amber);
+      color: #fef3c7;
+      box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.16);
+      transform: translateY(-4px) scale(1.05);
+    }
+
+    .cell-wrap.is-found .cell-box {
+      background: var(--emerald-soft);
+      border-color: var(--emerald);
+      color: #d1fae5;
+      box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.22);
+      transform: translateY(-5px) scale(1.08);
+    }
+
+    .cell-idx {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Explanation & Formula */
+    .explain-box {
+      border-radius: 12px;
+      padding: 13px 15px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-strong);
+      border-right: 4px solid var(--indigo);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .explain-box.state-found { border-right-color: var(--emerald); background: rgba(16, 185, 129, 0.08); }
+    .explain-box.state-notfound { border-right-color: var(--rose); background: rgba(244, 63, 94, 0.08); }
+    .explain-box.state-step { border-right-color: var(--amber); }
+
+    .explain-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .explain-text {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
+
+    .code-pill {
+      display: inline-block;
+      direction: ltr;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      background: var(--bg-root);
+      border: 1px solid var(--border-strong);
+      padding: 2px 7px;
+      border-radius: 6px;
+      color: #a5b4fc;
+    }
+
+    /* Stats & Comparison */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .metric-label {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .metric-value {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      font-weight: 800;
+      direction: ltr;
+      text-align: right;
+    }
+
+    .metric-sub {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .val-indigo { color: #a5b4fc; }
+    .val-emerald { color: #34d399; }
+    .val-amber { color: #fbbf24; }
+    .val-sky { color: #38bdf8; }
+
+    .vars-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      direction: ltr;
+      justify-content: flex-end;
+    }
+
+    .var-pill {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      background: var(--bg-root);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 4px 10px;
+      color: #e2e8f0;
+    }
+
+    .progress-bar {
+      height: 5px;
+      background: var(--bg-root);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--indigo), var(--emerald));
+      width: 0%;
+      transition: width 0.25s ease;
+    }
+
+    @media (max-width: 720px) {
+      body { padding: 10px; }
+      .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cell-wrap { width: 44px; }
+      .cell-box { width: 42px; height: 42px; font-size: 0.88rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="title-group">
+        <h1>
+          <span>مختبر البحث الثنائي التفاعلي</span>
+          <span class="badge badge-indigo">Binary Search</span>
+        </h1>
+        <p>تتبّع مؤشرات <span class="code-pill">low</span> و <span class="code-pill">mid</span> و <span class="code-pill">high</span> خطوة بخطوة وقارن الكفاءة مع البحث الخطي.</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="badge badge-emerald">Time: O(log n)</span>
+        <span class="badge badge-indigo">Space: O(1)</span>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="controls-grid">
+        <div class="control-group">
+          <div class="field">
+            <label for="targetInput">القيمة المطلوبة (Target)</label>
+            <input id="targetInput" type="number" value="42" />
+          </div>
+          <div class="field">
+            <label for="sizeSelect">حجم المصفوفة (n)</label>
+            <select id="sizeSelect">
+              <option value="11">11 عنصر</option>
+              <option value="15" selected>15 عنصر</option>
+              <option value="19">19 عنصر</option>
+            </select>
+          </div>
+          <button id="btnNewArray" title="توليد مصفوفة مرتبة جديدة">مصفوفة جديدة</button>
+        </div>
+
+        <div class="control-group">
+          <div class="btn-row">
+            <button id="btnPrev">السابق</button>
+            <button id="btnNext" class="btn-primary">الخطوة التالية</button>
+            <button id="btnPlay" class="btn-success">تشغيل تلقائي</button>
+            <button id="btnReset">إعادة</button>
+          </div>
+          <div class="speed-wrap">
+            <span>السرعة</span>
+            <input id="speedRange" type="range" min="300" max="1800" step="100" value="950" />
+          </div>
+        </div>
+      </div>
+
+      <div class="presets" id="presetsRow"></div>
+    </section>
+
+    <section class="card">
+      <div class="stage-header">
+        <div class="stage-hint">اضغط على أي خلية في المصفوفة لاختيارها كقيمة مطلوبة مباشرة:</div>
+        <div class="legend">
+          <span class="legend-item"><span class="dot" style="background:#38bdf8"></span> low (البداية)</span>
+          <span class="legend-item"><span class="dot" style="background:#f59e0b"></span> mid (المنتصف)</span>
+          <span class="legend-item"><span class="dot" style="background:#c084fc"></span> high (النهاية)</span>
+          <span class="legend-item"><span class="dot" style="background:#10b981"></span> تم العثور عليه</span>
+        </div>
+      </div>
+
+      <div class="array-scroll">
+        <div class="array-track" id="arrayTrack"></div>
+      </div>
+
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </section>
+
+    <section class="explain-box" id="explainBox">
+      <div class="explain-title">
+        <span id="explainTitle">جاهز للبدء</span>
+        <div class="vars-strip" id="varsStrip"></div>
+      </div>
+      <div class="explain-text" id="explainText"></div>
+    </section>
+
+    <section class="metrics-grid">
+      <div class="metric">
+        <span class="metric-label">خطوات البحث الثنائي</span>
+        <span class="metric-value val-emerald" id="metricBinary">0</span>
+        <span class="metric-sub" id="metricMaxLog">الحد الأقصى: 4 خطوات</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">مقارنات البحث الخطي</span>
+        <span class="metric-value val-amber" id="metricLinear">0</span>
+        <span class="metric-sub" id="metricLinearSub">لو بحثنا عنصراً بعنصر</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">العناصر المتبقية في النطاق</span>
+        <span class="metric-value val-sky" id="metricRemaining">15</span>
+        <span class="metric-sub" id="metricDiscarded">تم استبعاد 0 عنصر</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">مقدار التوفير</span>
+        <span class="metric-value val-indigo" id="metricSaved">0</span>
+        <span class="metric-sub" id="metricSavedSub">مقارنة تم توفيرها</span>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var DEFAULT_ARRAYS = {
+        11: [4, 9, 14, 21, 27, 35, 42, 56, 63, 78, 91],
+        15: [3, 8, 12, 17, 23, 29, 34, 42, 48, 55, 61, 69, 77, 84, 95],
+        19: [2, 6, 11, 15, 20, 25, 31, 37, 42, 49, 54, 60, 67, 73, 79, 85, 90, 94, 99]
+      };
+
+      var state = {
+        arr: DEFAULT_ARRAYS[15].slice(),
+        target: 42,
+        steps: [],
+        stepIndex: 0,
+        timer: null
+      };
+
+      var elTrack = document.getElementById("arrayTrack");
+      var elTarget = document.getElementById("targetInput");
+      var elSize = document.getElementById("sizeSelect");
+      var elPresets = document.getElementById("presetsRow");
+      var elExplainBox = document.getElementById("explainBox");
+      var elExplainTitle = document.getElementById("explainTitle");
+      var elExplainText = document.getElementById("explainText");
+      var elVarsStrip = document.getElementById("varsStrip");
+      var elProgress = document.getElementById("progressFill");
+
+      var btnPrev = document.getElementById("btnPrev");
+      var btnNext = document.getElementById("btnNext");
+      var btnPlay = document.getElementById("btnPlay");
+      var btnReset = document.getElementById("btnReset");
+      var btnNewArray = document.getElementById("btnNewArray");
+      var speedRange = document.getElementById("speedRange");
+
+      var mBinary = document.getElementById("metricBinary");
+      var mMaxLog = document.getElementById("metricMaxLog");
+      var mLinear = document.getElementById("metricLinear");
+      var mLinearSub = document.getElementById("metricLinearSub");
+      var mRemaining = document.getElementById("metricRemaining");
+      var mDiscarded = document.getElementById("metricDiscarded");
+      var mSaved = document.getElementById("metricSaved");
+      var mSavedSub = document.getElementById("metricSavedSub");
+
+      function generateSortedArray(size) {
+        var res = [];
+        var cur = Math.floor(Math.random() * 6) + 2;
+        for (var i = 0; i < size; i++) {
+          res.push(cur);
+          cur += Math.floor(Math.random() * 8) + 3;
+        }
+        return res;
+      }
+
+      function computeLinearCost(arr, target) {
+        for (var i = 0; i < arr.length; i++) {
+          if (arr[i] === target) return i + 1;
+        }
+        return arr.length;
+      }
+
+      function buildSteps(arr, target) {
+        var steps = [];
+        var low = 0;
+        var high = arr.length - 1;
+        var comparisons = 0;
+
+        steps.push({
+          low: low,
+          high: high,
+          mid: null,
+          status: "init",
+          comparisons: 0,
+          title: "الحالة الابتدائية — تهيئة النطاق الكامل",
+          text:
+            "نبحث عن القيمة " + target + " داخل مصفوفة مرتّبة طولها " + arr.length +
+            " عنصراً. نبدأ بالنطاق الكامل من الفهرس 0 حتى " + high +
+            ". اضغط «الخطوة التالية» أو «تشغيل تلقائي» لحساب المنتصف."
+        });
+
+        while (low <= high) {
+          var mid = Math.floor((low + high) / 2);
+          comparisons += 1;
+          var val = arr[mid];
+
+          if (val === target) {
+            steps.push({
+              low: low,
+              high: high,
+              mid: mid,
+              status: "found",
+              comparisons: comparisons,
+              title: "تم العثور على القيمة في الخطوة #" + comparisons + "!",
+              text:
+                "نحسب mid = ⌊(" + low + " + " + high + ") / 2⌋ = " + mid +
+                ". نجد أن arr[" + mid + "] = " + val + " وتطابق الهدف (" + target +
+                ") تماماً! توقّف البحث بنجاح عند الفهرس " + mid + "."
+            });
+            return steps;
+          } else if (val < target) {
+            steps.push({
+              low: low,
+              high: high,
+              mid: mid,
+              status: "go-right",
+              comparisons: comparisons,
+              title: "الخطوة #" + comparisons + ": arr[mid] أصغر من الهدف → نتجه يميناً",
+              text:
+                "mid = ⌊(" + low + " + " + high + ") / 2⌋ = " + mid +
+                ". القيمة arr[" + mid + "] = " + val + " أصغر من " + target +
+                ". بما أن المصفوفة مرتّبة تصاعدياً، نستبعد النصف الأيسر كاملاً (من " +
+                low + " إلى " + mid + ") ونُحدّث low = mid + 1 = " + (mid + 1) + "."
+            });
+            low = mid + 1;
+          } else {
+            steps.push({
+              low: low,
+              high: high,
+              mid: mid,
+              status: "go-left",
+              comparisons: comparisons,
+              title: "الخطوة #" + comparisons + ": arr[mid] أكبر من الهدف → نتجه يساراً",
+              text:
+                "mid = ⌊(" + low + " + " + high + ") / 2⌋ = " + mid +
+                ". القيمة arr[" + mid + "] = " + val + " أكبر من " + target +
+                ". نستبعد النصف الأيمن كاملاً (من " + mid + " إلى " + high +
+                ") ونُحدّث high = mid - 1 = " + (mid - 1) + "."
+            });
+            high = mid - 1;
+          }
+        }
+
+        steps.push({
+          low: low,
+          high: high,
+          mid: null,
+          status: "not-found",
+          comparisons: comparisons,
+          title: "القيمة غير موجودة في المصفوفة",
+          text:
+            "أصبح low (" + low + ") أكبر من high (" + high +
+            ") مما يعني أن نطاق البحث فارغ تماماً. استغرق إثبات عدم وجود القيمة " +
+            target + " فقط " + comparisons + " مقارنات بدلاً من فحص جميع العناصر (" + arr.length + ")."
+        });
+        return steps;
+      }
+
+      function stopPlay() {
+        if (state.timer) {
+          clearInterval(state.timer);
+          state.timer = null;
+        }
+        btnPlay.textContent = "تشغيل تلقائي";
+      }
+
+      function renderPresets() {
+        var arr = state.arr;
+        var picks = [
+          { val: arr[0], label: arr[0] + " (أول عنصر)" },
+          { val: arr[Math.floor(arr.length / 2)], label: arr[Math.floor(arr.length / 2)] + " (المنتصف)" },
+          { val: arr[arr.length - 2], label: arr[arr.length - 2] + " (قرب النهاية)" },
+          { val: arr[Math.floor(arr.length / 2)] + 1, label: (arr[Math.floor(arr.length / 2)] + 1) + " (غير موجود)", miss: true }
+        ];
+        // Ensure miss value actually isn't in array
+        while (arr.indexOf(picks[3].val) !== -1) {
+          picks[3].val += 1;
+          picks[3].label = picks[3].val + " (غير موجود)";
+        }
+
+        elPresets.innerHTML = '<span class="presets-label">أمثلة سريعة للتجربة:</span>';
+        picks.forEach(function (p) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "chip" + (p.miss ? " miss" : "") + (state.target === p.val ? " active" : "");
+          b.textContent = p.label;
+          b.addEventListener("click", function () {
+            setTarget(p.val);
+          });
+          elPresets.appendChild(b);
+        });
+      }
+
+      function render() {
+        var step = state.steps[state.stepIndex];
+        var arr = state.arr;
+        var n = arr.length;
+
+        elTrack.innerHTML = "";
+        for (var i = 0; i < n; i++) {
+          var wrap = document.createElement("div");
+          var inRange = step.low <= step.high && i >= step.low && i <= step.high;
+          var isMid = step.mid === i;
+          var isFound = step.status === "found" && isMid;
+
+          wrap.className = "cell-wrap" +
+            (inRange ? " in-range" : " discarded") +
+            (isFound ? " is-found" : (isMid ? " is-mid" : ""));
+
+          var ptrTop = document.createElement("div");
+          ptrTop.className = "ptr-top";
+          if (isFound) {
+            ptrTop.innerHTML = '<span class="ptr-tag ptr-found">FOUND</span>';
+          } else if (isMid) {
+            ptrTop.innerHTML = '<span class="ptr-tag ptr-mid">mid</span>';
+          }
+
+          var box = document.createElement("div");
+          box.className = "cell-box";
+          box.textContent = arr[i];
+          box.title = "اضغط لجعل " + arr[i] + " هو الهدف";
+          (function (val) {
+            box.addEventListener("click", function () {
+              setTarget(val);
+            });
+          })(arr[i]);
+
+          var idx = document.createElement("div");
+          idx.className = "cell-idx";
+          idx.textContent = i;
+
+          var ptrBottom = document.createElement("div");
+          ptrBottom.className = "ptr-bottom";
+          if (step.low === i && step.high === i) {
+            ptrBottom.innerHTML = '<span class="ptr-tag ptr-low">L</span><span class="ptr-tag ptr-high">H</span>';
+          } else {
+            if (step.low === i) ptrBottom.innerHTML += '<span class="ptr-tag ptr-low">low</span>';
+            if (step.high === i) ptrBottom.innerHTML += '<span class="ptr-tag ptr-high">high</span>';
+          }
+
+          wrap.appendChild(ptrTop);
+          wrap.appendChild(box);
+          wrap.appendChild(idx);
+          wrap.appendChild(ptrBottom);
+          elTrack.appendChild(wrap);
+        }
+
+        // Explanation card
+        elExplainBox.className = "explain-box " + (
+          step.status === "found" ? "state-found" :
+          step.status === "not-found" ? "state-notfound" :
+          step.status === "init" ? "" : "state-step"
+        );
+        elExplainTitle.textContent = step.title;
+        elExplainText.textContent = step.text;
+
+        var midLabel = step.mid === null ? "—" : step.mid + " (val=" + arr[step.mid] + ")";
+        elVarsStrip.innerHTML =
+          '<span class="var-pill">target = ' + state.target + '</span>' +
+          '<span class="var-pill" style="color:#38bdf8">low = ' + step.low + '</span>' +
+          '<span class="var-pill" style="color:#fbbf24">mid = ' + midLabel + '</span>' +
+          '<span class="var-pill" style="color:#d8b4fe">high = ' + step.high + '</span>';
+
+        // Metrics
+        var linearTotal = computeLinearCost(arr, state.target);
+        var maxLog = Math.ceil(Math.log2(n + 1));
+        var remaining = step.low <= step.high ? (step.high - step.low + 1) : 0;
+        var discarded = n - remaining;
+        var saved = Math.max(0, linearTotal - step.comparisons);
+
+        mBinary.textContent = step.comparisons;
+        mMaxLog.textContent = "الحد الأقصى النظري: " + maxLog + " خطوات";
+        mLinear.textContent = linearTotal;
+        mLinearSub.textContent = arr.indexOf(state.target) !== -1
+          ? "موقعه بالبحث الخطي: " + linearTotal + " خطوة"
+          : "يفحص كل العناصر (" + n + ") لإثبات غيابه";
+        mRemaining.textContent = remaining;
+        mDiscarded.textContent = "تم استبعاد " + discarded + " عنصر (" + Math.round((discarded / n) * 100) + "%)";
+        mSaved.textContent = step.status === "init" ? "—" : ("+" + saved);
+        mSavedSub.textContent = step.status === "init"
+          ? "ابدأ الخطوات لرؤية الفرق"
+          : "وفّر البحث الثنائي " + saved + " مقارنة";
+
+        // Progress bar & button states
+        var pct = state.steps.length <= 1 ? 100 : (state.stepIndex / (state.steps.length - 1)) * 100;
+        elProgress.style.width = pct + "%";
+
+        btnPrev.disabled = state.stepIndex === 0;
+        btnNext.disabled = state.stepIndex >= state.steps.length - 1;
+        if (state.stepIndex >= state.steps.length - 1) {
+          stopPlay();
+        }
+      }
+
+      function rebuild() {
+        stopPlay();
+        state.steps = buildSteps(state.arr, state.target);
+        state.stepIndex = 0;
+        renderPresets();
+        render();
+      }
+
+      function setTarget(val) {
+        if (isNaN(val)) return;
+        state.target = val;
+        elTarget.value = val;
+        rebuild();
+      }
+
+      elTarget.addEventListener("change", function () {
+        var v = parseInt(elTarget.value, 10);
+        if (!isNaN(v)) setTarget(v);
+      });
+
+      elTarget.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          var v = parseInt(elTarget.value, 10);
+          if (!isNaN(v)) setTarget(v);
+        }
+      });
+
+      elSize.addEventListener("change", function () {
+        var sz = parseInt(elSize.value, 10);
+        state.arr = DEFAULT_ARRAYS[sz] ? DEFAULT_ARRAYS[sz].slice() : generateSortedArray(sz);
+        state.target = state.arr[Math.floor(state.arr.length * 0.65)];
+        elTarget.value = state.target;
+        rebuild();
+      });
+
+      btnNewArray.addEventListener("click", function () {
+        var sz = parseInt(elSize.value, 10);
+        state.arr = generateSortedArray(sz);
+        state.target = state.arr[Math.floor(Math.random() * sz)];
+        elTarget.value = state.target;
+        rebuild();
+      });
+
+      btnPrev.addEventListener("click", function () {
+        stopPlay();
+        if (state.stepIndex > 0) {
+          state.stepIndex -= 1;
+          render();
+        }
+      });
+
+      btnNext.addEventListener("click", function () {
+        stopPlay();
+        if (state.stepIndex < state.steps.length - 1) {
+          state.stepIndex += 1;
+          render();
+        }
+      });
+
+      btnReset.addEventListener("click", function () {
+        stopPlay();
+        state.stepIndex = 0;
+        render();
+      });
+
+      btnPlay.addEventListener("click", function () {
+        if (state.timer) {
+          stopPlay();
+          return;
+        }
+        if (state.stepIndex >= state.steps.length - 1) {
+          state.stepIndex = 0;
+          render();
+        }
+        btnPlay.textContent = "إيقاف مؤقت";
+        var delay = 2100 - parseInt(speedRange.value, 10);
+        state.timer = setInterval(function () {
+          if (state.stepIndex < state.steps.length - 1) {
+            state.stepIndex += 1;
+            render();
+          } else {
+            stopPlay();
+          }
+        }, delay);
+      });
+
+      speedRange.addEventListener("input", function () {
+        if (state.timer) {
+          stopPlay();
+          btnPlay.click();
+        }
+      });
+
+      rebuild();
+    })();
+  </script>
+</body>
+</html>
