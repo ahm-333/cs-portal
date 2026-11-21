@@ -513,6 +513,22 @@ html.dark,
   }
 }
 
+.rb-shiny-text {
+  background-image: linear-gradient(
+    110deg,
+    currentColor 38%,
+    rgba(255, 255, 255, 0.92) 50%,
+    currentColor 62%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.rb-shiny-active {
+  animation: shinySweep var(--rb-shine-speed, 4.2s) linear infinite;
+}
+
 @keyframes paneIn {
   0% {
     opacity: 0;

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { SITE_CONFIG, type SocialLinkItem } from "@/lib/config";
 import { emitToast } from "@/lib/stores/events";
+import { BlurText, ShinyText, TiltedCard } from "@/components/ui/ReactBits";
 
 const IMPACT_METRICS = [
   {
@@ -174,47 +175,49 @@ export function InstructorBrandCard() {
               +
             </span>
 
-            {/* Balanced 4:5 Editorial Portrait Frame */}
-            <div
-              className="relative aspect-[4/5] w-full rounded-[26px] overflow-hidden border-2 shadow-xl"
-              style={{
-                borderColor: "var(--border-strong)",
-                background: "var(--hero-bg)",
-              }}
-            >
-              <Image
-                src="/images/founder.jpg"
-                alt={SITE_CONFIG.instructorName}
-                fill
-                sizes="(max-width: 640px) 240px, (max-width: 768px) 270px, 300px"
-                className="object-cover object-[50%_16%] transition-transform duration-500 group-hover:scale-[1.02]"
-              />
-
-              {/* Subtle Editorial Bottom Vignette for Credential Legibility */}
+            {/* Balanced 4:5 Editorial Portrait Frame wrapped in React Bits TiltedCard */}
+            <TiltedCard className="rounded-[26px]" maxTiltDeg={5.5} scaleOnHover={1.018}>
               <div
-                className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#0b1322]/90 via-[#0b1322]/35 to-transparent pointer-events-none"
-                aria-hidden="true"
-              />
-
-              {/* Floating Frosted-Glass Credential Card */}
-              <div
-                className="absolute bottom-3 right-3 left-3 px-3 py-2 rounded-2xl bg-[#0e1726]/86 backdrop-blur-md border border-white/15 flex items-center justify-between gap-2 shadow-lg"
-                dir="ltr"
+                className="relative aspect-[4/5] w-full rounded-[26px] overflow-hidden border-2 shadow-xl"
+                style={{
+                  borderColor: "var(--border-strong)",
+                  background: "var(--hero-bg)",
+                }}
               >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span
-                    className="w-2 h-2 rounded-full bg-[#66c7a6] shadow-[0_0_8px_#66c7a6] shrink-0"
-                    aria-hidden="true"
-                  />
-                  <span className="font-en text-[11px] font-extrabold text-white truncate">
-                    {SITE_CONFIG.universityBadge}
+                <Image
+                  src="/images/founder.jpg"
+                  alt={SITE_CONFIG.instructorName}
+                  fill
+                  sizes="(max-width: 640px) 240px, (max-width: 768px) 270px, 300px"
+                  className="object-cover object-[50%_16%] transition-transform duration-500 group-hover:scale-[1.02]"
+                />
+
+                {/* Subtle Editorial Bottom Vignette for Credential Legibility */}
+                <div
+                  className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#0b1322]/90 via-[#0b1322]/35 to-transparent pointer-events-none"
+                  aria-hidden="true"
+                />
+
+                {/* Floating Frosted-Glass Credential Card */}
+                <div
+                  className="absolute bottom-3 right-3 left-3 px-3 py-2 rounded-2xl bg-[#0e1726]/86 backdrop-blur-md border border-white/15 flex items-center justify-between gap-2 shadow-lg"
+                  dir="ltr"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span
+                      className="w-2 h-2 rounded-full bg-[#66c7a6] shadow-[0_0_8px_#66c7a6] shrink-0"
+                      aria-hidden="true"
+                    />
+                    <span className="font-en text-[11px] font-extrabold text-white truncate">
+                      {SITE_CONFIG.universityBadge}
+                    </span>
+                  </div>
+                  <span className="font-mono-code text-[10px] font-bold px-2 py-0.5 rounded-lg bg-white/10 text-[#66c7a6] border border-white/10 shrink-0">
+                    Class of AI
                   </span>
                 </div>
-                <span className="font-mono-code text-[10px] font-bold px-2 py-0.5 rounded-lg bg-white/10 text-[#66c7a6] border border-white/10 shrink-0">
-                  Class of AI
-                </span>
               </div>
-            </div>
+            </TiltedCard>
           </div>
         </div>
 
@@ -229,7 +232,7 @@ export function InstructorBrandCard() {
               }}
             >
               <UserCheck className="w-3.5 h-3.5" />
-              <span>مقدّم الشرح ومؤسس المنصة</span>
+              <ShinyText>مقدّم الشرح ومؤسس المنصة</ShinyText>
             </div>
             <span
               className="font-mono-code text-[10.5px] font-bold px-2.5 py-1 rounded-full border"
@@ -248,7 +251,7 @@ export function InstructorBrandCard() {
               className="font-en text-2xl sm:text-3xl lg:text-[32px] font-black tracking-tight"
               style={{ color: "var(--text-primary)" }}
             >
-              {SITE_CONFIG.instructorName}
+              <BlurText text={SITE_CONFIG.instructorName} stagger={0.07} />
             </h2>
             <p
               className="text-[14.5px] font-bold"

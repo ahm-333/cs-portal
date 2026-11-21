@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/config";
 import { openFeedbackModal } from "@/lib/stores/events";
+import { BlurText, ShinyText } from "@/components/ui/ReactBits";
 
 export function FinalCtaSection() {
   return (
@@ -23,15 +24,15 @@ export function FinalCtaSection() {
           </div>
           <span className="text-[12px] sm:text-[12.5px] font-bold text-slate-100">
             بإشراف وشرح{" "}
-            <span className="font-en font-extrabold text-white">
+            <ShinyText className="font-en font-extrabold text-white">
               {SITE_CONFIG.instructorName}
-            </span>{" "}
+            </ShinyText>{" "}
             <span className="text-slate-300/90">· جامعة الزقازيق</span>
           </span>
         </div>
 
         <h2 className="text-2xl sm:text-3xl font-extrabold leading-snug">
-          جاهز ترتّب مذاكرتك من النهاردة؟
+          <BlurText text="جاهز ترتّب مذاكرتك من النهاردة؟" />
         </h2>
         <p className="text-[13.5px] sm:text-[15px] text-slate-200/85 max-w-xl mx-auto leading-relaxed">
           اختار فرقتك في 5 ثوانٍ، وابدأ بأول درس في مادتك بدون أي خطوات معقدة.

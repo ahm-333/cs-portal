@@ -12,6 +12,7 @@ import {
   PlayCircle,
   Sparkles,
 } from "lucide-react";
+import { BlurText, ShinyText } from "@/components/ui/ReactBits";
 
 interface StageCopyItem {
   tag: string;
@@ -333,10 +334,15 @@ export function DeskScrollytellingCinema() {
       const topAbs = track.getBoundingClientRect().top + window.scrollY;
       const scrollable = track.offsetHeight - window.innerHeight;
       if (scrollable > 0) {
-        window.scrollTo({
-          top: topAbs + targetP * scrollable,
-          behavior: "smooth",
-        });
+        const destY = topAbs + targetP * scrollable;
+        if (window.__lenis) {
+          window.__lenis.scrollTo(destY, { duration: 1.05 });
+        } else {
+          window.scrollTo({
+            top: destY,
+            behavior: "smooth",
+          });
+        }
         return;
       }
     }
@@ -365,7 +371,9 @@ export function DeskScrollytellingCinema() {
             <div className="w-full flex items-center justify-between sm:justify-center relative mb-1.5 sm:mb-2">
               <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] sm:text-[11.5px] font-bold text-[#f0a786]">
                 <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                <span id="cinemaStageTag">{currentCopy.tag}</span>
+                <ShinyText id-tag="cinemaStageTag">
+                  <span id="cinemaStageTag">{currentCopy.tag}</span>
+                </ShinyText>
               </div>
 
               <a
@@ -382,7 +390,7 @@ export function DeskScrollytellingCinema() {
               id="cinemaHeadline"
               className="text-xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-snug transition-all"
             >
-              {currentCopy.title}
+              <BlurText key={currentCopy.title} text={currentCopy.title} stagger={0.035} duration={0.5} />
             </h1>
             <p
               id="cinemaSubline"

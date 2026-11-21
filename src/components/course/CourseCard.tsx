@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, BookOpen, Cpu, GitFork, Workflow } from "lucide-react";
 import { usePortalState } from "@/lib/stores/portalStore";
+import { TiltedCard } from "@/components/ui/ReactBits";
 import type { CourseWithStats } from "@/types/database";
 
 export interface CourseCardProps {
@@ -66,7 +67,8 @@ export function CourseCard({
       : "افتح المقرر";
 
   return (
-    <article className="spotlight-card bp-course-card bp-course-grid p-5 sm:p-6 flex flex-col justify-between gap-5">
+    <TiltedCard className="h-full rounded-[22px]" maxTiltDeg={3.2} scaleOnHover={1.008} glare={false}>
+      <article className="spotlight-card bp-course-card bp-course-grid h-full p-5 sm:p-6 flex flex-col justify-between gap-5">
       <div className="bp-fold-corner" aria-hidden="true" />
 
       <div className="space-y-4">
@@ -241,5 +243,6 @@ export function CourseCard({
         </div>
       </div>
     </article>
+    </TiltedCard>
   );
 }
