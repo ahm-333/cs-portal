@@ -1,18 +1,22 @@
 "use client";
 
 import { useMemo, useRef, useState, type ChangeEvent } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
+  ArrowLeft,
   ArrowRight,
   BookmarkCheck,
   CalendarClock,
   Download,
+  Flame,
   Moon,
   Search,
   Star,
   Sun,
   Upload,
   UserRound,
+  X,
 } from "lucide-react";
 import { CourseCard } from "@/components/course/CourseCard";
 import { Footer } from "@/components/layout/Footer";
@@ -42,26 +46,58 @@ export interface CoursesHubClientProps {
 
 type PriceFilter = "all" | "free" | "paid";
 
-function computeExamPlanText(
+interface ExamPlanMetrics {
+  text: string;
+  diffDays: number;
+  perDay: number;
+  remaining: number;
+  isUrgent: boolean;
+  isAllDone: boolean;
+  readinessPct: number;
+}
+
+function computeExamPlan(
   examDateStr: string,
   totalLessons: number,
   doneLessons: number
-): string {
+): ExamPlanMetrics {
   const remaining = Math.max(0, totalLessons - doneLessons);
-  if (remaining === 0 && totalLessons > 0) {
-    return "أنجزت كل الدروس المتاحة قبل الامتحان — عاش!";
-  }
+  const readinessPct =
+    totalLessons > 0
+      ? Math.min(100, Math.round((doneLessons / totalLessons) * 100))
+      : 100;
 
   const targetMs = Date.parse(`${examDateStr}T23:59:59`);
   const diffDays = Number.isFinite(targetMs)
     ? Math.max(1, Math.ceil((targetMs - Date.now()) / 86400000))
     : 5;
 
+  if (remaining === 0 && totalLessons > 0) {
+    return {
+      text: "أنجزت كل الدروس المتاحة قبل الامتحان — عاش!",
+      diffDays,
+      perDay: 0,
+      remaining: 0,
+      isUrgent: false,
+      isAllDone: true,
+      readinessPct: 100,
+    };
+  }
+
   const perDay = Math.max(1, Math.ceil(remaining / diffDays));
   const dayUnit = diffDays === 1 ? "يوم" : "أيام";
   const lessonUnit = perDay === 1 ? "درس" : "دروس";
+  const isUrgent = diffDays <= 3 && remaining > 0;
 
-  return `باقي ${diffDays} ${dayUnit} · محتاج تذاكر ${perDay} ${lessonUnit} يومياً (${remaining} متبقي)`;
+  return {
+    text: `باقي ${diffDays} ${dayUnit} · محتاج تذاكر ${perDay} ${lessonUnit} يومياً (${remaining} متبقي)`,
+    diffDays,
+    perDay,
+    remaining,
+    isUrgent,
+    isAllDone: false,
+    readinessPct,
+  };
 }
 
 export function CoursesHubClient({
@@ -145,13 +181,14 @@ export function CoursesHubClient({
   ]);
 
   const effectiveExamDate = portal.examDate || getDefaultExamDate();
-  const examPlanText = computeExamPlanText(
+  const examPlan = computeExamPlan(
     effectiveExamDate,
     totalLessons,
     doneLessonsCount
   );
 
   const mistakeCount = portal.mistakes.length;
+  const lastVisited = portal.lastVisited;
 
   function handleExportBackup() {
     const json = exportPortalBackupJson();
@@ -218,19 +255,19 @@ export function CoursesHubClient({
     <div className="flex-1 flex flex-col w-full min-h-screen">
       {/* Sticky Courses Topbar */}
       <header className="topbar-shell sticky top-0 z-40">
-        <div className="max-w-[1220px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+        <div className="max-w-[1220px] mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-1.5 sm:gap-3">
           {/* Start: Back to Landing + Brand Chip */}
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Link
               href="/"
-              className="px-3 h-9 rounded-xl border text-[12px] font-bold inline-flex items-center gap-1.5 transition-colors hover:opacity-85 shrink-0"
+              className="px-2.5 sm:px-3 min-h-[38px] h-9.5 rounded-xl border text-[11.5px] sm:text-[12px] font-bold inline-flex items-center gap-1 sm:gap-1.5 transition-colors hover:opacity-85 shrink-0"
               style={{
                 background: "var(--bg-surface)",
                 borderColor: "var(--border-soft)",
                 color: "var(--text-primary)",
               }}
             >
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-3.5 h-3.5 shrink-0" />
               <span>الرئيسية</span>
             </Link>
 
@@ -239,7 +276,7 @@ export function CoursesHubClient({
               style={{ background: "var(--border-strong)" }}
             />
 
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="hidden sm:flex items-center gap-2 min-w-0">
               <div
                 className="w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0"
                 style={{ background: "var(--hero-bg)" }}
@@ -259,7 +296,7 @@ export function CoursesHubClient({
                   <path d="M9 12l2 2 4-4" />
                 </svg>
               </div>
-              <div className="leading-tight hidden sm:block truncate">
+              <div className="leading-tight truncate">
                 <div
                   className="font-en font-extrabold text-[14px] truncate"
                   style={{ color: "var(--text-primary)" }}
@@ -276,23 +313,24 @@ export function CoursesHubClient({
             </div>
           </div>
 
-          {/* End: Ctrl+K Search, Pomodoro, Theme Toggle, Profile */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* End: Ctrl+K Search, Pomodoro, Theme Toggle, Profile (all accessible on mobile & desktop) */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               type="button"
               onClick={openCommandPalette}
-              className="inline-flex items-center gap-2 px-2.5 sm:px-3 h-9 rounded-xl border text-[12px] font-bold transition-colors hover:opacity-85 cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 min-h-[38px] h-9.5 rounded-xl border text-[12px] font-bold transition-colors hover:opacity-85 cursor-pointer shrink-0"
               style={{
                 background: "var(--bg-surface)",
                 borderColor: "var(--border-soft)",
                 color: "var(--text-secondary)",
               }}
               title="بحث سريع (Ctrl+K)"
+              aria-label="بحث سريع في المقررات والدروس (Ctrl+K)"
             >
               <Search className="w-3.5 h-3.5 shrink-0" />
               <span className="hidden sm:inline">بحث سريع</span>
               <span
-                className="hidden sm:inline-block font-mono-code text-[10px] px-1.5 py-0.5 rounded"
+                className="hidden lg:inline-block font-mono-code text-[10px] px-1.5 py-0.5 rounded"
                 style={{
                   background: "var(--bg-subtle)",
                   color: "var(--text-muted)",
@@ -302,12 +340,12 @@ export function CoursesHubClient({
               </span>
             </button>
 
-            <PomodoroTimer className="hidden md:flex" />
+            <PomodoroTimer className="inline-flex" />
 
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex items-center gap-1.5 px-2.5 h-9 rounded-xl border text-[12px] font-semibold transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 px-2.5 min-h-[38px] h-9.5 rounded-xl border text-[12px] font-semibold transition-colors cursor-pointer shrink-0"
               style={{
                 background: "var(--bg-surface)",
                 borderColor: "var(--border-soft)",
@@ -327,7 +365,7 @@ export function CoursesHubClient({
                   style={{ color: "var(--brand-primary)" }}
                 />
               )}
-              <span className="hidden sm:inline">
+              <span className="hidden md:inline">
                 {theme === "dark" ? "فاتح" : "داكن"}
               </span>
             </button>
@@ -335,11 +373,11 @@ export function CoursesHubClient({
             <button
               type="button"
               onClick={openProfileModal}
-              className="px-3.5 h-9 rounded-xl text-[12px] font-extrabold text-white flex items-center gap-1.5 transition-opacity hover:opacity-90 cursor-pointer"
+              className="px-2.5 sm:px-3.5 min-h-[38px] h-9.5 rounded-xl text-[11.5px] sm:text-[12px] font-extrabold text-white inline-flex items-center gap-1.5 transition-opacity hover:opacity-90 cursor-pointer shrink-0"
               style={{ background: "var(--hero-bg)" }}
             >
               <UserRound className="w-3.5 h-3.5 shrink-0" />
-              <span className="max-w-[120px] truncate">
+              <span className="max-w-[78px] sm:max-w-[130px] truncate">
                 {hasSavedProfile
                   ? `${portal.profile.name} · ف${portal.profile.year}`
                   : "إعداد فرقتك"}
@@ -350,27 +388,64 @@ export function CoursesHubClient({
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-[1220px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7">
+      <main className="flex-1 max-w-[1220px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-7">
         {/* 1. Student Progress & Welcome Banner */}
-        <section className="hero-shell rounded-[26px] p-6 sm:p-8 text-white border border-white/10 shadow-xl">
+        <section className="hero-shell rounded-[26px] p-5 sm:p-8 text-white border border-white/10 shadow-xl">
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            <div className="lg:col-span-7 space-y-2.5">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11.5px] font-bold text-[#a7f3d0]">
-                <span className="w-2 h-2 rounded-full bg-[#66c7a6]" />
-                <span>مساحة مذاكرتك الشخصية · حفظ محلي تلقائي</span>
+            <div className="lg:col-span-7 space-y-3">
+              {/* Hero Badge Row + Founder Mini-Signature */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] sm:text-[11.5px] font-bold text-[#a7f3d0]">
+                  <span className="w-2 h-2 rounded-full bg-[#66c7a6] shrink-0" />
+                  <span>مساحة مذاكرتك الشخصية · حفظ محلي تلقائي</span>
+                </div>
+
+                <div className="inline-flex items-center gap-2 pl-3 pr-1.5 py-1 rounded-full bg-white/[0.08] border border-white/15 text-[11px] sm:text-[11.5px] font-bold text-slate-200">
+                  <Image
+                    src="/images/founder.jpg"
+                    alt="Ahmed Amir Ahmed"
+                    width={28}
+                    height={28}
+                    className="w-7 h-7 rounded-full object-cover object-[50%_15%] ring-2 ring-[#e58a62] shrink-0"
+                  />
+                  <span>
+                    إعداد وشرح:{" "}
+                    <strong className="font-en text-white">
+                      Ahmed Amir Ahmed
+                    </strong>
+                  </span>
+                </div>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-snug">
                 {hasSavedProfile
                   ? `أهلاً يا ${portal.profile.name} — جاهز تكمل مذاكرتك؟`
                   : "اختار مادتك وابدأ المذاكرة بنظام"}
               </h1>
-              <p className="text-[13.5px] text-slate-300 max-w-xl leading-relaxed">
+
+              <p className="text-[13px] sm:text-[13.5px] text-slate-300 max-w-xl leading-relaxed">
                 كل مقرر مجهّز بفيديوهات الشرح، الملخصات المنظمة، الشرح التفاعلي،
                 موقع المادة، والكويزات — وتقدمك بيتحفظ تلقائياً على جهازك.
               </p>
+
+              {/* NEW "أكمل من حيث توقفت" (Resume Last Lesson) Smart Pill/Card */}
+              {lastVisited && (
+                <div className="pt-1">
+                  <Link
+                    href={`/courses/${lastVisited.courseSlug}/${lastVisited.lessonId}`}
+                    className="group inline-flex items-center gap-2 max-w-full px-3.5 sm:px-4 py-2.5 min-h-[42px] rounded-2xl bg-[#c25e33] hover:bg-[#ad5129] text-white text-[12px] sm:text-[12.5px] font-extrabold shadow-lg shadow-black/20 border border-white/15 transition-all hover:-translate-y-0.5"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-[#a7f3d0] animate-pulse shrink-0" />
+                    <span className="truncate">
+                      أكمل: {lastVisited.courseCode} · {lastVisited.lessonTitle}
+                    </span>
+                    <ArrowLeft className="w-3.5 h-3.5 shrink-0 transition-transform group-hover:-translate-x-1" />
+                  </Link>
+                </div>
+              )}
             </div>
 
-            <div className="lg:col-span-5 rounded-2xl p-4 sm:p-5 bg-white/[0.07] border border-white/12 backdrop-blur-md space-y-3">
+            <div className="lg:col-span-5 rounded-2xl p-4 sm:p-5 bg-white/[0.07] border border-white/12 backdrop-blur-md space-y-3.5">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[12.5px] font-bold text-slate-200">
                   إنجازك الإجمالي
@@ -387,27 +462,27 @@ export function CoursesHubClient({
                 />
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 text-[11.5px] text-slate-300 pt-0.5">
-                <span>
+              <div className="flex flex-wrap items-center justify-between gap-2.5 text-[11.5px] text-slate-300 pt-0.5">
+                <span className="font-semibold">
                   {doneLessonsCount} من {totalLessons} دروس مكتملة
                 </span>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={handleExportBackup}
-                    className="text-[#f0a786] hover:underline font-bold inline-flex items-center gap-1 cursor-pointer"
+                    className="min-h-[36px] px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-[#f0a786] text-[11.5px] font-extrabold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <Download className="w-3.5 h-3.5" />
+                    <Download className="w-3.5 h-3.5 shrink-0" />
                     <span>نسخة JSON</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={handleImportClick}
-                    className="text-[#a7f3d0] hover:underline font-bold inline-flex items-center gap-1 cursor-pointer"
+                    className="min-h-[36px] px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-[#a7f3d0] text-[11.5px] font-extrabold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <Upload className="w-3.5 h-3.5" />
+                    <Upload className="w-3.5 h-3.5 shrink-0" />
                     <span>استعادة</span>
                   </button>
 
@@ -428,57 +503,123 @@ export function CoursesHubClient({
         {/* 1.5 Student Productivity Strip: Exam Countdown Planner + Mistake Bank */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* Exam Countdown & Daily Target Planner */}
-          <div className="lg:col-span-7 surface-card rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div
-                className="inline-flex items-center gap-1.5 text-[11.5px] font-extrabold"
-                style={{ color: "var(--accent-warm)" }}
-              >
-                <CalendarClock className="w-4 h-4" />
-                <span>عدّاد الامتحان وخطة اليوم</span>
+          <div
+            className="lg:col-span-7 surface-card rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            style={{
+              borderColor: examPlan.isUrgent
+                ? "var(--accent-warm)"
+                : "var(--border-soft)",
+            }}
+          >
+            <div className="space-y-1.5 flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <div
+                  className="inline-flex items-center gap-1.5 text-[11.5px] font-extrabold"
+                  style={{
+                    color: examPlan.isUrgent
+                      ? "var(--accent-warm)"
+                      : "var(--brand-primary)",
+                  }}
+                >
+                  {examPlan.isUrgent ? (
+                    <Flame className="w-4 h-4 shrink-0" />
+                  ) : (
+                    <CalendarClock className="w-4 h-4 shrink-0" />
+                  )}
+                  <span>عدّاد الامتحان وخطة اليوم</span>
+                </div>
+
+                <span
+                  className="px-2 py-0.5 rounded-full text-[10.5px] font-extrabold"
+                  style={{
+                    background: examPlan.isAllDone
+                      ? "var(--success-soft)"
+                      : examPlan.isUrgent
+                        ? "var(--accent-warm-soft)"
+                        : "var(--brand-soft)",
+                    color: examPlan.isAllDone
+                      ? "var(--success-fg)"
+                      : examPlan.isUrgent
+                        ? "var(--accent-warm-text)"
+                        : "var(--brand-soft-text)",
+                  }}
+                >
+                  {examPlan.isAllDone
+                    ? "جاهز للامتحان ✓"
+                    : examPlan.isUrgent
+                      ? `أولوية قصوى · ${examPlan.diffDays} ${
+                          examPlan.diffDays === 1 ? "يوم" : "أيام"
+                        }`
+                      : "وتيرة مريحة"}
+                </span>
               </div>
+
               <div
-                className="text-[13.5px] font-extrabold"
+                className="text-[13.5px] font-extrabold leading-snug"
                 style={{ color: "var(--text-primary)" }}
               >
-                {examPlanText}
+                {examPlan.text}
               </div>
-              <div
-                className="text-[11.5px]"
-                style={{ color: "var(--text-muted)" }}
-              >
-                غيّر تاريخ الامتحان عشان الخطة تتحدث تلقائياً حسب الدروس
-                المتبقية.
+
+              {/* Visual Readiness Progress Track */}
+              <div className="pt-0.5 space-y-1">
+                <div
+                  className="h-1.5 w-full rounded-full overflow-hidden"
+                  style={{ background: "var(--bg-subtle)" }}
+                >
+                  <div
+                    className="h-full rounded-full transition-all duration-300"
+                    style={{
+                      width: `${Math.max(6, examPlan.readinessPct)}%`,
+                      background: examPlan.isAllDone
+                        ? "var(--success-fg)"
+                        : examPlan.isUrgent
+                          ? "var(--accent-warm)"
+                          : "var(--brand-primary)",
+                    }}
+                  />
+                </div>
+                <div
+                  className="text-[11px]"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  غيّر تاريخ الامتحان عشان الخطة تتحدث تلقائياً حسب الدروس
+                  المتبقية.
+                </div>
               </div>
             </div>
-            <div className="shrink-0 flex items-center gap-2">
+
+            <div className="w-full sm:w-auto shrink-0 flex items-center">
               <input
                 type="date"
                 value={effectiveExamDate}
                 onChange={handleExamDateChange}
                 aria-label="تاريخ الامتحان"
-                className="px-3 py-2 rounded-xl border text-[12px] font-mono-code font-bold outline-none"
+                className="w-full sm:w-auto min-h-[42px] px-3.5 py-2 rounded-xl border text-[12.5px] font-mono-code font-bold outline-none transition-colors focus:ring-2"
                 style={{
-                  background: "var(--bg-canvas)",
-                  borderColor: "var(--border-soft)",
+                  background: "var(--bg-subtle)",
+                  borderColor: examPlan.isUrgent
+                    ? "var(--accent-warm)"
+                    : "var(--border-strong)",
                   color: "var(--text-primary)",
+                  colorScheme: theme === "dark" ? "dark" : "light",
                 }}
               />
             </div>
           </div>
 
           {/* Mistake Bank Summary Card */}
-          <div className="lg:col-span-5 surface-card rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
-            <div className="space-y-1">
+          <div className="lg:col-span-5 surface-card rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+            <div className="space-y-1 min-w-0">
               <div
                 className="inline-flex items-center gap-1.5 text-[11.5px] font-extrabold"
                 style={{ color: "var(--brand-primary)" }}
               >
-                <BookmarkCheck className="w-4 h-4" />
+                <BookmarkCheck className="w-4 h-4 shrink-0" />
                 <span>بنك الأخطاء والمراجعة</span>
               </div>
               <div
-                className="text-[13px] font-bold"
+                className="text-[13px] font-bold leading-snug"
                 style={{ color: "var(--text-primary)" }}
               >
                 {mistakeCount === 0
@@ -492,19 +633,31 @@ export function CoursesHubClient({
             <button
               type="button"
               onClick={openMistakeBankModal}
-              className="px-3.5 py-2 rounded-xl text-[12px] font-extrabold border shrink-0 transition-colors hover:opacity-85 cursor-pointer"
+              className="w-full sm:w-auto min-h-[42px] px-4 py-2 rounded-xl text-[12px] font-extrabold border shrink-0 inline-flex items-center justify-center gap-1 transition-colors hover:opacity-85 cursor-pointer"
               style={{
-                background: "var(--bg-canvas)",
-                borderColor: "var(--border-strong)",
-                color: "var(--text-primary)",
+                background:
+                  mistakeCount > 0
+                    ? "var(--accent-warm-soft)"
+                    : "var(--bg-canvas)",
+                borderColor:
+                  mistakeCount > 0
+                    ? "var(--accent-warm)"
+                    : "var(--border-strong)",
+                color:
+                  mistakeCount > 0
+                    ? "var(--accent-warm-text)"
+                    : "var(--text-primary)",
               }}
             >
-              مراجعة (<span className="font-mono-code">{mistakeCount}</span>)
+              <span>مراجعة</span>
+              <span>(</span>
+              <span className="font-mono-code">{mistakeCount}</span>
+              <span>)</span>
             </button>
           </div>
         </section>
 
-        {/* 2. Smart RTL Search & Filter Toolbar */}
+        {/* 2. Smart RTL Search & Swipeable Mobile Filter Toolbar */}
         <section className="surface-card rounded-2xl p-4 sm:p-5 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="relative w-full md:w-96">
@@ -518,13 +671,27 @@ export function CoursesHubClient({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="ابحث باسم المادة أو الكود، مثل: CS-213"
-                className="w-full pr-10 pl-3 py-2.5 rounded-xl border text-[13px] outline-none focus:ring-2"
+                className="w-full min-h-[42px] pr-10 pl-9 py-2.5 rounded-xl border text-[13px] outline-none focus:ring-2"
                 style={{
                   background: "var(--bg-canvas)",
                   borderColor: "var(--border-soft)",
                   color: "var(--text-primary)",
                 }}
               />
+              {search.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  aria-label="مسح البحث"
+                  className="w-6 h-6 rounded-lg absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center hover:opacity-80 cursor-pointer"
+                  style={{
+                    background: "var(--bg-subtle)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
 
             <div className="flex items-center justify-between md:justify-end gap-3">
@@ -537,7 +704,7 @@ export function CoursesHubClient({
               <button
                 type="button"
                 onClick={openFeedbackModal}
-                className="px-3 py-1.5 rounded-xl border text-[12px] font-bold transition-colors hover:opacity-85 cursor-pointer"
+                className="min-h-[38px] px-3.5 py-1.5 rounded-xl border text-[12px] font-bold transition-colors hover:opacity-85 cursor-pointer shrink-0"
                 style={{
                   background: "var(--bg-canvas)",
                   borderColor: "var(--border-soft)",
@@ -549,8 +716,9 @@ export function CoursesHubClient({
             </div>
           </div>
 
+          {/* Horizontal Swipeable Snap Rail on Mobile, Wrapping on >= sm */}
           <div
-            className="flex flex-wrap items-center gap-2 pt-2 border-t"
+            className="flex flex-nowrap overflow-x-auto hide-scrollbar pb-1 sm:pb-0 sm:flex-wrap sm:overflow-visible items-center gap-2 pt-2.5 border-t snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             style={{ borderColor: "var(--border-soft)" }}
           >
             {hasSavedProfile && (
@@ -563,11 +731,11 @@ export function CoursesHubClient({
                     return next;
                   });
                 }}
-                className={`filter-pill px-3.5 py-1.5 rounded-xl text-[12px] font-bold inline-flex items-center gap-1.5 cursor-pointer ${
+                className={`filter-pill min-h-[38px] px-3.5 py-1.5 rounded-xl text-[12px] font-bold inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap snap-start cursor-pointer ${
                   myYearOnly ? "active-warm" : ""
                 }`}
               >
-                <Star className="w-3.5 h-3.5" />
+                <Star className="w-3.5 h-3.5 shrink-0" />
                 <span>مقررات فرقتي (ف{portal.profile.year})</span>
               </button>
             )}
@@ -578,7 +746,7 @@ export function CoursesHubClient({
                 setMyYearOnly(false);
                 setYearFilter("all");
               }}
-              className={`filter-pill px-3.5 py-1.5 rounded-xl text-[12px] cursor-pointer ${
+              className={`filter-pill min-h-[38px] px-3.5 py-1.5 rounded-xl text-[12px] shrink-0 whitespace-nowrap snap-start cursor-pointer ${
                 !myYearOnly && yearFilter === "all" ? "active" : ""
               }`}
             >
@@ -593,7 +761,7 @@ export function CoursesHubClient({
                   setMyYearOnly(false);
                   setYearFilter(String(yr));
                 }}
-                className={`filter-pill px-3.5 py-1.5 rounded-xl text-[12px] cursor-pointer ${
+                className={`filter-pill min-h-[38px] px-3.5 py-1.5 rounded-xl text-[12px] shrink-0 whitespace-nowrap snap-start cursor-pointer ${
                   !myYearOnly && yearFilter === String(yr) ? "active" : ""
                 }`}
               >
@@ -602,14 +770,14 @@ export function CoursesHubClient({
             ))}
 
             <span
-              className="h-4 w-px mx-1 hidden sm:inline-block"
+              className="h-4 w-px mx-0.5 shrink-0"
               style={{ background: "var(--border-strong)" }}
             />
 
             <button
               type="button"
               onClick={() => setPriceFilter("all")}
-              className={`filter-pill px-3.5 py-1.5 rounded-xl text-[12px] cursor-pointer ${
+              className={`filter-pill min-h-[38px] px-3.5 py-1.5 rounded-xl text-[12px] shrink-0 whitespace-nowrap snap-start cursor-pointer ${
                 priceFilter === "all" ? "active" : ""
               }`}
             >
@@ -618,7 +786,7 @@ export function CoursesHubClient({
             <button
               type="button"
               onClick={() => setPriceFilter("free")}
-              className={`filter-pill px-3.5 py-1.5 rounded-xl text-[12px] cursor-pointer ${
+              className={`filter-pill min-h-[38px] px-3.5 py-1.5 rounded-xl text-[12px] shrink-0 whitespace-nowrap snap-start cursor-pointer ${
                 priceFilter === "free" ? "active" : ""
               }`}
             >
@@ -627,7 +795,7 @@ export function CoursesHubClient({
             <button
               type="button"
               onClick={() => setPriceFilter("paid")}
-              className={`filter-pill px-3.5 py-1.5 rounded-xl text-[12px] cursor-pointer ${
+              className={`filter-pill min-h-[38px] px-3.5 py-1.5 rounded-xl text-[12px] shrink-0 whitespace-nowrap snap-start cursor-pointer ${
                 priceFilter === "paid" ? "active-warm" : ""
               }`}
             >
@@ -655,14 +823,14 @@ export function CoursesHubClient({
               <button
                 type="button"
                 onClick={resetAllFilters}
-                className="mt-1 px-4 py-2 rounded-xl text-[12px] font-extrabold text-white cursor-pointer"
+                className="mt-1 min-h-[42px] px-4 py-2 rounded-xl text-[12px] font-extrabold text-white cursor-pointer"
                 style={{ background: "var(--hero-bg)" }}
               >
                 إعادة ضبط الفلاتر
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
               {filteredCourses.map((course, idx) => (
                 <CourseCard
                   key={course.id}

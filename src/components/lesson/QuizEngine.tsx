@@ -339,7 +339,7 @@ export default function QuizEngine({
             <button
               type="button"
               onClick={handleRetake}
-              className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-extrabold text-white transition-opacity hover:opacity-95"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-extrabold text-white transition-opacity hover:opacity-95"
               style={{ background: "var(--hero-bg)" }}
             >
               <RotateCcw className="h-4 w-4" />
@@ -429,7 +429,7 @@ export default function QuizEngine({
         {currentQuestion.code_snippet ? (
           <div
             dir="ltr"
-            className="overflow-hidden rounded-xl border border-white/10 bg-[#0d131d] text-[#e4ebf5]"
+            className="max-w-full overflow-hidden rounded-xl border border-white/10 bg-[#0d131d] text-[#e4ebf5]"
           >
             <div className="flex items-center gap-2 border-b border-white/10 bg-[#141d2b] px-3.5 py-1.5 text-xs font-semibold text-slate-300">
               <Code2 className="h-3.5 w-3.5 text-[#66c7a6]" />
@@ -437,7 +437,7 @@ export default function QuizEngine({
                 {currentQuestion.code_lang || "cpp"}
               </span>
             </div>
-            <div className="overflow-x-auto">
+            <div className="max-w-full overflow-x-auto">
               <SyntaxHighlighter
                 language={(currentQuestion.code_lang || "cpp").toLowerCase()}
                 style={vscDarkPlus}
@@ -445,7 +445,7 @@ export default function QuizEngine({
                   margin: 0,
                   padding: "0.85rem 1.1rem",
                   background: "transparent",
-                  fontSize: "0.84rem",
+                  fontSize: "0.82rem",
                   lineHeight: "1.6",
                   fontFamily:
                     "var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -494,7 +494,7 @@ export default function QuizEngine({
                 type="button"
                 disabled={hasAnswered}
                 onClick={() => handleSelectOption(optionIndex)}
-                className="flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-right text-[13px] font-bold transition-all hover:opacity-95 disabled:cursor-default"
+                className="flex min-h-[48px] w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-right text-[13px] font-bold transition-all hover:opacity-95 disabled:cursor-default sm:px-4"
                 style={{
                   borderColor,
                   background,
@@ -514,7 +514,9 @@ export default function QuizEngine({
                 >
                   {letter}
                 </span>
-                <span className="flex-1 leading-relaxed">{optionText}</span>
+                <span className="flex-1 break-words leading-relaxed">
+                  {optionText}
+                </span>
 
                 {hasAnswered && isCorrectOption ? (
                   <CheckCircle2
@@ -578,7 +580,7 @@ export default function QuizEngine({
         <button
           type="button"
           onClick={handleBookmarkQuestion}
-          className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-[12px] font-bold transition-colors hover:opacity-85"
+          className="inline-flex min-h-[42px] items-center gap-1.5 rounded-xl border px-3.5 py-2 text-[12px] font-bold transition-colors hover:opacity-85"
           style={{
             background: isBookmarked
               ? "var(--accent-warm-soft)"
@@ -611,7 +613,7 @@ export default function QuizEngine({
           type="button"
           onClick={handleNext}
           disabled={!hasAnswered}
-          className="rounded-xl px-5 py-2 text-[12.5px] font-extrabold text-white transition-all hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-45"
+          className="inline-flex min-h-[42px] items-center justify-center rounded-xl px-5 py-2 text-[12.5px] font-extrabold text-white transition-all hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-45"
           style={{ background: "var(--hero-bg)" }}
         >
           {safeIndex + 1 < sortedQuestions.length

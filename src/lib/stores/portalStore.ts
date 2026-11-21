@@ -19,6 +19,15 @@ export interface MistakeItem {
   ansText: string;
 }
 
+export interface LastVisitedLesson {
+  courseSlug: string;
+  courseCode: string;
+  courseTitle: string;
+  lessonId: string;
+  lessonTitle: string;
+  visitedAt: string;
+}
+
 export interface PortalState {
   profile: PortalProfile;
   completedLessons: string[];
@@ -27,6 +36,7 @@ export interface PortalState {
   mistakes: MistakeItem[];
   unlockedCourses: string[];
   examDate: string; // YYYY-MM-DD
+  lastVisited: LastVisitedLesson | null;
 }
 
 export const PORTAL_STORAGE_KEY = "cs_portal_state_v3";
@@ -53,6 +63,7 @@ const SERVER_SNAPSHOT: PortalState = Object.freeze({
   mistakes: Object.freeze([]) as unknown as MistakeItem[],
   unlockedCourses: Object.freeze([]) as unknown as string[],
   examDate: "",
+  lastVisited: null,
 });
 
 let cachedRaw: string | null | undefined = undefined;
@@ -166,6 +177,25 @@ function sanitizeExamDate(raw: unknown): string {
   return getDefaultExamDate();
 }
 
+function sanitizeLastVisited(raw: unknown): LastVisitedLesson | null {
+  if (!isRecord(raw)) return null;
+  const courseSlug = typeof raw.courseSlug === "string" ? raw.courseSlug.trim() : "";
+  const courseCode = typeof raw.courseCode === "string" ? raw.courseCode.trim() : "";
+  const courseTitle = typeof raw.courseTitle === "string" ? raw.courseTitle.trim() : "";
+  const lessonId = typeof raw.lessonId === "string" ? raw.lessonId.trim() : "";
+  const lessonTitle = typeof raw.lessonTitle === "string" ? raw.lessonTitle.trim() : "";
+  const visitedAt = typeof raw.visitedAt === "string" ? raw.visitedAt.trim() : "";
+  if (!courseSlug || !lessonId || !courseTitle) return null;
+  return {
+    courseSlug,
+    courseCode: courseCode || "CS",
+    courseTitle,
+    lessonId,
+    lessonTitle: lessonTitle || courseTitle,
+    visitedAt: visitedAt || new Date().toISOString(),
+  };
+}
+
 function createEmptyClientState(): PortalState {
   return {
     profile: {
@@ -180,6 +210,7 @@ function createEmptyClientState(): PortalState {
     mistakes: [],
     unlockedCourses: [],
     examDate: getDefaultExamDate(),
+    lastVisited: null,
   };
 }
 
@@ -218,6 +249,7 @@ function sanitizePortalState(raw: unknown): PortalState {
     mistakes: sanitizeMistakes(raw.mistakes),
     unlockedCourses: sanitizeStringArray(raw.unlockedCourses),
     examDate: sanitizeExamDate(raw.examDate),
+    lastVisited: sanitizeLastVisited(raw.lastVisited),
   };
 }
 
@@ -669,6 +701,33 @@ export function setExamDate(dateStr: string): PortalState {
   return persistState({
     ...current,
     examDate: ISO_DATE_RE.test(clean) ? clean : getDefaultExamDate(),
+  });
+}
+
+export function setLastVisited(
+  entry: Omit<LastVisitedLesson, "visitedAt"> & { visitedAt?: string }
+): PortalState {
+  const cleanSlug = entry.courseSlug.trim();
+  const cleanLesson = entry.lessonId.trim();
+  if (!cleanSlug || !cleanLesson) return getPortalSnapshot();
+  const current = getPortalSnapshot();
+  if (
+    current.lastVisited &&
+    current.lastVisited.courseSlug === cleanSlug &&
+    current.lastVisited.lessonId === cleanLesson
+  ) {
+    return current;
+  }
+  return persistState({
+    ...current,
+    lastVisited: {
+      courseSlug: cleanSlug,
+      courseCode: entry.courseCode.trim() || "CS",
+      courseTitle: entry.courseTitle.trim() || cleanSlug,
+      lessonId: cleanLesson,
+      lessonTitle: entry.lessonTitle.trim() || entry.courseTitle.trim(),
+      visitedAt: entry.visitedAt || new Date().toISOString(),
+    },
   });
 }
 

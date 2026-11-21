@@ -6,6 +6,12 @@ import { ArrowLeft, Menu, Moon, Sun, X } from "lucide-react";
 import { toggleTheme, useTheme } from "@/components/layout/themeStore";
 import { SITE_CONFIG } from "@/lib/config";
 
+const NAV_LINKS = [
+  { href: "#interactive-showcase", label: "أدوات المادة" },
+  { href: "#compare", label: "الفرق الحقيقي" },
+  { href: "#instructor", label: "عن المحاضر" },
+] as const;
+
 export function LandingTopbar() {
   const theme = useTheme();
   const [isVisible, setIsVisible] = useState(false);
@@ -36,6 +42,17 @@ export function LandingTopbar() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileMenuOpen]);
+
   const isDark = theme === "dark";
 
   return (
@@ -45,20 +62,20 @@ export function LandingTopbar() {
         isVisible ? "" : "topbar-hidden"
       }`}
     >
-      <div className="max-w-[1220px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
-        {/* Brand */}
-        <div className="flex items-center gap-2.5">
+      <div className="max-w-[1220px] mx-auto px-3.5 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2.5 sm:gap-3">
+        {/* Brand + Mobile Menu Button */}
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
           <button
             id="mobileMenuBtn"
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className="lg:hidden p-2 rounded-xl border cursor-pointer"
+            className="lg:hidden min-w-[42px] min-h-[42px] p-2.5 rounded-xl border flex items-center justify-center cursor-pointer transition-colors shrink-0"
             style={{
               background: "var(--bg-surface)",
               borderColor: "var(--border-soft)",
               color: "var(--text-primary)",
             }}
-            aria-label="القائمة"
+            aria-label={mobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobileNavDrawer"
           >
@@ -69,7 +86,11 @@ export function LandingTopbar() {
             )}
           </button>
 
-          <a href="#top" className="flex items-center gap-2.5 text-right">
+          <a
+            href="#top"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-2 sm:gap-2.5 text-right min-w-0"
+          >
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0"
               style={{ background: "var(--hero-bg)" }}
@@ -90,15 +111,15 @@ export function LandingTopbar() {
                 <path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4" />
               </svg>
             </div>
-            <div className="leading-tight">
+            <div className="leading-tight min-w-0">
               <div
-                className="font-en font-extrabold text-[15px] tracking-tight"
+                className="font-en font-extrabold text-[14.5px] sm:text-[15px] tracking-tight truncate"
                 style={{ color: "var(--text-primary)" }}
               >
                 {SITE_CONFIG.name}
               </div>
               <div
-                className="text-[10.5px] font-semibold"
+                className="text-[10.5px] font-semibold truncate"
                 style={{ color: "var(--text-muted)" }}
               >
                 {SITE_CONFIG.arabicName}
@@ -107,7 +128,7 @@ export function LandingTopbar() {
           </a>
         </div>
 
-        {/* Center Pill Nav */}
+        {/* Center Pill Nav (Desktop >= 1024px) */}
         <nav
           className="hidden lg:flex items-center gap-1 p-1 rounded-2xl border"
           style={{
@@ -116,18 +137,15 @@ export function LandingTopbar() {
           }}
           aria-label="أقسام الصفحة"
         >
-          <a
-            href="#interactive-showcase"
-            className="nav-link px-3.5 py-1.5 rounded-xl text-[13px] font-semibold"
-          >
-            أدوات المادة
-          </a>
-          <a
-            href="#compare"
-            className="nav-link px-3.5 py-1.5 rounded-xl text-[13px] font-semibold"
-          >
-            الفرق الحقيقي
-          </a>
+          {NAV_LINKS.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="nav-link px-3.5 py-1.5 rounded-xl text-[13px] font-semibold"
+            >
+              {item.label}
+            </a>
+          ))}
         </nav>
 
         {/* Left Controls: Theme + Magnetic Start CTA */}
@@ -136,26 +154,36 @@ export function LandingTopbar() {
             id="themeToggleBtn"
             type="button"
             onClick={() => toggleTheme()}
-            className="flex items-center gap-1.5 px-3 h-9 rounded-xl border text-[12px] font-semibold transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-1.5 px-3 min-h-[40px] rounded-xl border text-[12px] font-semibold transition-colors cursor-pointer"
             style={{
               background: "var(--bg-surface)",
               borderColor: "var(--border-soft)",
               color: "var(--text-primary)",
             }}
             title="تبديل الوضع الفاتح والداكن"
-            aria-label={isDark ? "التبديل إلى الوضع الفاتح" : "التبديل إلى الوضع الداكن"}
+            aria-label={
+              isDark ? "التبديل إلى الوضع الفاتح" : "التبديل إلى الوضع الداكن"
+            }
           >
             {isDark ? (
-              <Sun className="w-4 h-4" style={{ color: "var(--brand-primary)" }} />
+              <Sun
+                className="w-4 h-4"
+                style={{ color: "var(--brand-primary)" }}
+              />
             ) : (
-              <Moon className="w-4 h-4" style={{ color: "var(--brand-primary)" }} />
+              <Moon
+                className="w-4 h-4"
+                style={{ color: "var(--brand-primary)" }}
+              />
             )}
-            <span className="hidden sm:inline">{isDark ? "فاتح" : "داكن"}</span>
+            <span className="hidden sm:inline">
+              {isDark ? "فاتح" : "داكن"}
+            </span>
           </button>
 
           <Link
             href="/courses"
-            className="start-study-cta magnetic-btn px-4 h-9 rounded-xl text-[12.5px] font-extrabold text-white flex items-center gap-1.5 shadow-sm"
+            className="start-study-cta magnetic-btn px-3.5 sm:px-4 min-h-[40px] rounded-xl text-[12px] sm:text-[12.5px] font-extrabold text-white flex items-center gap-1.5 shadow-sm"
             style={{ background: "#c25e33" }}
           >
             <span>ابدأ المذاكرة</span>
@@ -164,30 +192,44 @@ export function LandingTopbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Sleek Frosted Glass Mobile Drawer */}
       {mobileMenuOpen && (
         <div
           id="mobileNavDrawer"
-          className="lg:hidden border-t px-4 py-3 flex flex-col gap-1"
+          className="lg:hidden border-t px-4 py-3.5 flex flex-col gap-1.5 backdrop-blur-xl shadow-xl"
           style={{
-            background: "var(--bg-surface)",
+            background: "color-mix(in srgb, var(--bg-surface) 94%, transparent)",
             borderColor: "var(--border-soft)",
           }}
         >
-          <a
-            href="#interactive-showcase"
-            onClick={() => setMobileMenuOpen(false)}
-            className="mobile-nav-link nav-link px-3 py-2 rounded-xl text-[13.5px] font-semibold"
+          {NAV_LINKS.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className="mobile-nav-link nav-link min-h-[44px] px-3.5 py-2.5 rounded-xl text-[13.5px] font-bold flex items-center justify-between"
+            >
+              <span>{item.label}</span>
+              <ArrowLeft
+                className="w-3.5 h-3.5 opacity-60"
+                style={{ color: "var(--text-muted)" }}
+              />
+            </a>
+          ))}
+
+          <div
+            className="pt-2 mt-1 border-t"
+            style={{ borderColor: "var(--border-soft)" }}
           >
-            أدوات المادة
-          </a>
-          <a
-            href="#compare"
-            onClick={() => setMobileMenuOpen(false)}
-            className="mobile-nav-link nav-link px-3 py-2 rounded-xl text-[13.5px] font-semibold"
-          >
-            الفرق الحقيقي
-          </a>
+            <Link
+              href="/courses"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full min-h-[44px] px-4 py-2.5 rounded-xl text-[13px] font-extrabold text-white flex items-center justify-center gap-2 shadow-sm"
+              style={{ background: "#c25e33" }}
+            >
+              <span>ابدأ المذاكرة ←</span>
+            </Link>
+          </div>
         </div>
       )}
     </header>

@@ -239,7 +239,7 @@ export default function VideoPlayer({
               type="button"
               onClick={() => setSpeedIdx((prev) => (prev + 1) % SPEEDS.length)}
               title="سرعة التشغيل المفضلة"
-              className="font-mono-code rounded-lg bg-white/10 px-2.5 py-1 text-[11.5px] font-bold text-slate-200 transition-colors hover:bg-white/15"
+              className="font-mono-code inline-flex min-h-[36px] min-w-[50px] items-center justify-center rounded-xl bg-white/10 px-2.5 py-1 text-[11.5px] font-bold text-slate-200 transition-colors hover:bg-white/15"
             >
               {SPEEDS[speedIdx]}
             </button>
@@ -254,7 +254,7 @@ export default function VideoPlayer({
                 }
               }}
               aria-label={isPlayingBoard ? "إيقاف مؤقت" : "تشغيل"}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#c25e33] text-white shadow-lg transition-transform hover:scale-105"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#c25e33] text-white shadow-lg transition-transform hover:scale-105"
             >
               {isPlayingBoard && !showEmbed ? (
                 <Pause className="h-4 w-4 fill-current" />
@@ -280,13 +280,13 @@ export default function VideoPlayer({
             />
           </div>
         ) : (
-          <div className="flex min-h-[180px] flex-col items-center justify-center gap-3 rounded-2xl border border-white/10 bg-[#09111f] p-5 text-center">
-            <div className="text-[12.5px] font-bold text-[#f0a786]">
+          <div className="flex min-h-[180px] w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border border-white/10 bg-[#09111f] p-4 text-center sm:p-5">
+            <div className="max-w-full break-words text-[12.5px] font-bold text-[#f0a786]">
               {activeChapter ? activeChapter.name : title}
             </div>
             <div
               dir="ltr"
-              className="font-mono-code rounded-xl border border-[#66c7a6]/35 bg-white/[0.06] px-4 py-2.5 text-[13.5px] font-bold text-[#a7f3d0] sm:text-[15.5px]"
+              className="font-mono-code max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded-xl border border-[#66c7a6]/35 bg-white/[0.06] px-3.5 py-2.5 text-[12.5px] font-bold text-[#a7f3d0] sm:px-4 sm:text-[15.5px]"
             >
               {activeChapter?.visual ?? title}
             </div>
@@ -301,13 +301,13 @@ export default function VideoPlayer({
 
         {/* Active Chapter Visual Pill when Real Video is shown */}
         {showEmbed && activeChapter ? (
-          <div className="flex flex-col items-start justify-between gap-2 rounded-xl border border-white/10 bg-[#09111f]/80 px-4 py-2.5 sm:flex-row sm:items-center">
-            <div className="text-[12px] font-bold text-[#f0a786]">
+          <div className="flex flex-col items-start justify-between gap-2 overflow-hidden rounded-xl border border-white/10 bg-[#09111f]/80 px-3.5 py-2.5 sm:flex-row sm:items-center sm:px-4">
+            <div className="max-w-full break-words text-[12px] font-bold text-[#f0a786]">
               {activeChapter.name}
             </div>
             <div
               dir="ltr"
-              className="font-mono-code text-[12px] font-bold text-[#a7f3d0]"
+              className="font-mono-code max-w-full overflow-x-auto break-words text-[11.5px] font-bold text-[#a7f3d0] sm:text-[12px]"
             >
               {activeChapter.visual}
             </div>
@@ -324,7 +324,7 @@ export default function VideoPlayer({
           </div>
           <div
             dir="ltr"
-            className="font-mono-code flex items-center justify-between text-[11px] text-slate-400"
+            className="font-mono-code flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400"
           >
             <span>
               {activeChapter?.time ?? "00:00"} / {durationLabel}
@@ -346,7 +346,8 @@ export default function VideoPlayer({
                 key={`${chapter.time}-${idx}`}
                 type="button"
                 onClick={() => handleSelectChapter(idx)}
-                className="rounded-xl border p-3 text-right transition-all hover:-translate-y-0.5"
+                aria-pressed={isActive}
+                className="flex min-h-[54px] flex-col justify-center rounded-xl border p-3 text-right transition-all hover:-translate-y-0.5"
                 style={{
                   background: isActive
                     ? "var(--accent-warm-soft)"
@@ -356,14 +357,26 @@ export default function VideoPlayer({
                     : "var(--border-soft)",
                 }}
               >
-                <div
-                  className="font-mono-code text-[10.5px] font-bold"
-                  style={{ color: "var(--accent-warm)" }}
-                >
-                  {chapter.time}
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className="font-mono-code text-[10.5px] font-bold"
+                    style={{ color: "var(--accent-warm)" }}
+                  >
+                    {chapter.time}
+                  </span>
+                  <span
+                    className="text-[10px] font-bold"
+                    style={{
+                      color: isActive
+                        ? "var(--accent-warm-text)"
+                        : "var(--text-muted)",
+                    }}
+                  >
+                    فصل {idx + 1}
+                  </span>
                 </div>
                 <div
-                  className="mt-0.5 truncate text-[12px] font-bold"
+                  className="mt-1 line-clamp-2 text-[12px] font-bold sm:truncate"
                   style={{ color: "var(--text-primary)" }}
                   title={chapter.name}
                 >

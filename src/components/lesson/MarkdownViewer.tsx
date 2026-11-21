@@ -130,19 +130,19 @@ function CodeBlock({ code, language }: CodeBlockProps) {
   return (
     <div
       dir="ltr"
-      className="my-5 overflow-hidden rounded-[16px] border border-white/10 bg-[#0d131d] text-[#e4ebf5] shadow-sm"
+      className="my-5 w-full max-w-full overflow-hidden rounded-[16px] border border-white/10 bg-[#0d131d] text-[#e4ebf5] shadow-sm"
     >
-      <div className="flex items-center justify-between border-b border-white/10 bg-[#141d2b] px-4 py-2">
-        <div className="flex items-center gap-2 text-xs font-semibold tracking-wide text-slate-300">
-          <Terminal className="h-3.5 w-3.5 text-[#66c7a6]" />
-          <span className="font-mono-code">{displayLang}</span>
+      <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-[#141d2b] px-3.5 py-2 sm:px-4">
+        <div className="flex min-w-0 items-center gap-2 text-xs font-semibold tracking-wide text-slate-300">
+          <Terminal className="h-3.5 w-3.5 shrink-0 text-[#66c7a6]" />
+          <span className="font-mono-code truncate">{displayLang}</span>
         </div>
 
         <button
           type="button"
           onClick={handleCopy}
           dir="rtl"
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-bold transition-all ${
+          className={`inline-flex min-h-[34px] shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-bold transition-all ${
             copied
               ? "border-[#66c7a6]/50 bg-[#173026] text-[#66c7a6]"
               : "border-white/15 bg-white/5 text-slate-200 hover:border-[#e58a62] hover:text-white"
@@ -162,7 +162,7 @@ function CodeBlock({ code, language }: CodeBlockProps) {
         </button>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="max-w-full overflow-x-auto">
         <SyntaxHighlighter
           language={prismLang}
           style={vscDarkPlus}
@@ -175,9 +175,9 @@ function CodeBlock({ code, language }: CodeBlockProps) {
           }}
           customStyle={{
             margin: 0,
-            padding: "1rem 1.25rem",
+            padding: "1rem 1.15rem",
             background: "transparent",
-            fontSize: "0.84rem",
+            fontSize: "0.82rem",
             lineHeight: "1.7",
             fontFamily:
               "var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -290,7 +290,7 @@ const markdownComponents: Components = {
   },
   table({ children }) {
     return (
-      <div className="my-4 overflow-x-auto rounded-2xl border border-[var(--border-soft)] bg-[var(--bg-surface)]">
+      <div className="my-4 w-full max-w-full overflow-x-auto rounded-2xl border border-[var(--border-soft)] bg-[var(--bg-surface)]">
         <table className="w-full border-collapse text-start text-[12.5px]">
           {children}
         </table>
@@ -343,7 +343,10 @@ const markdownComponents: Components = {
     }
 
     return (
-      <pre dir="ltr" className="code-ltr my-4 text-[12.5px]">
+      <pre
+        dir="ltr"
+        className="code-ltr my-4 max-w-full overflow-x-auto text-[12.5px]"
+      >
         {children}
       </pre>
     );
@@ -352,7 +355,7 @@ const markdownComponents: Components = {
     return (
       <code
         dir="ltr"
-        className={`inline-block rounded-md border border-[var(--border-soft)] bg-[var(--bg-subtle)] px-1.5 py-0.5 align-baseline font-mono-code text-[0.85em] font-semibold text-[var(--brand-soft-text)] ${
+        className={`inline-block max-w-full break-words rounded-md border border-[var(--border-soft)] bg-[var(--bg-subtle)] px-1.5 py-0.5 align-baseline font-mono-code text-[0.85em] font-semibold text-[var(--brand-soft-text)] ${
           className ?? ""
         }`}
       >
@@ -389,11 +392,11 @@ export default function MarkdownViewer({
 
   return (
     <article
-      className={`${
+      className={`w-full max-w-full overflow-hidden ${
         embedded
           ? "rounded-2xl border border-[var(--border-soft)] bg-[var(--bg-canvas)] p-4 sm:p-6"
           : "surface-card rounded-[22px] p-5 sm:p-7"
-      } [&_.katex-display]:my-4 [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display]:rounded-xl [&_.katex-display]:border [&_.katex-display]:border-[var(--border-soft)] [&_.katex-display]:bg-[var(--bg-surface)] [&_.katex-display]:px-4 [&_.katex-display]:py-3 [&_.katex-display]:text-[var(--text-primary)] [&_.katex-display]:[direction:ltr] [&_.katex-display]:[unicode-bidi:isolate] [&_.katex]:text-[var(--text-primary)] [&_.katex]:[direction:ltr] [&_.katex]:[unicode-bidi:isolate]`}
+      } [&_.katex-display]:my-4 [&_.katex-display]:max-w-full [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display]:rounded-xl [&_.katex-display]:border [&_.katex-display]:border-[var(--border-soft)] [&_.katex-display]:bg-[var(--bg-surface)] [&_.katex-display]:px-4 [&_.katex-display]:py-3 [&_.katex-display]:text-[var(--text-primary)] [&_.katex-display]:[direction:ltr] [&_.katex-display]:[unicode-bidi:isolate] [&_.katex]:text-[var(--text-primary)] [&_.katex]:[direction:ltr] [&_.katex]:[unicode-bidi:isolate]`}
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Clock, Layers } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Layers } from "lucide-react";
 
 type RealityMode = "before" | "after";
 
@@ -30,10 +30,10 @@ export function RealitySwitchSection() {
           </h2>
         </div>
 
-        {/* Tactile Editorial Mode Switch */}
+        {/* Tactile Editorial Mode Switch (Balanced 50/50 Grid on <640px) */}
         <div className="flex justify-center">
           <div
-            className="reality-switch"
+            className="reality-switch w-full max-w-[420px] sm:w-auto sm:max-w-none !grid grid-cols-2 sm:!inline-flex"
             role="tablist"
             aria-label="تبديل بين المذاكرة التقليدية والمنصة"
           >
@@ -43,7 +43,9 @@ export function RealitySwitchSection() {
               role="tab"
               aria-selected={!isAfter}
               onClick={() => setMode("before")}
-              className={`reality-btn ${!isAfter ? "active-before" : ""}`}
+              className={`reality-btn min-h-[44px] !px-2.5 sm:!px-5 !py-2.5 !text-[12px] sm:!text-[13px] flex items-center justify-center text-center whitespace-nowrap ${
+                !isAfter ? "active-before" : ""
+              }`}
             >
               المذاكرة التقليدية
             </button>
@@ -53,7 +55,9 @@ export function RealitySwitchSection() {
               role="tab"
               aria-selected={isAfter}
               onClick={() => setMode("after")}
-              className={`reality-btn ${isAfter ? "active-after" : ""}`}
+              className={`reality-btn min-h-[44px] !px-2.5 sm:!px-5 !py-2.5 !text-[12px] sm:!text-[13px] flex items-center justify-center text-center whitespace-nowrap ${
+                isAfter ? "active-after" : ""
+              }`}
             >
               مع Ahmed Amir Ahmed
             </button>
@@ -107,7 +111,10 @@ export function RealitySwitchSection() {
             </p>
           </div>
 
-          <div id="rmTags1" className="flex flex-wrap gap-1.5 text-[11px] font-bold">
+          <div
+            id="rmTags1"
+            className="flex flex-wrap gap-1.5 text-[11px] font-bold"
+          >
             {isAfter ? (
               <>
                 <span
@@ -198,7 +205,10 @@ export function RealitySwitchSection() {
             </p>
           </div>
 
-          <div id="rmTags2" className="flex flex-wrap gap-1.5 text-[11px] font-bold">
+          <div
+            id="rmTags2"
+            className="flex flex-wrap gap-1.5 text-[11px] font-bold"
+          >
             {isAfter ? (
               <>
                 <span
@@ -304,6 +314,71 @@ export function RealitySwitchSection() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Dynamic Editorial Delta Strip */}
+      <div
+        id="realityDeltaStrip"
+        className="px-4 sm:px-6 py-3.5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all duration-300"
+        style={{
+          background: isAfter
+            ? "var(--success-soft)"
+            : "var(--accent-warm-soft)",
+          borderColor: isAfter ? "var(--success-fg)" : "var(--accent-warm)",
+        }}
+      >
+        <div className="flex items-center gap-2.5">
+          <span
+            className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+            style={{
+              background: "var(--bg-surface)",
+              color: isAfter ? "var(--success-fg)" : "var(--accent-warm)",
+            }}
+            aria-hidden="true"
+          >
+            {isAfter ? (
+              <CheckCircle2 className="w-4 h-4" />
+            ) : (
+              <AlertTriangle className="w-4 h-4" />
+            )}
+          </span>
+          <span
+            className="text-[13px] sm:text-[13.5px] font-extrabold leading-snug"
+            style={{
+              color: isAfter ? "var(--success-fg)" : "var(--accent-warm-text)",
+            }}
+          >
+            {isAfter
+              ? "النتيجة: توفير 45 دقيقة تشتيت + قفزة +72% في جاهزيتك للامتحان"
+              : "المشكلة: 45 دقيقة ضايعة قبل ما تبدأ أول سطر مذاكرة"}
+          </span>
+        </div>
+
+        {isAfter ? (
+          <span
+            className="font-mono-code text-[11px] font-extrabold px-3 py-1 rounded-xl border self-end sm:self-auto shrink-0"
+            style={{
+              background: "var(--bg-surface)",
+              borderColor: "var(--border-soft)",
+              color: "var(--success-fg)",
+            }}
+          >
+            -45m Search · +72% Readiness
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setMode("after")}
+            className="text-[12px] font-extrabold px-3.5 py-1.5 rounded-xl border self-end sm:self-auto shrink-0 cursor-pointer transition-transform hover:-translate-y-0.5"
+            style={{
+              background: "var(--bg-surface)",
+              borderColor: "var(--accent-warm)",
+              color: "var(--accent-warm-text)",
+            }}
+          >
+            شوف الفرق مع المنصة ←
+          </button>
+        )}
       </div>
     </section>
   );

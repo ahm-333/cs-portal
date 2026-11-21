@@ -343,7 +343,7 @@ export default function CourseInteractiveLab({
 
   const loadedLab = activeLab ? labCache[activeLab.id] : undefined;
   const isLabLoading = Boolean(activeLab && !loadedLab && !activeError);
-  const iframeHeight = `${Math.max(activeLab?.default_height || 580, 440)}px`;
+  const iframeHeight = `${Math.max(activeLab?.default_height || 540, 420)}px`;
   const safeExternalUrl = isSafeHttpUrl(
     loadedLab?.external_url ?? activeLab?.external_url
   );
@@ -372,7 +372,7 @@ export default function CourseInteractiveLab({
                 <button
                   type="button"
                   onClick={handleDsPush}
-                  className="rounded-xl px-3.5 py-1.5 text-[12px] font-extrabold text-white transition-transform hover:scale-[1.02]"
+                  className="inline-flex min-h-[40px] items-center justify-center rounded-xl px-3.5 py-2 text-[12px] font-extrabold text-white transition-transform hover:scale-[1.02]"
                   style={{ background: "#c25e33" }}
                 >
                   + Push Head
@@ -381,7 +381,7 @@ export default function CourseInteractiveLab({
                   type="button"
                   onClick={handleDsPop}
                   disabled={dsNodes.length <= 1}
-                  className="rounded-xl border px-3.5 py-1.5 text-[12px] font-bold transition-colors hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-45"
+                  className="inline-flex min-h-[40px] items-center justify-center rounded-xl border px-3.5 py-2 text-[12px] font-bold transition-colors hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-45"
                   style={{
                     background: "var(--bg-canvas)",
                     borderColor: "var(--border-soft)",
@@ -394,7 +394,8 @@ export default function CourseInteractiveLab({
                   type="button"
                   onClick={handleDsReset}
                   title="إعادة ضبط القائمة"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-xl border transition-colors hover:opacity-85"
+                  aria-label="إعادة ضبط القائمة"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-colors hover:opacity-85"
                   style={{
                     background: "var(--bg-canvas)",
                     borderColor: "var(--border-soft)",
@@ -415,7 +416,7 @@ export default function CourseInteractiveLab({
                         setBsTarget(t);
                         setBsStep(0);
                       }}
-                      className="font-mono-code rounded-lg px-2 py-1 text-[11px] font-bold transition-colors"
+                      className="font-mono-code inline-flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg px-2 py-1 text-[11px] font-bold transition-colors"
                       style={{
                         background:
                           bsTarget === t ? "var(--brand-soft)" : "transparent",
@@ -434,10 +435,24 @@ export default function CourseInteractiveLab({
                   onClick={() =>
                     setBsStep((prev) => (prev + 1) % activeBsSteps.length)
                   }
-                  className="rounded-xl px-4 py-1.5 text-[12px] font-extrabold text-white transition-transform hover:scale-[1.02]"
+                  className="inline-flex min-h-[40px] items-center justify-center rounded-xl px-4 py-2 text-[12px] font-extrabold text-white transition-transform hover:scale-[1.02]"
                   style={{ background: "#c25e33" }}
                 >
                   الخطوة التالية ←
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBsStep(0)}
+                  title="إعادة من الخطوة الأولى"
+                  aria-label="إعادة من الخطوة الأولى"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-colors hover:opacity-85"
+                  style={{
+                    background: "var(--bg-canvas)",
+                    borderColor: "var(--border-soft)",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
                 </button>
               </>
             ) : (
@@ -445,7 +460,7 @@ export default function CourseInteractiveLab({
                 <button
                   type="button"
                   onClick={() => setOsMode("fcfs")}
-                  className="rounded-xl px-3.5 py-1.5 text-[12px] font-extrabold transition-all"
+                  className="inline-flex min-h-[40px] items-center justify-center rounded-xl px-3.5 py-2 text-[12px] font-extrabold transition-all"
                   style={
                     osMode === "fcfs"
                       ? { background: "#c25e33", color: "#ffffff" }
@@ -461,7 +476,7 @@ export default function CourseInteractiveLab({
                 <button
                   type="button"
                   onClick={() => setOsMode("sjf")}
-                  className="rounded-xl px-3.5 py-1.5 text-[12px] font-extrabold transition-all"
+                  className="inline-flex min-h-[40px] items-center justify-center rounded-xl px-3.5 py-2 text-[12px] font-extrabold transition-all"
                   style={
                     osMode === "sjf"
                       ? { background: "#1d6b52", color: "#ffffff" }
@@ -480,26 +495,26 @@ export default function CourseInteractiveLab({
         </div>
 
         {/* Dark Interactive Stage */}
-        <div className="space-y-4 rounded-2xl border border-white/10 bg-[#0e1726] p-5 text-white">
+        <div className="space-y-4 overflow-hidden rounded-2xl border border-white/10 bg-[#0e1726] p-4 text-white sm:p-5">
           {course.lab_type === "linked-list" ? (
             <>
               <div
                 dir="ltr"
-                className="flex flex-wrap items-center justify-center gap-2.5 py-5"
+                className="flex flex-wrap items-center justify-center gap-2 py-4 sm:gap-2.5 sm:py-5"
               >
-                <span className="font-mono-code rounded-xl border border-[#e58a62] bg-[#c25e33]/30 px-3 py-1.5 text-[12px] font-bold text-[#fed7aa]">
+                <span className="font-mono-code rounded-xl border border-[#e58a62] bg-[#c25e33]/30 px-2.5 py-1.5 text-[11.5px] font-bold text-[#fed7aa] sm:px-3 sm:text-[12px]">
                   HEAD
                 </span>
                 {dsNodes.map((val, idx) => (
                   <div
                     key={`${dsCounter}-${idx}-${val}`}
-                    className="inline-flex items-center gap-2.5"
+                    className="inline-flex items-center gap-2 sm:gap-2.5"
                   >
                     <span className="font-mono-code font-bold text-[#66c7a6]">
                       →
                     </span>
                     <span
-                      className={`node-pop font-mono-code rounded-xl border px-4 py-2 text-[13px] font-bold ${
+                      className={`node-pop font-mono-code rounded-xl border px-3.5 py-1.5 text-[12.5px] font-bold sm:px-4 sm:py-2 sm:text-[13px] ${
                         idx === 0
                           ? "border-[#66c7a6] bg-[#66c7a6]/25 text-[#a7f3d0]"
                           : "border-white/15 bg-white/10 text-white"
@@ -509,7 +524,7 @@ export default function CourseInteractiveLab({
                     </span>
                   </div>
                 ))}
-                <span className="font-mono-code font-bold text-slate-500">
+                <span className="font-mono-code text-[12px] font-bold text-slate-400">
                   → NULL
                 </span>
               </div>
@@ -522,7 +537,7 @@ export default function CourseInteractiveLab({
             </>
           ) : course.lab_type === "binary-search" ? (
             <>
-              <div className="flex items-center justify-between text-[11.5px] text-slate-300">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11.5px] text-slate-300">
                 <span>
                   الهدف المطلوب:{" "}
                   <strong className="font-mono-code text-[#66c7a6]">
@@ -535,24 +550,24 @@ export default function CourseInteractiveLab({
                   {currentBs.high}]
                 </span>
               </div>
-              <div dir="ltr" className="grid grid-cols-7 gap-1.5 py-2">
+              <div dir="ltr" className="grid grid-cols-7 gap-1 py-2 sm:gap-1.5">
                 {BS_ARR.map((val, idx) => {
                   const out = idx < currentBs.low || idx > currentBs.high;
                   const isMid = idx === currentBs.mid;
                   const cls = out
                     ? "bg-white/[0.03] border-white/5 text-slate-500 opacity-40"
                     : isMid
-                      ? "bg-[#66c7a6]/25 border-[#66c7a6] text-[#a7f3d0] scale-105"
+                      ? "bg-[#66c7a6]/25 border-[#66c7a6] text-[#a7f3d0] scale-[1.03] sm:scale-105"
                       : "bg-white/10 border-white/15 text-white";
                   return (
                     <div
                       key={idx}
-                      className={`rounded-xl border py-2.5 text-center transition-all ${cls}`}
+                      className={`min-w-0 overflow-hidden rounded-lg border px-0.5 py-2 text-center transition-all sm:rounded-xl sm:px-1.5 sm:py-2.5 ${cls}`}
                     >
-                      <div className="font-mono-code text-[13px] font-bold">
+                      <div className="font-mono-code text-[11.5px] font-bold leading-tight sm:text-[13px]">
                         {val}
                       </div>
-                      <div className="font-mono-code text-[9.5px] opacity-75">
+                      <div className="font-mono-code mt-0.5 truncate text-[8.5px] leading-tight opacity-80 sm:text-[9.5px]">
                         {isMid ? (currentBs.found ? "FOUND" : "MID") : `[${idx}]`}
                       </div>
                     </div>
@@ -570,12 +585,25 @@ export default function CourseInteractiveLab({
                   <div
                     key={`${osMode}-${b.p}`}
                     style={{ width: b.w, background: b.col, color: "#0f172a" }}
-                    className="font-mono-code flex flex-col items-center justify-center border-r border-black/20 text-[12px] font-black transition-all duration-300"
+                    className="font-mono-code flex min-w-0 flex-col items-center justify-center overflow-hidden border-r border-black/20 px-1 text-[11.5px] font-black transition-all duration-300 sm:text-[12px]"
                   >
-                    <span>{b.p}</span>
-                    <span className="text-[10px] opacity-80">{b.t}ms</span>
+                    <span className="truncate">{b.p}</span>
+                    <span className="truncate text-[9.5px] opacity-85 sm:text-[10px]">
+                      {b.t}ms
+                    </span>
                   </div>
                 ))}
+              </div>
+              <div className="font-mono-code flex flex-wrap items-center gap-2 text-[10.5px] text-slate-300">
+                <span className="rounded-md bg-white/10 px-2 py-0.5">
+                  P1 Burst: 8ms
+                </span>
+                <span className="rounded-md bg-white/10 px-2 py-0.5">
+                  P2 Burst: 2ms
+                </span>
+                <span className="rounded-md bg-white/10 px-2 py-0.5">
+                  P3 Burst: 4ms
+                </span>
               </div>
               <div className="font-mono-code flex flex-wrap items-center justify-between gap-2 px-1 text-[12px] text-slate-200">
                 <span>Algorithm: {osMode === "sjf" ? "SJF" : "FCFS"}</span>
@@ -681,7 +709,7 @@ export default function CourseInteractiveLab({
                     href={safeExternalUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-xl border border-[var(--border-soft)] bg-[var(--bg-surface)] px-2.5 py-1 text-[11.5px] font-bold text-[var(--text-primary)] hover:opacity-85"
+                    className="inline-flex min-h-[36px] items-center gap-1 rounded-xl border border-[var(--border-soft)] bg-[var(--bg-surface)] px-2.5 py-1 text-[11.5px] font-bold text-[var(--text-primary)] hover:opacity-85"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                     <span>فتح خارجياً</span>
@@ -692,7 +720,7 @@ export default function CourseInteractiveLab({
                   type="button"
                   onClick={() => setIframeResetKey((k) => k + 1)}
                   disabled={isLabLoading || !loadedLab}
-                  className="inline-flex items-center gap-1 rounded-xl border border-[var(--border-soft)] bg-[var(--bg-surface)] px-2.5 py-1 text-[11.5px] font-bold text-[var(--text-primary)] hover:opacity-85 disabled:opacity-45"
+                  className="inline-flex min-h-[36px] items-center gap-1 rounded-xl border border-[var(--border-soft)] bg-[var(--bg-surface)] px-2.5 py-1 text-[11.5px] font-bold text-[var(--text-primary)] hover:opacity-85 disabled:opacity-45"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   <span>إعادة تشغيل</span>
@@ -701,7 +729,7 @@ export default function CourseInteractiveLab({
                 <button
                   type="button"
                   onClick={toggleFullscreen}
-                  className="inline-flex items-center gap-1 rounded-xl border px-2.5 py-1 text-[11.5px] font-bold transition-colors hover:opacity-90"
+                  className="inline-flex min-h-[36px] items-center gap-1 rounded-xl border px-2.5 py-1 text-[11.5px] font-bold transition-colors hover:opacity-90"
                   style={{
                     background: "var(--brand-soft)",
                     borderColor: "transparent",
@@ -754,7 +782,7 @@ export default function CourseInteractiveLab({
                   <button
                     type="button"
                     onClick={handleRetryLab}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#c25e33] px-4 py-2 text-xs font-extrabold text-white"
+                    className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl bg-[#c25e33] px-4 py-2 text-xs font-extrabold text-white"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
                     <span>إعادة المحاولة</span>
@@ -767,8 +795,16 @@ export default function CourseInteractiveLab({
                     srcDoc={loadedLab.html_content ?? ""}
                     title={loadedLab.title}
                     sandbox="allow-scripts"
-                    className="block w-full border-0 bg-[#020617]"
-                    style={{ height: isFullscreen ? "100%" : iframeHeight }}
+                    className={`block w-full border-0 bg-[#020617] ${
+                      isFullscreen ? "h-full" : "min-h-[420px] sm:min-h-[540px]"
+                    }`}
+                    style={
+                      isFullscreen
+                        ? { height: "100%" }
+                        : activeLab.default_height
+                          ? { height: iframeHeight }
+                          : undefined
+                    }
                   />
                 ) : safeExternalUrl ? (
                   <iframe
@@ -777,8 +813,16 @@ export default function CourseInteractiveLab({
                     title={loadedLab.title}
                     sandbox="allow-scripts"
                     referrerPolicy="no-referrer"
-                    className="block w-full border-0 bg-[var(--bg-surface)]"
-                    style={{ height: isFullscreen ? "100%" : iframeHeight }}
+                    className={`block w-full border-0 bg-[var(--bg-surface)] ${
+                      isFullscreen ? "h-full" : "min-h-[420px] sm:min-h-[540px]"
+                    }`}
+                    style={
+                      isFullscreen
+                        ? { height: "100%" }
+                        : activeLab.default_height
+                          ? { height: iframeHeight }
+                          : undefined
+                    }
                   />
                 ) : (
                   <div className="flex h-56 items-center justify-center text-sm text-slate-300">

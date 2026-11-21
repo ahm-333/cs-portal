@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import {
@@ -14,6 +15,7 @@ import {
   FileCode2,
   Globe,
   KeyRound,
+  ListVideo,
   Lock,
   Maximize2,
   Minimize2,
@@ -23,6 +25,7 @@ import {
   Search,
   Sun,
   Table2,
+  X,
   Zap,
 } from "lucide-react";
 import { saveLastLesson } from "@/components/course/lastLessonStore";
@@ -35,6 +38,7 @@ import {
   openUnlockModal,
 } from "@/lib/stores/events";
 import {
+  setLastVisited,
   setLessonNote,
   toggleLessonComplete,
   usePortalState,
@@ -292,10 +296,10 @@ function CheatSheetTable({ course }: { course: Course }) {
 
   return (
     <div
-      className="overflow-x-auto rounded-2xl border"
+      className="w-full max-w-full overflow-x-auto rounded-2xl border"
       style={{ borderColor: "var(--border-soft)" }}
     >
-      <table className="w-full text-right text-[12px]">
+      <table className="w-full min-w-[340px] text-right text-[12px]">
         <thead
           style={{
             background: "var(--bg-subtle)",
@@ -304,7 +308,10 @@ function CheatSheetTable({ course }: { course: Course }) {
         >
           <tr>
             {sheet.headers.map((header, idx) => (
-              <th key={idx} className="px-3.5 py-2.5 font-extrabold">
+              <th
+                key={idx}
+                className="whitespace-nowrap px-3.5 py-2.5 text-right font-extrabold"
+              >
                 {header}
               </th>
             ))}
@@ -323,19 +330,28 @@ function CheatSheetTable({ course }: { course: Course }) {
               className="transition-colors hover:bg-[var(--bg-hover)]"
               style={{ borderColor: "var(--border-soft)" }}
             >
-              {row.map((cell, cIdx) => (
-                <td
-                  key={cIdx}
-                  className={`px-3.5 py-2.5 ${
-                    cIdx === 0 ? "font-bold" : "font-mono-code"
-                  }`}
-                  style={
-                    cIdx === 0 ? { color: "var(--text-primary)" } : undefined
-                  }
-                >
-                  {cell}
-                </td>
-              ))}
+              {row.map((cell, cIdx) => {
+                const hasArabic = /[\u0600-\u06FF]/.test(cell);
+                const isLtrCode = cIdx > 0 && !hasArabic;
+                return (
+                  <td
+                    key={cIdx}
+                    dir={isLtrCode ? "ltr" : undefined}
+                    className={`px-3.5 py-2.5 ${
+                      cIdx === 0
+                        ? "whitespace-nowrap font-bold"
+                        : isLtrCode
+                          ? "font-mono-code text-right"
+                          : "font-semibold"
+                    }`}
+                    style={
+                      cIdx === 0 ? { color: "var(--text-primary)" } : undefined
+                    }
+                  >
+                    {cell}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>
@@ -371,7 +387,9 @@ export default function CourseWorkspaceClient({
   const [examNight, setExamNight] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [mobileLessonsOpen, setMobileLessonsOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const notesDrawerRef = useRef<HTMLDivElement | null>(null);
 
   const sortedLessons = useMemo(
     () => [...allLessons].sort((a, b) => a.order_index - b.order_index),
@@ -425,7 +443,7 @@ export default function CourseWorkspaceClient({
   const parsedLessonTitle = useMemo(() => splitBilingualTitle(rawTitle), [rawTitle]);
   const lessonNumPadded = String(currentLessonIndex + 1).padStart(2, "0");
 
-  // Save last visited lesson for resume banner
+  // Save last visited lesson for resume banner (/courses and unified portalStore v3)
   useEffect(() => {
     if (!currentLessonId || isLockedView) return;
     saveLastLesson({
@@ -436,6 +454,13 @@ export default function CourseWorkspaceClient({
       lessonTitle: parsedLessonTitle.primary,
       sectionTitle: activeLessonMeta?.section_title ?? "",
     });
+    setLastVisited({
+      courseSlug: course.slug,
+      courseCode: course.code,
+      courseTitle: course.title,
+      lessonId: currentLessonId,
+      lessonTitle: parsedLessonTitle.primary,
+    });
   }, [
     course.slug,
     course.title,
@@ -445,6 +470,23 @@ export default function CourseWorkspaceClient({
     parsedLessonTitle.primary,
     activeLessonMeta?.section_title,
   ]);
+
+  // Lock body scroll & listen for Escape when Slide-Over Mobile Lessons Drawer is open
+  useEffect(() => {
+    if (!mobileLessonsOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileLessonsOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [mobileLessonsOpen]);
 
   const firstFreeLesson = useMemo(
     () => sortedLessons.find((l) => l.is_free_preview) ?? null,
@@ -585,6 +627,21 @@ export default function CourseWorkspaceClient({
     });
   }, [course.id, course.title, course.code, course.unlock_code]);
 
+  const handleToggleNotes = useCallback(() => {
+    setNotesOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        window.setTimeout(() => {
+          notesDrawerRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
+        }, 80);
+      }
+      return next;
+    });
+  }, []);
+
   const handleQuizScoreUpdate = useCallback(() => {
     // Score is already persisted in portalStore by QuizEngine
   }, []);
@@ -595,12 +652,12 @@ export default function CourseWorkspaceClient({
     <div className="flex min-h-screen w-full flex-1 flex-col">
       {/* ==================== WORKSPACE TOPBAR ==================== */}
       <header className="topbar-shell sticky top-0 z-40">
-        <div className="mx-auto flex h-16 max-w-[1260px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-[1260px] items-center justify-between gap-2.5 px-3.5 sm:gap-3 sm:px-6 lg:px-8">
           {/* Right side (RTL start): Back + Course Code + Title */}
-          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
             <Link
               href="/courses"
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-[12px] font-bold transition-colors hover:opacity-85"
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-[12px] font-bold transition-colors hover:opacity-85 sm:px-3"
               style={{
                 background: "var(--bg-surface)",
                 borderColor: "var(--border-soft)",
@@ -616,9 +673,9 @@ export default function CourseWorkspaceClient({
               style={{ background: "var(--border-strong)" }}
             />
 
-            <div className="flex min-w-0 items-center gap-2">
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <span
-                className="font-mono-code shrink-0 rounded-md px-2 py-0.5 text-[11px] font-extrabold"
+                className="font-mono-code shrink-0 rounded-md px-2 py-0.5 text-[10.5px] font-extrabold sm:text-[11px]"
                 style={{
                   background: "var(--brand-soft)",
                   color: "var(--brand-soft-text)",
@@ -627,7 +684,7 @@ export default function CourseWorkspaceClient({
                 {course.code}
               </span>
               <span
-                className="truncate text-[14px] font-extrabold sm:text-[15px]"
+                className="truncate text-[13px] font-extrabold sm:text-[15px]"
                 style={{ color: "var(--text-primary)" }}
               >
                 {course.title}
@@ -635,23 +692,24 @@ export default function CourseWorkspaceClient({
             </div>
           </div>
 
-          {/* Left side (RTL end): Progress, Ctrl+K, Cram Mode, Notes, Focus, Theme */}
+          {/* Left side (RTL end): Progress, Desktop Actions (Ctrl+K, Cram Mode, Notes, Focus), Theme */}
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <span
-              className="hidden h-9 items-center gap-1.5 rounded-xl px-3 text-[12px] font-extrabold sm:inline-flex"
+              className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-[11.5px] font-extrabold sm:gap-1.5 sm:px-3 sm:text-[12px]"
               style={{
                 background: "var(--success-soft)",
                 color: "var(--success-fg)",
               }}
             >
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              <span>{progressPct}% مكتمل</span>
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+              <span>{progressPct}%</span>
+              <span className="hidden sm:inline">مكتمل</span>
             </span>
 
             <button
               type="button"
               onClick={() => openCommandPalette()}
-              className="hidden h-9 items-center gap-1.5 rounded-xl border px-2.5 text-[11.5px] font-bold transition-colors hover:opacity-85 md:inline-flex"
+              className="hidden h-9 items-center gap-1.5 rounded-xl border px-2.5 text-[11.5px] font-bold transition-colors hover:opacity-85 lg:inline-flex"
               style={{
                 background: "var(--bg-surface)",
                 borderColor: "var(--border-soft)",
@@ -667,7 +725,7 @@ export default function CourseWorkspaceClient({
               type="button"
               onClick={() => setExamNight((prev) => !prev)}
               aria-pressed={examNight}
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-[12px] font-extrabold transition-all"
+              className="hidden h-9 items-center gap-1.5 rounded-xl border px-3 text-[12px] font-extrabold transition-all lg:inline-flex"
               style={
                 examNight
                   ? {
@@ -688,9 +746,9 @@ export default function CourseWorkspaceClient({
 
             <button
               type="button"
-              onClick={() => setNotesOpen((prev) => !prev)}
+              onClick={handleToggleNotes}
               aria-pressed={notesOpen}
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl border px-2.5 text-[12px] font-bold transition-colors sm:px-3"
+              className="hidden h-9 items-center gap-1.5 rounded-xl border px-3 text-[12px] font-bold transition-colors lg:inline-flex"
               style={{
                 background: notesOpen
                   ? "var(--brand-soft)"
@@ -707,7 +765,7 @@ export default function CourseWorkspaceClient({
                 className="h-3.5 w-3.5"
                 style={{ color: "var(--brand-primary)" }}
               />
-              <span className="hidden sm:inline">نوتس</span>
+              <span>نوتس</span>
               {currentNote.trim().length > 0 ? (
                 <span
                   aria-hidden="true"
@@ -774,9 +832,9 @@ export default function CourseWorkspaceClient({
       </header>
 
       {/* ==================== WORKSPACE BODY ==================== */}
-      <main className="mx-auto w-full max-w-[1260px] flex-1 space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-[1260px] flex-1 space-y-6 px-4 py-6 pb-24 sm:px-6 lg:px-8 lg:pb-8">
         {/* Course Hero Strip + 5-Feature Switcher Dock */}
-        <section className="surface-card space-y-5 rounded-[26px] p-5 sm:p-6">
+        <section className="surface-card space-y-5 rounded-[26px] p-4 sm:p-6">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -809,7 +867,7 @@ export default function CourseWorkspaceClient({
               </div>
 
               <h1
-                className="text-xl font-black sm:text-2xl"
+                className="text-lg font-black sm:text-2xl"
                 style={{ color: "var(--text-primary)" }}
               >
                 الدرس {lessonNumPadded} · {parsedLessonTitle.primary}
@@ -821,7 +879,7 @@ export default function CourseWorkspaceClient({
                 type="button"
                 onClick={handleToggleDone}
                 aria-pressed={isCurrentLessonDone}
-                className="inline-flex shrink-0 items-center gap-2 self-start rounded-xl border px-4 py-2.5 text-[12.5px] font-extrabold transition-all hover:opacity-90 md:self-auto"
+                className="inline-flex min-h-[42px] shrink-0 items-center gap-2 self-start rounded-xl border px-4 py-2.5 text-[12.5px] font-extrabold transition-all hover:opacity-90 md:self-auto"
                 style={{
                   background: isCurrentLessonDone
                     ? "var(--success-soft)"
@@ -845,7 +903,7 @@ export default function CourseWorkspaceClient({
               <button
                 type="button"
                 onClick={handleTriggerUnlock}
-                className="inline-flex shrink-0 items-center gap-2 self-start rounded-xl px-4 py-2.5 text-[12.5px] font-extrabold text-white transition-transform hover:scale-[1.02] md:self-auto"
+                className="inline-flex min-h-[42px] shrink-0 items-center gap-2 self-start rounded-xl px-4 py-2.5 text-[12.5px] font-extrabold text-white transition-transform hover:scale-[1.02] md:self-auto"
                 style={{ background: "#c25e33" }}
               >
                 <KeyRound className="h-4 w-4" />
@@ -854,11 +912,11 @@ export default function CourseWorkspaceClient({
             )}
           </div>
 
-          {/* 5 Real Course Features Dock */}
+          {/* 5 Real Course Features Dock — Horizontally Swipeable on Mobile */}
           <div
             role="tablist"
             aria-label="أدوات دراسة الدرس"
-            className="flex flex-wrap items-center gap-1.5 rounded-2xl border p-1.5"
+            className="hide-scrollbar flex flex-nowrap items-center gap-1.5 overflow-x-auto rounded-2xl border p-1.5 scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap"
             style={{
               background: "var(--bg-canvas)",
               borderColor: "var(--border-soft)",
@@ -873,9 +931,11 @@ export default function CourseWorkspaceClient({
                   role="tab"
                   aria-selected={isActive}
                   onClick={() => handleSelectTab(id)}
-                  className={`tool-dock-pill ${isActive ? "active" : ""}`}
+                  className={`tool-dock-pill min-h-[42px] shrink-0 snap-start whitespace-nowrap ${
+                    isActive ? "active" : ""
+                  }`}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-4 w-4 shrink-0" />
                   <span>{label}</span>
                 </button>
               );
@@ -885,9 +945,9 @@ export default function CourseWorkspaceClient({
 
         {/* 2-Column Workspace Grid */}
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-          {/* Right Sidebar: Course Lessons List */}
+          {/* Right Sidebar: Course Lessons List (Desktop >= 1024px only; Mobile/Tablet uses Bottom Thumb Dock Drawer) */}
           {!focusMode ? (
-            <aside className="surface-card space-y-3.5 rounded-[24px] p-4 sm:p-5 lg:col-span-4">
+            <aside className="surface-card hidden space-y-3.5 rounded-[24px] p-4 sm:p-5 lg:col-span-4 lg:block">
               <div
                 className="flex items-center justify-between border-b pb-2"
                 style={{ borderColor: "var(--border-soft)" }}
@@ -1009,12 +1069,43 @@ export default function CourseWorkspaceClient({
                   );
                 })}
               </div>
+
+              {/* Subtle Instructor Mini-Signature */}
+              <div
+                className="flex items-center justify-between gap-2.5 border-t pt-3.5"
+                style={{ borderColor: "var(--border-soft)" }}
+              >
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <Image
+                    src="/images/founder.jpg"
+                    alt="Ahmed Amir Ahmed"
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 shrink-0 rounded-full border object-cover object-[50%_15%]"
+                    style={{ borderColor: "var(--border-strong)" }}
+                  />
+                  <div className="min-w-0 text-right">
+                    <div
+                      className="truncate text-[11.5px] font-extrabold"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      شرح: <span className="font-en">Ahmed Amir Ahmed</span>
+                    </div>
+                    <div
+                      className="truncate text-[10px] font-semibold"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      Faculty of Computers & AI
+                    </div>
+                  </div>
+                </div>
+              </div>
             </aside>
           ) : null}
 
           {/* Left Main Feature Stage */}
           <section
-            className={`surface-card min-h-[420px] rounded-[24px] p-5 sm:p-7 ${
+            className={`surface-card min-h-[420px] overflow-hidden rounded-[24px] p-4 sm:p-7 ${
               focusMode ? "lg:col-span-12" : "lg:col-span-8"
             }`}
           >
@@ -1027,18 +1118,18 @@ export default function CourseWorkspaceClient({
                     background: "linear-gradient(135deg, #182947, #c25e33)",
                   }}
                 >
-                  <div className="space-y-0.5">
+                  <div className="min-w-0 space-y-0.5">
                     <div className="text-[11px] font-bold text-[#fed7aa]">
                       وضع ليلة الامتحان · مراجعة سريعة في 5 دقائق
                     </div>
-                    <h2 className="text-lg font-black">
+                    <h2 className="text-base font-black sm:text-lg">
                       خلاصة ليلة الامتحان · {course.title}
                     </h2>
                   </div>
                   <button
                     type="button"
                     onClick={() => setExamNight(false)}
-                    className="rounded-xl bg-white/15 px-3.5 py-1.5 text-[12px] font-bold transition-colors hover:bg-white/25"
+                    className="inline-flex min-h-[38px] items-center justify-center rounded-xl bg-white/15 px-3.5 py-1.5 text-[12px] font-bold transition-colors hover:bg-white/25"
                   >
                     العودة للدرس
                   </button>
@@ -1058,7 +1149,7 @@ export default function CourseWorkspaceClient({
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <div
                       className="text-[12.5px] font-extrabold"
                       style={{ color: "var(--text-primary)" }}
@@ -1068,7 +1159,7 @@ export default function CourseWorkspaceClient({
                     <button
                       type="button"
                       onClick={handleCopyKeyCode}
-                      className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-1 text-[11.5px] font-bold transition-colors hover:opacity-85"
+                      className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border px-3 py-1 text-[11.5px] font-bold transition-colors hover:opacity-85"
                       style={{
                         background: "var(--bg-canvas)",
                         borderColor: "var(--border-soft)",
@@ -1083,7 +1174,10 @@ export default function CourseWorkspaceClient({
                       <span>{copiedCode ? "تم النسخ ✓" : "نسخ الكود"}</span>
                     </button>
                   </div>
-                  <pre dir="ltr" className="code-ltr text-[12px] leading-relaxed">
+                  <pre
+                    dir="ltr"
+                    className="code-ltr max-w-full overflow-x-auto text-[12px] leading-relaxed"
+                  >
                     {activeKeyCode}
                   </pre>
                 </div>
@@ -1138,7 +1232,7 @@ export default function CourseWorkspaceClient({
                   <button
                     type="button"
                     onClick={handleTriggerUnlock}
-                    className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-extrabold text-white shadow-sm transition-transform hover:scale-[1.02]"
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-extrabold text-white shadow-sm transition-transform hover:scale-[1.02]"
                     style={{ background: "#c25e33" }}
                   >
                     <KeyRound className="h-4 w-4" />
@@ -1148,7 +1242,7 @@ export default function CourseWorkspaceClient({
                   {firstFreeLesson && firstFreeLesson.id !== currentLessonId ? (
                     <Link
                       href={`/courses/${course.slug}/${firstFreeLesson.id}`}
-                      className="inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-bold transition-colors hover:opacity-85"
+                      className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-bold transition-colors hover:opacity-85"
                       style={{
                         background: "var(--bg-surface)",
                         borderColor: "var(--border-strong)",
@@ -1237,7 +1331,7 @@ export default function CourseWorkspaceClient({
                     )}
                   </div>
 
-                  {/* Modules Grid */}
+                  {/* Modules Grid — Clickable unlocked modules & unlock modal for locked modules */}
                   <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                     {sortedLessons.map((item, idx) => {
                       const done = completedSet.has(item.id);
@@ -1253,62 +1347,87 @@ export default function CourseWorkspaceClient({
 
                       const moduleCard = (
                         <div
-                          className="h-full space-y-2.5 rounded-2xl border p-4 text-right transition-all hover:-translate-y-0.5"
+                          className="group flex h-full flex-col justify-between space-y-2.5 rounded-2xl border p-4 text-right transition-all hover:-translate-y-0.5"
                           style={{
-                            background: "var(--bg-canvas)",
+                            background: isCurrent
+                              ? "var(--accent-warm-soft)"
+                              : "var(--bg-canvas)",
                             borderColor: isCurrent
                               ? "var(--accent-warm)"
                               : "var(--border-soft)",
                           }}
                         >
-                          <div className="flex items-center justify-between gap-2">
-                            <span
-                              className="font-mono-code rounded px-2 py-0.5 text-[11px] font-bold"
-                              style={{
-                                background: "var(--bg-subtle)",
-                                color: "var(--text-primary)",
-                              }}
-                            >
-                              Module {String(idx + 1).padStart(2, "0")}
-                            </span>
-                            <span
-                              className="text-[11px] font-bold"
-                              style={{
-                                color: done
-                                  ? "var(--success-fg)"
-                                  : locked
-                                    ? "var(--accent-warm)"
-                                    : "var(--text-muted)",
-                              }}
-                            >
-                              {done
-                                ? "مكتمل ✓"
-                                : locked
-                                  ? "مدفوع"
-                                  : durationLabel}
-                            </span>
-                          </div>
-
-                          <div
-                            className="text-[14px] font-extrabold"
-                            style={{ color: "var(--text-primary)" }}
-                          >
-                            {titleParts.primary}
-                          </div>
-
-                          <div
-                            className="flex flex-wrap gap-1.5 text-[10.5px] font-bold"
-                            style={{ color: "var(--text-secondary)" }}
-                          >
-                            {["فيديو", "ملخص", "تفاعلي", "كويز"].map((tag) => (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between gap-2">
                               <span
-                                key={tag}
-                                className="rounded px-2 py-0.5"
-                                style={{ background: "var(--bg-subtle)" }}
+                                className="font-mono-code rounded px-2 py-0.5 text-[11px] font-bold"
+                                style={{
+                                  background: "var(--bg-subtle)",
+                                  color: "var(--text-primary)",
+                                }}
                               >
-                                {tag}
+                                Module {String(idx + 1).padStart(2, "0")}
                               </span>
-                            ))}
+                              <span
+                                className="inline-flex items-center gap-1 text-[11px] font-bold"
+                                style={{
+                                  color: done
+                                    ? "var(--success-fg)"
+                                    : locked
+                                      ? "var(--accent-warm)"
+                                      : "var(--text-muted)",
+                                }}
+                              >
+                                {locked ? (
+                                  <>
+                                    <Lock className="h-3 w-3" />
+                                    <span>تفعيل بكود</span>
+                                  </>
+                                ) : done ? (
+                                  <span>مكتمل ✓</span>
+                                ) : (
+                                  <span>{durationLabel}</span>
+                                )}
+                              </span>
+                            </div>
+
+                            <div
+                              className="text-[14px] font-extrabold group-hover:underline"
+                              style={{ color: "var(--text-primary)" }}
+                            >
+                              {titleParts.primary}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-2 pt-1">
+                            <div
+                              className="flex flex-wrap gap-1.5 text-[10.5px] font-bold"
+                              style={{ color: "var(--text-secondary)" }}
+                            >
+                              {["فيديو", "ملخص", "تفاعلي", "كويز"].map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="rounded px-2 py-0.5"
+                                  style={{ background: "var(--bg-subtle)" }}
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                            <span
+                              className="shrink-0 text-[11px] font-extrabold"
+                              style={{
+                                color: locked
+                                  ? "var(--accent-warm)"
+                                  : "var(--brand-primary)",
+                              }}
+                            >
+                              {isCurrent
+                                ? "الدرس الحالي"
+                                : locked
+                                  ? "فتح الكود ←"
+                                  : "فتح الدرس ←"}
+                            </span>
                           </div>
                         </div>
                       );
@@ -1319,7 +1438,7 @@ export default function CourseWorkspaceClient({
                             key={item.id}
                             type="button"
                             onClick={handleTriggerUnlock}
-                            className="w-full text-right"
+                            className="w-full cursor-pointer text-right"
                           >
                             {moduleCard}
                           </button>
@@ -1413,7 +1532,7 @@ export default function CourseWorkspaceClient({
                     <button
                       type="button"
                       onClick={handleCopyKeyCode}
-                      className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-[12px] font-bold transition-colors hover:opacity-85"
+                      className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-[12px] font-bold transition-colors hover:opacity-85"
                       style={{
                         background: "var(--bg-canvas)",
                         borderColor: "var(--border-soft)",
@@ -1448,7 +1567,7 @@ export default function CourseWorkspaceClient({
                       </div>
                       <pre
                         dir="ltr"
-                        className="code-ltr text-[12.5px] leading-relaxed"
+                        className="code-ltr max-w-full overflow-x-auto text-[12.5px] leading-relaxed"
                       >
                         {activeKeyCode}
                       </pre>
@@ -1476,7 +1595,7 @@ export default function CourseWorkspaceClient({
                       className="flex items-center gap-1.5 text-[12px] font-extrabold"
                       style={{ color: "var(--brand-primary)" }}
                     >
-                      <Table2 className="h-4 w-4" />
+                      <Table2 className="h-4 w-4 shrink-0" />
                       <span>
                         ورقة القوانين والمقارنات السريعة (Cheat Sheet)
                       </span>
@@ -1503,33 +1622,48 @@ export default function CourseWorkspaceClient({
             {/* ==================== QUICK LESSON NOTES DRAWER ==================== */}
             {notesOpen ? (
               <div
+                ref={notesDrawerRef}
+                id="lesson-notes-drawer"
                 className="mt-5 space-y-3 border-t pt-5"
                 style={{ borderColor: "var(--border-soft)" }}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div
-                    className="flex items-center gap-2 text-[13px] font-extrabold"
+                    className="flex min-w-0 items-center gap-2 text-[13px] font-extrabold"
                     style={{ color: "var(--text-primary)" }}
                   >
                     <NotebookPen
-                      className="h-4 w-4"
+                      className="h-4 w-4 shrink-0"
                       style={{ color: "var(--brand-primary)" }}
                     />
-                    <span>ملاحظاتك على: {parsedLessonTitle.primary}</span>
+                    <span className="truncate">
+                      ملاحظاتك على: {parsedLessonTitle.primary}
+                    </span>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleCopyNotes}
-                    className="rounded-lg border px-3 py-1 text-[11.5px] font-bold transition-colors hover:opacity-85"
-                    style={{
-                      background: "var(--bg-canvas)",
-                      borderColor: "var(--border-soft)",
-                      color: "var(--text-secondary)",
-                    }}
-                  >
-                    نسخ الملاحظات
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="rounded-md px-2 py-0.5 text-[10.5px] font-bold"
+                      style={{
+                        background: "var(--success-soft)",
+                        color: "var(--success-fg)",
+                      }}
+                    >
+                      حفظ تلقائي ✓
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCopyNotes}
+                      className="inline-flex min-h-[36px] items-center rounded-xl border px-3 py-1 text-[11.5px] font-bold transition-colors hover:opacity-85"
+                      style={{
+                        background: "var(--bg-canvas)",
+                        borderColor: "var(--border-soft)",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      نسخ الملاحظات
+                    </button>
+                  </div>
                 </div>
 
                 <textarea
@@ -1552,7 +1686,319 @@ export default function CourseWorkspaceClient({
         </div>
       </main>
 
-      <Footer variant="compact" />
+      {/* ==================== STICKY MOBILE BOTTOM THUMB-ZONE DOCK (< 1024px) ==================== */}
+      <nav
+        aria-label="شريط أدوات المذاكرة السريع للموبايل"
+        className="fixed inset-x-0 bottom-0 z-40 border-t px-2.5 pt-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden"
+        style={{
+          background: "color-mix(in srgb, var(--bg-surface) 92%, transparent)",
+          borderColor: "var(--border-soft)",
+          boxShadow: "0 -8px 28px rgba(15, 23, 42, 0.08)",
+        }}
+      >
+        <div className="mx-auto grid max-w-lg grid-cols-4 gap-1.5">
+          {/* 1. الدروس (done/total) */}
+          <button
+            type="button"
+            onClick={() => setMobileLessonsOpen(true)}
+            aria-expanded={mobileLessonsOpen}
+            className="flex min-h-[46px] flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[11px] font-extrabold transition-all"
+            style={{
+              background: mobileLessonsOpen
+                ? "var(--brand-soft)"
+                : "var(--bg-canvas)",
+              borderColor: mobileLessonsOpen
+                ? "var(--brand-primary)"
+                : "var(--border-soft)",
+              color: mobileLessonsOpen
+                ? "var(--brand-soft-text)"
+                : "var(--text-primary)",
+            }}
+          >
+            <ListVideo
+              className="h-4 w-4 shrink-0"
+              style={{ color: "var(--brand-primary)" }}
+            />
+            <span className="truncate">
+              الدروس ({doneCount}/{sortedLessons.length})
+            </span>
+          </button>
+
+          {/* 2. ليلة الامتحان */}
+          <button
+            type="button"
+            onClick={() => setExamNight((prev) => !prev)}
+            aria-pressed={examNight}
+            className="flex min-h-[46px] flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[11px] font-extrabold transition-all"
+            style={
+              examNight
+                ? {
+                    background: "var(--accent-warm)",
+                    borderColor: "var(--accent-warm)",
+                    color: "#ffffff",
+                  }
+                : {
+                    background: "var(--accent-warm-soft)",
+                    borderColor: "var(--accent-warm)",
+                    color: "var(--accent-warm-text)",
+                  }
+            }
+          >
+            <Zap className="h-4 w-4 shrink-0" />
+            <span className="truncate">ليلة الامتحان</span>
+          </button>
+
+          {/* 3. نوتس */}
+          <button
+            type="button"
+            onClick={handleToggleNotes}
+            aria-pressed={notesOpen}
+            className="relative flex min-h-[46px] flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[11px] font-extrabold transition-all"
+            style={{
+              background: notesOpen ? "var(--brand-soft)" : "var(--bg-canvas)",
+              borderColor: notesOpen
+                ? "var(--brand-primary)"
+                : "var(--border-soft)",
+              color: notesOpen
+                ? "var(--brand-soft-text)"
+                : "var(--text-primary)",
+            }}
+          >
+            <div className="relative inline-flex items-center">
+              <NotebookPen
+                className="h-4 w-4 shrink-0"
+                style={{ color: "var(--brand-primary)" }}
+              />
+              {currentNote.trim().length > 0 ? (
+                <span
+                  aria-hidden="true"
+                  className="-top-0.5 -end-1.5 absolute h-2 w-2 rounded-full"
+                  style={{ background: "var(--accent-warm)" }}
+                />
+              ) : null}
+            </div>
+            <span className="truncate">نوتس</span>
+          </button>
+
+          {/* 4. بحث */}
+          <button
+            type="button"
+            onClick={() => openCommandPalette()}
+            className="flex min-h-[46px] flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[11px] font-extrabold transition-all"
+            style={{
+              background: "var(--bg-canvas)",
+              borderColor: "var(--border-soft)",
+              color: "var(--text-primary)",
+            }}
+          >
+            <Search
+              className="h-4 w-4 shrink-0"
+              style={{ color: "var(--text-secondary)" }}
+            />
+            <span className="truncate">بحث</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* ==================== SLIDE-OVER MOBILE LESSONS DRAWER (< 1024px) ==================== */}
+      {mobileLessonsOpen ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="دروس المقرر"
+          className="fixed inset-0 z-50 flex lg:hidden"
+        >
+          {/* Backdrop */}
+          <div
+            className="modal-backdrop fixed inset-0"
+            onClick={() => setMobileLessonsOpen(false)}
+          />
+
+          {/* Slide-Over Panel */}
+          <div
+            className="relative z-10 flex h-full w-full max-w-[340px] flex-col border-e p-4 shadow-2xl sm:p-5"
+            style={{
+              background: "var(--bg-surface)",
+              borderColor: "var(--border-soft)",
+            }}
+          >
+            <div
+              className="flex items-center justify-between gap-2 border-b pb-3"
+              style={{ borderColor: "var(--border-soft)" }}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-[14px] font-black"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  دروس المقرر
+                </span>
+                <span
+                  className="font-mono-code rounded-md px-2 py-0.5 text-[11px] font-bold"
+                  style={{
+                    background: "var(--bg-subtle)",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  {doneCount} / {sortedLessons.length}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMobileLessonsOpen(false)}
+                aria-label="إغلاق قائمة الدروس"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:opacity-85"
+                style={{
+                  background: "var(--bg-canvas)",
+                  borderColor: "var(--border-soft)",
+                  color: "var(--text-primary)",
+                }}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 space-y-2 overflow-y-auto py-3.5">
+              {sortedLessons.map((item, idx) => {
+                const done = completedSet.has(item.id);
+                const locked =
+                  course.is_paid &&
+                  !item.is_free_preview &&
+                  !isUnlockedLocally;
+                const active = item.id === currentLessonId;
+                const itemTitle = splitBilingualTitle(item.title);
+                const subEn = item.title_en ?? itemTitle.secondaryEn ?? "";
+                const durationStr = item.duration_minutes
+                  ? `${item.duration_minutes} د`
+                  : "";
+
+                const cardStyle = {
+                  background: active
+                    ? "var(--accent-warm-soft)"
+                    : "var(--bg-canvas)",
+                  borderColor: active
+                    ? "var(--accent-warm)"
+                    : "var(--border-soft)",
+                };
+
+                const badgeStyle = {
+                  background: done
+                    ? "var(--success-fg)"
+                    : active
+                      ? "var(--accent-warm)"
+                      : "var(--bg-subtle)",
+                  color: done || active ? "#ffffff" : "var(--text-primary)",
+                };
+
+                const inner = (
+                  <>
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span
+                        className="font-en flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11.5px] font-extrabold"
+                        style={badgeStyle}
+                      >
+                        {done ? "✓" : String(idx + 1).padStart(2, "0")}
+                      </span>
+                      <div className="min-w-0 text-right">
+                        <div
+                          className="truncate text-[12.5px] font-bold"
+                          style={{ color: "var(--text-primary)" }}
+                        >
+                          {itemTitle.primary}
+                        </div>
+                        {subEn || durationStr ? (
+                          <div
+                            className="font-en truncate text-[10.5px]"
+                            style={{ color: "var(--text-muted)" }}
+                          >
+                            {[subEn, durationStr].filter(Boolean).join(" · ")}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {locked ? (
+                      <span
+                        className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold"
+                        style={{
+                          background: "var(--accent-warm-soft)",
+                          color: "var(--accent-warm-text)",
+                        }}
+                      >
+                        <Lock className="h-2.5 w-2.5" />
+                        <span>مغلق</span>
+                      </span>
+                    ) : null}
+                  </>
+                );
+
+                if (locked) {
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setMobileLessonsOpen(false);
+                        handleTriggerUnlock();
+                      }}
+                      className="flex min-h-[52px] w-full cursor-pointer items-center justify-between gap-2.5 rounded-2xl border p-3 text-right opacity-85 transition-all hover:opacity-100"
+                      style={cardStyle}
+                    >
+                      {inner}
+                    </button>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/courses/${course.slug}/${item.id}`}
+                    onClick={() => setMobileLessonsOpen(false)}
+                    className="flex min-h-[52px] w-full items-center justify-between gap-2.5 rounded-2xl border p-3 text-right transition-all hover:opacity-95"
+                    style={cardStyle}
+                  >
+                    {inner}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Subtle Instructor Mini-Signature in Mobile Drawer */}
+            <div
+              className="flex items-center justify-between gap-2.5 border-t pt-3.5"
+              style={{ borderColor: "var(--border-soft)" }}
+            >
+              <div className="flex min-w-0 items-center gap-2.5">
+                <Image
+                  src="/images/founder.jpg"
+                  alt="Ahmed Amir Ahmed"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 shrink-0 rounded-full border object-cover object-[50%_15%]"
+                  style={{ borderColor: "var(--border-strong)" }}
+                />
+                <div className="min-w-0 text-right">
+                  <div
+                    className="truncate text-[11.5px] font-extrabold"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    شرح: <span className="font-en">Ahmed Amir Ahmed</span>
+                  </div>
+                  <div
+                    className="truncate text-[10px] font-semibold"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    Faculty of Computers & AI
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <Footer variant="compact" className="pb-20 lg:pb-0" />
     </div>
   );
 }

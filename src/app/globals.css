@@ -175,7 +175,7 @@ html.dark,
     color: var(--text-primary);
     transition: background-color 0.22s ease, color 0.22s ease;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   :focus-visible {
@@ -652,9 +652,15 @@ html.dark,
   width: 100%;
 }
 
-@media (max-width: 1023px) {
+@media (min-width: 768px) and (max-width: 1023px) {
   .scrolly-track {
-    min-height: auto;
+    min-height: 400vh;
+  }
+}
+
+@media (max-width: 767px) {
+  .scrolly-track {
+    min-height: 330vh;
   }
 }
 
@@ -662,22 +668,14 @@ html.dark,
   position: sticky;
   top: 0;
   height: 100vh;
-  min-height: 640px;
+  height: 100svh;
+  min-height: 580px;
   width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   overflow: hidden;
   background: radial-gradient(circle at 50% 52%, #14233c 0%, #101d33 48%, #0c1628 100%);
-}
-
-@media (max-width: 1023px) {
-  .scrolly-sticky {
-    position: relative;
-    height: auto;
-    min-height: 100vh;
-    padding: 5rem 1rem 2rem;
-  }
 }
 
 .frame-3d {
@@ -1368,6 +1366,65 @@ html.dark .reality-btn.active-after,
 }
 
 /* ==========================================================================
+   Mobile & Editorial Helper Classes
+   ========================================================================== */
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.editorial-dots {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--border-strong) 65%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 18px 18px;
+}
+
+.safe-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.founder-portrait-frame {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  box-shadow:
+    0 20px 44px rgba(18, 28, 45, 0.14),
+    0 0 0 1px rgba(194, 94, 51, 0.16);
+}
+
+html.dark .founder-portrait-frame,
+[data-theme="dark"] .founder-portrait-frame {
+  box-shadow:
+    0 24px 52px rgba(0, 0, 0, 0.52),
+    0 0 0 1px rgba(229, 138, 98, 0.22);
+}
+
+@keyframes scrollCueBounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.84;
+  }
+  50% {
+    transform: translateY(5px);
+    opacity: 1;
+  }
+}
+
+.anim-scroll-cue {
+  animation: scrollCueBounce 1.8s ease-in-out infinite;
+}
+
+/* ==========================================================================
    Reduced Motion Guards
    ========================================================================== */
 
@@ -1388,6 +1445,7 @@ html.dark .reality-btn.active-after,
   .anim-orbit-a,
   .anim-orbit-b,
   .anim-pointer,
+  .anim-scroll-cue,
   .cta-shimmer,
   .cta-shimmer::after,
   .stu-eye,

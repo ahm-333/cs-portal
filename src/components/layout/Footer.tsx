@@ -14,7 +14,7 @@ export function Footer({ variant = "default", className = "" }: FooterProps) {
         }}
       >
         <div
-          className="max-w-[1220px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[12px]"
+          className="max-w-[1220px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-right text-[12px]"
           style={{ color: "var(--text-muted)" }}
         >
           <span>
@@ -38,9 +38,9 @@ export function Footer({ variant = "default", className = "" }: FooterProps) {
     >
       <div className="max-w-[1220px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-start sm:items-center gap-3 min-w-0">
             <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0"
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0 mt-0.5 sm:mt-0"
               style={{ background: "var(--hero-bg)" }}
             >
               <svg
@@ -58,21 +58,23 @@ export function Footer({ variant = "default", className = "" }: FooterProps) {
                 <path d="M9 12l2 2 4-4" />
               </svg>
             </div>
-            <div>
-              <div
-                className="font-en font-extrabold text-[14.5px]"
-                style={{ color: "var(--text-primary)" }}
-              >
-                Ahmed Amir Ahmed{" "}
+            <div className="min-w-0 space-y-0.5">
+              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                 <span
-                  className="text-[12px] font-semibold"
+                  className="font-en font-extrabold text-[14.5px]"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Ahmed Amir Ahmed
+                </span>
+                <span
+                  className="font-en text-[12px] font-semibold"
                   style={{ color: "var(--text-muted)" }}
                 >
                   · AI · Zagazig University
                 </span>
               </div>
               <div
-                className="text-[12px]"
+                className="text-[12px] leading-relaxed"
                 style={{ color: "var(--text-secondary)" }}
               >
                 مبادرة طلابية مفتوحة لطلبة الحاسبات والذكاء الاصطناعي
@@ -80,15 +82,15 @@ export function Footer({ variant = "default", className = "" }: FooterProps) {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto">
             <span
-              className="font-en text-[10.5px] font-bold tracking-widest uppercase"
+              className="font-en text-[10px] font-bold tracking-widest uppercase"
               style={{ color: "var(--text-muted)" }}
             >
               BUILT BY
             </span>
             <span
-              className="px-3 py-1.5 rounded-full border text-[12.5px] font-semibold font-en"
+              className="px-3 py-1 rounded-full border text-[12px] font-semibold font-en"
               style={{
                 background: "var(--bg-canvas)",
                 borderColor: "var(--border-soft)",
@@ -98,7 +100,7 @@ export function Footer({ variant = "default", className = "" }: FooterProps) {
               Ahmed Amir Ahmed
             </span>
             <span
-              className="px-3 py-1.5 rounded-full text-[11.5px] font-bold"
+              className="px-3 py-1 rounded-full text-[11.5px] font-bold"
               style={{
                 background: "var(--brand-soft)",
                 color: "var(--brand-soft-text)",
@@ -110,7 +112,7 @@ export function Footer({ variant = "default", className = "" }: FooterProps) {
         </div>
 
         <div
-          className="pt-3.5 border-t flex flex-col sm:flex-row items-center justify-between gap-2 text-[11.5px]"
+          className="pt-3.5 border-t flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-right text-[11.5px]"
           style={{
             borderColor: "var(--border-soft)",
             color: "var(--text-muted)",

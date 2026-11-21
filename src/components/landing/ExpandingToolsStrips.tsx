@@ -5,10 +5,12 @@ import Link from "next/link";
 import {
   ArrowLeft,
   CheckSquare,
+  ChevronDown,
   Cpu,
   FileCode2,
   Globe,
   PlayCircle,
+  RotateCcw,
 } from "lucide-react";
 
 const VIDEO_CHAPTERS = [
@@ -40,6 +42,12 @@ interface LinkedNode {
   isNew?: boolean;
 }
 
+const INITIAL_NODES: LinkedNode[] = [
+  { id: 1, value: 7, isNew: false },
+  { id: 2, value: 14, isNew: false },
+  { id: 3, value: 29, isNew: false },
+];
+
 export function ExpandingToolsStrips() {
   const [activeStrip, setActiveStrip] = useState(0);
 
@@ -48,11 +56,7 @@ export function ExpandingToolsStrips() {
   const [speedIdx, setSpeedIdx] = useState(1);
 
   // Strip 02: Interactive Linked List live toy
-  const [nodes, setNodes] = useState<LinkedNode[]>([
-    { id: 1, value: 7, isNew: false },
-    { id: 2, value: 14, isNew: false },
-    { id: 3, value: 29, isNew: false },
-  ]);
+  const [nodes, setNodes] = useState<LinkedNode[]>(INITIAL_NODES);
   const [nextNodeId, setNextNodeId] = useState(4);
 
   // Strip 04: Copy C++ code feedback
@@ -73,7 +77,7 @@ export function ExpandingToolsStrips() {
     idx: number,
     e: React.MouseEvent<HTMLElement>
   ) => {
-    if ((e.target as HTMLElement).closest("button")) return;
+    if ((e.target as HTMLElement).closest("button, a")) return;
     setActiveStrip(idx);
   };
 
@@ -81,7 +85,12 @@ export function ExpandingToolsStrips() {
     idx: number,
     e: React.KeyboardEvent<HTMLElement>
   ) => {
-    if (activeStrip === idx) return;
+    if (
+      e.target !== e.currentTarget &&
+      (e.target as HTMLElement).closest("button, a")
+    ) {
+      return;
+    }
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       setActiveStrip(idx);
@@ -92,9 +101,14 @@ export function ExpandingToolsStrips() {
     const val = Math.floor(Math.random() * 88) + 10;
     setNodes((prev) => [
       { id: nextNodeId, value: val, isNew: true },
-      ...prev.slice(0, 3).map((n) => ({ ...n, isNew: false })),
+      ...prev.slice(0, 4).map((n) => ({ ...n, isNew: false })),
     ]);
     setNextNodeId((id) => id + 1);
+  };
+
+  const handleResetNodes = () => {
+    setNodes(INITIAL_NODES);
+    setNextNodeId(4);
   };
 
   const handleCopyCode = () => {
@@ -169,46 +183,90 @@ export function ExpandingToolsStrips() {
         </Link>
       </div>
 
-      {/* 5 Horizontal Expanding Strips */}
+      {/* 5 Horizontal Expanding Strips (Accordion on <1024px) */}
       <div id="expGallery" className="exp-gallery">
         {/* STRIP 01: Video Lectures */}
         <article
           data-strip="0"
           role="region"
           aria-label="فيديوهات الشرح"
-          tabIndex={activeStrip === 0 ? -1 : 0}
           onClick={(e) => handleStripClick(0, e)}
           onKeyDown={(e) => handleStripKeyDown(0, e)}
-          className={`exp-strip ${activeStrip === 0 ? "active" : ""}`}
+          className={`exp-strip ${
+            activeStrip === 0
+              ? "active ring-2 ring-[var(--accent-warm)]/25"
+              : ""
+          }`}
         >
-          <div className="exp-collapsed">
-            <span
-              className="font-en text-[12px] font-black"
-              style={{ color: "var(--accent-warm)" }}
-            >
-              01
+          <div
+            role="button"
+            tabIndex={0}
+            aria-expanded={activeStrip === 0}
+            aria-label="01 · فيديوهات الشرح"
+            onKeyDown={(e) => handleStripKeyDown(0, e)}
+            className="exp-collapsed"
+          >
+            <div className="flex items-center gap-2.5 lg:flex-col lg:gap-0">
+              <span
+                className="font-en text-[11.5px] font-black px-2 py-0.5 rounded-lg lg:px-0 lg:py-0"
+                style={{
+                  background: "var(--accent-warm-soft)",
+                  color: "var(--accent-warm-text)",
+                }}
+              >
+                01
+              </span>
+              <span className="exp-vertical-title lg:hidden">
+                فيديوهات الشرح
+              </span>
+            </div>
+
+            <span className="exp-vertical-title hidden lg:inline-block">
+              فيديوهات الشرح
             </span>
-            <span className="exp-vertical-title">فيديوهات الشرح</span>
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{
-                background: "var(--accent-warm-soft)",
-                color: "var(--accent-warm-text)",
-              }}
-            >
-              <PlayCircle className="w-4 h-4" />
+
+            <div className="flex items-center gap-2">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{
+                  background: "var(--accent-warm-soft)",
+                  color: "var(--accent-warm-text)",
+                }}
+              >
+                <PlayCircle className="w-4 h-4" />
+              </div>
+              <span
+                className="lg:hidden w-8 h-8 rounded-lg border flex items-center justify-center transition-transform duration-300"
+                style={{
+                  background: "var(--bg-canvas)",
+                  borderColor: "var(--border-soft)",
+                  color: "var(--text-secondary)",
+                }}
+                aria-hidden="true"
+              >
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-300 ${
+                    activeStrip === 0 ? "rotate-180" : ""
+                  }`}
+                />
+              </span>
             </div>
           </div>
 
-          <div className="exp-expanded">
+          <div className="exp-expanded min-w-0">
             <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <span
-                  className="font-en text-[11px] font-extrabold tracking-widest uppercase"
-                  style={{ color: "var(--accent-warm)" }}
-                >
-                  01 · VIDEO LECTURES
-                </span>
+              <div className="space-y-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="font-en text-[11px] font-extrabold tracking-widest uppercase px-2 py-0.5 rounded-md"
+                    style={{
+                      background: "var(--accent-warm-soft)",
+                      color: "var(--accent-warm-text)",
+                    }}
+                  >
+                    01 · VIDEO LECTURES
+                  </span>
+                </div>
                 <h3
                   className="text-xl sm:text-2xl font-black"
                   style={{ color: "var(--text-primary)" }}
@@ -216,17 +274,31 @@ export function ExpandingToolsStrips() {
                   فيديوهات شرح مقسّمة لفصول
                 </h3>
               </div>
-              <span
-                className="font-en text-4xl font-black opacity-[0.1] select-none"
-                style={{ color: "var(--text-primary)" }}
-                aria-hidden="true"
-              >
-                01
-              </span>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span
+                  className="lg:hidden w-8 h-8 rounded-lg border flex items-center justify-center"
+                  style={{
+                    background: "var(--accent-warm-soft)",
+                    borderColor: "var(--accent-warm)",
+                    color: "var(--accent-warm-text)",
+                  }}
+                  aria-hidden="true"
+                >
+                  <ChevronDown className="w-4 h-4 rotate-180 transition-transform duration-300" />
+                </span>
+                <span
+                  className="hidden lg:inline-block font-en text-4xl font-black opacity-[0.1] select-none"
+                  style={{ color: "var(--text-primary)" }}
+                  aria-hidden="true"
+                >
+                  01
+                </span>
+              </div>
             </div>
 
             <div
-              className="p-4 rounded-2xl border space-y-3 my-2"
+              className="p-3.5 sm:p-4 rounded-2xl border space-y-3 my-2 min-w-0"
               style={{
                 background: "var(--bg-canvas)",
                 borderColor: "var(--border-soft)",
@@ -235,7 +307,7 @@ export function ExpandingToolsStrips() {
               <div className="flex items-center justify-between gap-2 text-[12px]">
                 <span
                   id="stripVidTitle"
-                  className="font-extrabold"
+                  className="font-extrabold min-w-0 truncate"
                   style={{ color: "var(--text-primary)" }}
                 >
                   {videoTitle}
@@ -246,7 +318,7 @@ export function ExpandingToolsStrips() {
                   onClick={() =>
                     setSpeedIdx((prev) => (prev + 1) % SPEED_OPTIONS.length)
                   }
-                  className="font-mono-code text-[11px] font-bold px-2.5 py-1 rounded-lg border shrink-0 cursor-pointer"
+                  className="font-mono-code text-[11px] font-bold px-2.5 py-1 min-h-[32px] rounded-lg border shrink-0 cursor-pointer"
                   style={{
                     background: "var(--bg-surface)",
                     borderColor: "var(--border-soft)",
@@ -272,7 +344,7 @@ export function ExpandingToolsStrips() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-2 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
                 {VIDEO_CHAPTERS.map((chap, idx) => {
                   const isActive = activeChapterIdx === idx;
                   return (
@@ -280,7 +352,7 @@ export function ExpandingToolsStrips() {
                       key={chap.btnLabel}
                       type="button"
                       onClick={() => setSelectedChapter(idx)}
-                      className="sv-btn p-2 rounded-xl border text-right text-[11px] font-bold transition-all cursor-pointer"
+                      className="sv-btn min-h-[40px] px-3 py-2 rounded-xl border text-right text-[11.5px] font-bold transition-all cursor-pointer flex items-center justify-between sm:justify-center"
                       style={{
                         background: isActive
                           ? "var(--accent-warm-soft)"
@@ -293,7 +365,13 @@ export function ExpandingToolsStrips() {
                           : "var(--text-secondary)",
                       }}
                     >
-                      {chap.btnLabel}
+                      <span>{chap.btnLabel}</span>
+                      <span
+                        className="sm:hidden font-mono-code text-[10px] opacity-75"
+                        aria-hidden="true"
+                      >
+                        {chap.progress}
+                      </span>
                     </button>
                   );
                 })}
@@ -315,39 +393,83 @@ export function ExpandingToolsStrips() {
           data-strip="1"
           role="region"
           aria-label="الشرح التفاعلي"
-          tabIndex={activeStrip === 1 ? -1 : 0}
           onClick={(e) => handleStripClick(1, e)}
           onKeyDown={(e) => handleStripKeyDown(1, e)}
-          className={`exp-strip ${activeStrip === 1 ? "active" : ""}`}
+          className={`exp-strip ${
+            activeStrip === 1
+              ? "active ring-2 ring-[var(--accent-warm)]/25"
+              : ""
+          }`}
         >
-          <div className="exp-collapsed">
-            <span
-              className="font-en text-[12px] font-black"
-              style={{ color: "var(--success-fg)" }}
-            >
-              02
+          <div
+            role="button"
+            tabIndex={0}
+            aria-expanded={activeStrip === 1}
+            aria-label="02 · الشرح التفاعلي"
+            onKeyDown={(e) => handleStripKeyDown(1, e)}
+            className="exp-collapsed"
+          >
+            <div className="flex items-center gap-2.5 lg:flex-col lg:gap-0">
+              <span
+                className="font-en text-[11.5px] font-black px-2 py-0.5 rounded-lg lg:px-0 lg:py-0"
+                style={{
+                  background: "var(--success-soft)",
+                  color: "var(--success-fg)",
+                }}
+              >
+                02
+              </span>
+              <span className="exp-vertical-title lg:hidden">
+                الشرح التفاعلي
+              </span>
+            </div>
+
+            <span className="exp-vertical-title hidden lg:inline-block">
+              الشرح التفاعلي
             </span>
-            <span className="exp-vertical-title">الشرح التفاعلي</span>
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{
-                background: "var(--success-soft)",
-                color: "var(--success-fg)",
-              }}
-            >
-              <Cpu className="w-4 h-4" />
+
+            <div className="flex items-center gap-2">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{
+                  background: "var(--success-soft)",
+                  color: "var(--success-fg)",
+                }}
+              >
+                <Cpu className="w-4 h-4" />
+              </div>
+              <span
+                className="lg:hidden w-8 h-8 rounded-lg border flex items-center justify-center transition-transform duration-300"
+                style={{
+                  background: "var(--bg-canvas)",
+                  borderColor: "var(--border-soft)",
+                  color: "var(--text-secondary)",
+                }}
+                aria-hidden="true"
+              >
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-300 ${
+                    activeStrip === 1 ? "rotate-180" : ""
+                  }`}
+                />
+              </span>
             </div>
           </div>
 
-          <div className="exp-expanded">
+          <div className="exp-expanded min-w-0">
             <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <span
-                  className="font-en text-[11px] font-extrabold tracking-widest uppercase"
-                  style={{ color: "var(--success-fg)" }}
-                >
-                  02 · INTERACTIVE LABS
-                </span>
+              <div className="space-y-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="font-en text-[11px] font-extrabold tracking-widest uppercase px-2 py-0.5 rounded-md"
+                    style={{
+                      background: "var(--success-soft)",
+                      color: "var(--success-fg)",
+                    }}
+                  >
+                    02 · INTERACTIVE LABS
+                  </span>
+                </div>
                 <h3
                   className="text-xl sm:text-2xl font-black"
                   style={{ color: "var(--text-primary)" }}
@@ -355,43 +477,96 @@ export function ExpandingToolsStrips() {
                   تطبيق عملي حيّ جوه الدرس
                 </h3>
               </div>
-              <span
-                className="font-en text-4xl font-black opacity-[0.1] select-none"
-                style={{ color: "var(--text-primary)" }}
-                aria-hidden="true"
-              >
-                02
-              </span>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span
+                  className="lg:hidden w-8 h-8 rounded-lg border flex items-center justify-center"
+                  style={{
+                    background: "var(--success-soft)",
+                    borderColor: "var(--success-fg)",
+                    color: "var(--success-fg)",
+                  }}
+                  aria-hidden="true"
+                >
+                  <ChevronDown className="w-4 h-4 rotate-180 transition-transform duration-300" />
+                </span>
+                <span
+                  className="hidden lg:inline-block font-en text-4xl font-black opacity-[0.1] select-none"
+                  style={{ color: "var(--text-primary)" }}
+                  aria-hidden="true"
+                >
+                  02
+                </span>
+              </div>
             </div>
 
             <div
-              className="p-4 rounded-2xl border space-y-3 my-2"
+              className="p-3.5 sm:p-4 rounded-2xl border space-y-3 my-2 min-w-0"
               style={{
                 background: "var(--bg-canvas)",
                 borderColor: "var(--border-soft)",
               }}
             >
-              <div className="flex items-center justify-between gap-2">
-                <span
-                  className="text-[12px] font-extrabold"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  جرّب إضافة عقدة في Linked List
-                </span>
-                <button
-                  id="stripPushBtn"
-                  type="button"
-                  onClick={handlePushHead}
-                  className="px-3 py-1 rounded-xl text-[11.5px] font-extrabold text-white cursor-pointer transition-transform active:scale-95"
-                  style={{ background: "var(--success-fg)" }}
-                >
-                  + Push Head
-                </button>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="text-[12px] font-extrabold"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    جرّب إضافة عقدة في Linked List
+                  </span>
+                  <span
+                    className="font-mono-code text-[10.5px] font-extrabold px-2 py-0.5 rounded-md border"
+                    style={{
+                      background: "var(--bg-surface)",
+                      borderColor: "var(--border-soft)",
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    Size: {nodes.length}
+                  </span>
+                  <span
+                    className="font-mono-code text-[10.5px] font-extrabold px-2 py-0.5 rounded-md"
+                    style={{
+                      background: "var(--success-soft)",
+                      color: "var(--success-fg)",
+                    }}
+                  >
+                    O(1)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    id="stripPushBtn"
+                    type="button"
+                    onClick={handlePushHead}
+                    className="min-h-[36px] px-3 py-1.5 rounded-xl text-[11.5px] font-extrabold text-white cursor-pointer transition-transform active:scale-95"
+                    style={{ background: "var(--success-fg)" }}
+                  >
+                    + Push Head
+                  </button>
+                  <button
+                    id="stripResetNodesBtn"
+                    type="button"
+                    onClick={handleResetNodes}
+                    aria-label="إعادة ضبط القائمة"
+                    className="min-h-[36px] px-2.5 py-1.5 rounded-xl border text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
+                    style={{
+                      background: "var(--bg-surface)",
+                      borderColor: "var(--border-soft)",
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span className="font-en">Reset</span>
+                  </button>
+                </div>
               </div>
 
               <div
                 id="stripNodesRow"
-                className="flex items-center justify-center gap-2 flex-wrap py-2"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap py-2"
                 dir="ltr"
               >
                 <span
@@ -404,9 +579,12 @@ export function ExpandingToolsStrips() {
                   HEAD
                 </span>
                 {nodes.map((node, idx) => (
-                  <span key={node.id} className="inline-flex items-center gap-2">
+                  <span
+                    key={node.id}
+                    className="inline-flex items-center gap-1.5 sm:gap-2"
+                  >
                     <span
-                      className="font-mono-code"
+                      className="font-mono-code text-[12px]"
                       style={{
                         color:
                           idx === 0
@@ -419,7 +597,7 @@ export function ExpandingToolsStrips() {
                     <span
                       className={`${
                         node.isNew ? "node-pop" : ""
-                      } px-3 py-1.5 rounded-xl border font-mono-code text-[12px] font-extrabold`}
+                      } px-2.5 sm:px-3 py-1.5 rounded-xl border font-mono-code text-[12px] font-extrabold`}
                       style={
                         idx === 0
                           ? {
@@ -438,6 +616,19 @@ export function ExpandingToolsStrips() {
                     </span>
                   </span>
                 ))}
+                <span className="inline-flex items-center gap-1.5 font-mono-code text-[11px]">
+                  <span style={{ color: "var(--text-muted)" }}>→</span>
+                  <span
+                    className="px-2 py-1 rounded-lg border"
+                    style={{
+                      background: "var(--bg-subtle)",
+                      borderColor: "var(--border-soft)",
+                      color: "var(--text-muted)",
+                    }}
+                  >
+                    NULL
+                  </span>
+                </span>
               </div>
             </div>
 
@@ -456,39 +647,81 @@ export function ExpandingToolsStrips() {
           data-strip="2"
           role="region"
           aria-label="موقع المادة"
-          tabIndex={activeStrip === 2 ? -1 : 0}
           onClick={(e) => handleStripClick(2, e)}
           onKeyDown={(e) => handleStripKeyDown(2, e)}
-          className={`exp-strip ${activeStrip === 2 ? "active" : ""}`}
+          className={`exp-strip ${
+            activeStrip === 2
+              ? "active ring-2 ring-[var(--accent-warm)]/25"
+              : ""
+          }`}
         >
-          <div className="exp-collapsed">
-            <span
-              className="font-en text-[12px] font-black"
-              style={{ color: "var(--brand-primary)" }}
-            >
-              03
+          <div
+            role="button"
+            tabIndex={0}
+            aria-expanded={activeStrip === 2}
+            aria-label="03 · موقع المادة"
+            onKeyDown={(e) => handleStripKeyDown(2, e)}
+            className="exp-collapsed"
+          >
+            <div className="flex items-center gap-2.5 lg:flex-col lg:gap-0">
+              <span
+                className="font-en text-[11.5px] font-black px-2 py-0.5 rounded-lg lg:px-0 lg:py-0"
+                style={{
+                  background: "var(--brand-soft)",
+                  color: "var(--brand-soft-text)",
+                }}
+              >
+                03
+              </span>
+              <span className="exp-vertical-title lg:hidden">موقع المادة</span>
+            </div>
+
+            <span className="exp-vertical-title hidden lg:inline-block">
+              موقع المادة
             </span>
-            <span className="exp-vertical-title">موقع المادة</span>
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{
-                background: "var(--brand-soft)",
-                color: "var(--brand-soft-text)",
-              }}
-            >
-              <Globe className="w-4 h-4" />
+
+            <div className="flex items-center gap-2">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{
+                  background: "var(--brand-soft)",
+                  color: "var(--brand-soft-text)",
+                }}
+              >
+                <Globe className="w-4 h-4" />
+              </div>
+              <span
+                className="lg:hidden w-8 h-8 rounded-lg border flex items-center justify-center transition-transform duration-300"
+                style={{
+                  background: "var(--bg-canvas)",
+                  borderColor: "var(--border-soft)",
+                  color: "var(--text-secondary)",
+                }}
+                aria-hidden="true"
+              >
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-300 ${
+                    activeStrip === 2 ? "rotate-180" : ""
+                  }`}
+                />
+              </span>
             </div>
           </div>
 
-          <div className="exp-expanded">
+          <div className="exp-expanded min-w-0">
             <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <span
-                  className="font-en text-[11px] font-extrabold tracking-widest uppercase"
-                  style={{ color: "var(--brand-primary)" }}
-                >
-                  03 · COURSE WEBSITE
-                </span>
+              <div className="space-y-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="font-en text-[11px] font-extrabold tracking-widest uppercase px-2 py-0.5 rounded-md"
+                    style={{
+                      background: "var(--brand-soft)",
+                      color: "var(--brand-soft-text)",
+                    }}
+                  >
+                    03 · COURSE WEBSITE
+                  </span>
+                </div>
                 <h3
                   className="text-xl sm:text-2xl font-black"
                   style={{ color: "var(--text-primary)" }}
@@ -496,13 +729,27 @@ export function ExpandingToolsStrips() {
                   موقع منظّم مخصص لكل مادة
                 </h3>
               </div>
-              <span
-                className="font-en text-4xl font-black opacity-[0.1] select-none"
-                style={{ color: "var(--text-primary)" }}
-                aria-hidden="true"
-              >
-                03
-              </span>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span
+                  className="lg:hidden w-8 h-8 rounded-lg border flex items-center justify-center"
+                  style={{
+                    background: "var(--brand-soft)",
+                    borderColor: "var(--brand-primary)",
+                    color: "var(--brand-soft-text)",
+                  }}
+                  aria-hidden="true"
+                >
+                  <ChevronDown className="w-4 h-4 rotate-180 transition-transform duration-300" />
+                </span>
+                <span
+                  className="hidden lg:inline-block font-en text-4xl font-black opacity-[0.1] select-none"
+                  style={{ color: "var(--text-primary)" }}
+                  aria-hidden="true"
+                >
+                  03
+                </span>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 my-2">
@@ -603,39 +850,83 @@ export function ExpandingToolsStrips() {
           data-strip="3"
           role="region"
           aria-label="الملخصات والأكواد"
-          tabIndex={activeStrip === 3 ? -1 : 0}
           onClick={(e) => handleStripClick(3, e)}
           onKeyDown={(e) => handleStripKeyDown(3, e)}
-          className={`exp-strip ${activeStrip === 3 ? "active" : ""}`}
+          className={`exp-strip ${
+            activeStrip === 3
+              ? "active ring-2 ring-[var(--accent-warm)]/25"
+              : ""
+          }`}
         >
-          <div className="exp-collapsed">
-            <span
-              className="font-en text-[12px] font-black"
-              style={{ color: "var(--accent-warm)" }}
-            >
-              04
+          <div
+            role="button"
+            tabIndex={0}
+            aria-expanded={activeStrip === 3}
+            aria-label="04 · الملخصات والأكواد"
+            onKeyDown={(e) => handleStripKeyDown(3, e)}
+            className="exp-collapsed"
+          >
+            <div className="flex items-center gap-2.5 lg:flex-col lg:gap-0">
+              <span
+                className="font-en text-[11.5px] font-black px-2 py-0.5 rounded-lg lg:px-0 lg:py-0"
+                style={{
+                  background: "var(--accent-warm-soft)",
+                  color: "var(--accent-warm-text)",
+                }}
+              >
+                04
+              </span>
+              <span className="exp-vertical-title lg:hidden">
+                الملخصات والأكواد
+              </span>
+            </div>
+
+            <span className="exp-vertical-title hidden lg:inline-block">
+              الملخصات والأكواد
             </span>
-            <span className="exp-vertical-title">الملخصات والأكواد</span>
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{
-                background: "var(--bg-subtle)",
-                color: "var(--text-primary)",
-              }}
-            >
-              <FileCode2 className="w-4 h-4" />
+
+            <div className="flex items-center gap-2">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{
+                  background: "var(--bg-subtle)",
+                  color: "var(--text-primary)",
+                }}
+              >
+                <FileCode2 className="w-4 h-4" />
+              </div>
+              <span
+                className="lg:hidden w-8 h-8 rounded-lg border flex items-center justify-center transition-transform duration-300"
+                style={{
+                  background: "var(--bg-canvas)",
+                  borderColor: "var(--border-soft)",
+                  color: "var(--text-secondary)",
+                }}
+                aria-hidden="true"
+              >
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-300 ${
+                    activeStrip === 3 ? "rotate-180" : ""
+                  }`}
+                />
+              </span>
             </div>
           </div>
 
-          <div className="exp-expanded">
+          <div className="exp-expanded min-w-0">
             <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <span
-                  className="font-en text-[11px] font-extrabold tracking-widest uppercase"
-                  style={{ color: "var(--accent-warm)" }}
-                >
-                  04 · SUMMARIES &amp; CODE
-                </span>
+              <div className="space-y-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="font-en text-[11px] font-extrabold tracking-widest uppercase px-2 py-0.5 rounded-md"
+                    style={{
+                      background: "var(--accent-warm-soft)",
+                      color: "var(--accent-warm-text)",
+                    }}
+                  >
+                    04 · SUMMARIES &amp; CODE
+                  </span>
+                </div>
                 <h3
                   className="text-xl sm:text-2xl font-black"
                   style={{ color: "var(--text-primary)" }}
@@ -643,17 +934,34 @@ export function ExpandingToolsStrips() {
                   ملخصات هندسية وأكواد LTR نظيفة
                 </h3>
               </div>
-              <span
-                className="font-en text-4xl font-black opacity-[0.1] select-none"
-                style={{ color: "var(--text-primary)" }}
-                aria-hidden="true"
-              >
-                04
-              </span>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span
+                  className="lg:hidden w-8 h-8 rounded-lg border flex items-center justify-center"
+                  style={{
+                    background: "var(--accent-warm-soft)",
+                    borderColor: "var(--accent-warm)",
+                    color: "var(--accent-warm-text)",
+                  }}
+                  aria-hidden="true"
+                >
+                  <ChevronDown className="w-4 h-4 rotate-180 transition-transform duration-300" />
+                </span>
+                <span
+                  className="hidden lg:inline-block font-en text-4xl font-black opacity-[0.1] select-none"
+                  style={{ color: "var(--text-primary)" }}
+                  aria-hidden="true"
+                >
+                  04
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-2.5 my-2">
-              <pre className="code-ltr text-[11.5px] leading-relaxed" dir="ltr">
+            <div className="space-y-2.5 my-2 min-w-0 w-full">
+              <pre
+                className="code-ltr text-[11.5px] leading-relaxed min-w-0 max-w-full overflow-x-auto"
+                dir="ltr"
+              >
                 <span style={{ color: "#9dc0f7" }}>void</span>{" "}
                 {"insertHead(Node*& head, "}
                 <span style={{ color: "#9dc0f7" }}>int</span>
@@ -661,7 +969,7 @@ export function ExpandingToolsStrips() {
                 <span style={{ color: "#f0a786" }}>new</span>
                 {" Node(val); n->next = head; head = n;\n}"}
               </pre>
-              <div className="flex items-center justify-between text-[11.5px] font-bold px-1">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11.5px] font-bold px-1">
                 <span style={{ color: "var(--success-fg)" }}>
                   التعقيد الزمني ثابت دائماً: O(1)
                 </span>
@@ -669,7 +977,7 @@ export function ExpandingToolsStrips() {
                   id="stripCopyBtn"
                   type="button"
                   onClick={handleCopyCode}
-                  className="px-3 py-1 rounded-lg border cursor-pointer transition-colors"
+                  className="min-h-[36px] px-3 py-1.5 rounded-lg border cursor-pointer transition-colors"
                   style={{
                     background: "var(--bg-canvas)",
                     borderColor: "var(--border-soft)",
@@ -696,39 +1004,83 @@ export function ExpandingToolsStrips() {
           data-strip="4"
           role="region"
           aria-label="الكويزات والتثبيت"
-          tabIndex={activeStrip === 4 ? -1 : 0}
           onClick={(e) => handleStripClick(4, e)}
           onKeyDown={(e) => handleStripKeyDown(4, e)}
-          className={`exp-strip ${activeStrip === 4 ? "active" : ""}`}
+          className={`exp-strip ${
+            activeStrip === 4
+              ? "active ring-2 ring-[var(--accent-warm)]/25"
+              : ""
+          }`}
         >
-          <div className="exp-collapsed">
-            <span
-              className="font-en text-[12px] font-black"
-              style={{ color: "var(--success-fg)" }}
-            >
-              05
+          <div
+            role="button"
+            tabIndex={0}
+            aria-expanded={activeStrip === 4}
+            aria-label="05 · الكويزات والتثبيت"
+            onKeyDown={(e) => handleStripKeyDown(4, e)}
+            className="exp-collapsed"
+          >
+            <div className="flex items-center gap-2.5 lg:flex-col lg:gap-0">
+              <span
+                className="font-en text-[11.5px] font-black px-2 py-0.5 rounded-lg lg:px-0 lg:py-0"
+                style={{
+                  background: "var(--success-soft)",
+                  color: "var(--success-fg)",
+                }}
+              >
+                05
+              </span>
+              <span className="exp-vertical-title lg:hidden">
+                الكويزات والتثبيت
+              </span>
+            </div>
+
+            <span className="exp-vertical-title hidden lg:inline-block">
+              الكويزات والتثبيت
             </span>
-            <span className="exp-vertical-title">الكويزات والتثبيت</span>
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{
-                background: "var(--success-soft)",
-                color: "var(--success-fg)",
-              }}
-            >
-              <CheckSquare className="w-4 h-4" />
+
+            <div className="flex items-center gap-2">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{
+                  background: "var(--success-soft)",
+                  color: "var(--success-fg)",
+                }}
+              >
+                <CheckSquare className="w-4 h-4" />
+              </div>
+              <span
+                className="lg:hidden w-8 h-8 rounded-lg border flex items-center justify-center transition-transform duration-300"
+                style={{
+                  background: "var(--bg-canvas)",
+                  borderColor: "var(--border-soft)",
+                  color: "var(--text-secondary)",
+                }}
+                aria-hidden="true"
+              >
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-300 ${
+                    activeStrip === 4 ? "rotate-180" : ""
+                  }`}
+                />
+              </span>
             </div>
           </div>
 
-          <div className="exp-expanded">
+          <div className="exp-expanded min-w-0">
             <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <span
-                  className="font-en text-[11px] font-extrabold tracking-widest uppercase"
-                  style={{ color: "var(--success-fg)" }}
-                >
-                  05 · INSTANT QUIZZES
-                </span>
+              <div className="space-y-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="font-en text-[11px] font-extrabold tracking-widest uppercase px-2 py-0.5 rounded-md"
+                    style={{
+                      background: "var(--success-soft)",
+                      color: "var(--success-fg)",
+                    }}
+                  >
+                    05 · INSTANT QUIZZES
+                  </span>
+                </div>
                 <h3
                   className="text-xl sm:text-2xl font-black"
                   style={{ color: "var(--text-primary)" }}
@@ -736,17 +1088,31 @@ export function ExpandingToolsStrips() {
                   كويزات فورية وبنك أخطاء ذكي
                 </h3>
               </div>
-              <span
-                className="font-en text-4xl font-black opacity-[0.1] select-none"
-                style={{ color: "var(--text-primary)" }}
-                aria-hidden="true"
-              >
-                05
-              </span>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span
+                  className="lg:hidden w-8 h-8 rounded-lg border flex items-center justify-center"
+                  style={{
+                    background: "var(--success-soft)",
+                    borderColor: "var(--success-fg)",
+                    color: "var(--success-fg)",
+                  }}
+                  aria-hidden="true"
+                >
+                  <ChevronDown className="w-4 h-4 rotate-180 transition-transform duration-300" />
+                </span>
+                <span
+                  className="hidden lg:inline-block font-en text-4xl font-black opacity-[0.1] select-none"
+                  style={{ color: "var(--text-primary)" }}
+                  aria-hidden="true"
+                >
+                  05
+                </span>
+              </div>
             </div>
 
             <div
-              className="p-4 rounded-2xl border space-y-3 my-2"
+              className="p-3.5 sm:p-4 rounded-2xl border space-y-3 my-2 min-w-0"
               style={{
                 background: "var(--bg-canvas)",
                 borderColor: "var(--border-soft)",
@@ -762,7 +1128,7 @@ export function ExpandingToolsStrips() {
                 <button
                   type="button"
                   onClick={() => void handleQuizAnswer("ok")}
-                  className="strip-q-btn px-3 py-2 rounded-xl border text-[12px] font-mono-code font-bold transition-all cursor-pointer"
+                  className="strip-q-btn min-h-[44px] px-3 py-2.5 rounded-xl border text-[12px] font-mono-code font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   style={
                     quizAnswer !== null
                       ? {
@@ -777,12 +1143,15 @@ export function ExpandingToolsStrips() {
                         }
                   }
                 >
-                  A) O(1)
+                  <span>A) O(1)</span>
+                  {quizAnswer !== null && (
+                    <span style={{ color: "var(--success-fg)" }}>✓</span>
+                  )}
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleQuizAnswer("no")}
-                  className="strip-q-btn px-3 py-2 rounded-xl border text-[12px] font-mono-code font-bold transition-all cursor-pointer"
+                  className="strip-q-btn min-h-[44px] px-3 py-2.5 rounded-xl border text-[12px] font-mono-code font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   style={
                     quizAnswer === "no"
                       ? {
@@ -797,14 +1166,25 @@ export function ExpandingToolsStrips() {
                         }
                   }
                 >
-                  B) O(n)
+                  <span>B) O(n)</span>
+                  {quizAnswer === "no" && (
+                    <span style={{ color: "var(--accent-warm)" }}>✕</span>
+                  )}
                 </button>
               </div>
               {quizAnswer !== null && (
                 <div
                   id="stripQuizFb"
-                  className="text-[12px] font-bold"
+                  className="text-[12px] font-bold px-2.5 py-1.5 rounded-xl border"
                   style={{
+                    background:
+                      quizAnswer === "ok"
+                        ? "var(--success-soft)"
+                        : "var(--accent-warm-soft)",
+                    borderColor:
+                      quizAnswer === "ok"
+                        ? "var(--success-fg)"
+                        : "var(--accent-warm)",
                     color:
                       quizAnswer === "ok"
                         ? "var(--success-fg)"

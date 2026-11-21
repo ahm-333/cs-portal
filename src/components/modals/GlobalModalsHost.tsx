@@ -56,6 +56,7 @@ export function GlobalModalsHost() {
   const [cmdkQuery, setCmdkQuery] = useState("");
   const [cmdkSelectedIndex, setCmdkSelectedIndex] = useState(0);
   const cmdkInputRef = useRef<HTMLInputElement | null>(null);
+  const cmdkListRef = useRef<HTMLDivElement | null>(null);
   const fetchInFlightRef = useRef(false);
 
   // 2. Profile Modal state
@@ -191,6 +192,17 @@ export function GlobalModalsHost() {
     );
   }, [searchIndex, cmdkQuery]);
 
+  function scrollSelectedCmdkOptionIntoView(index: number) {
+    window.requestAnimationFrame(() => {
+      const container = cmdkListRef.current;
+      if (!container) return;
+      const el = container.querySelector<HTMLElement>(
+        `[data-cmdk-index="${index}"]`
+      );
+      el?.scrollIntoView({ block: "nearest" });
+    });
+  }
+
   function handleSelectSearchHit(item: SearchIndexItem) {
     closeModal();
     const targetUrl = item.lessonId
@@ -271,11 +283,17 @@ export function GlobalModalsHost() {
         onClick={(e) => {
           if (e.target === e.currentTarget) closeModal();
         }}
-        className="fixed inset-0 z-50 modal-backdrop flex items-start justify-center pt-20 p-4"
+        className="fixed inset-0 z-50 modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
       >
-        <div className="surface-card rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl">
+        <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[90svh] overflow-y-auto pt-3 sm:pt-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-0 shadow-2xl">
           <div
-            className="p-4 border-b flex items-center gap-3"
+            aria-hidden="true"
+            className="w-10 h-1 rounded-full mx-auto mb-3 sm:hidden"
+            style={{ background: "var(--border-strong)" }}
+          />
+
+          <div
+            className="px-4 py-3.5 sm:p-4 border-b flex items-center gap-3"
             style={{ borderColor: "var(--border-soft)" }}
           >
             <Search
@@ -294,19 +312,19 @@ export function GlobalModalsHost() {
               onKeyDown={(e) => {
                 if (e.key === "ArrowDown" && filteredSearchHits.length > 0) {
                   e.preventDefault();
-                  setCmdkSelectedIndex(
-                    (prev) => (prev + 1) % filteredSearchHits.length
-                  );
+                  const next = (safeSelected + 1) % filteredSearchHits.length;
+                  setCmdkSelectedIndex(next);
+                  scrollSelectedCmdkOptionIntoView(next);
                 } else if (
                   e.key === "ArrowUp" &&
                   filteredSearchHits.length > 0
                 ) {
                   e.preventDefault();
-                  setCmdkSelectedIndex(
-                    (prev) =>
-                      (prev - 1 + filteredSearchHits.length) %
-                      filteredSearchHits.length
-                  );
+                  const next =
+                    (safeSelected - 1 + filteredSearchHits.length) %
+                    filteredSearchHits.length;
+                  setCmdkSelectedIndex(next);
+                  scrollSelectedCmdkOptionIntoView(next);
                 } else if (
                   e.key === "Enter" &&
                   filteredSearchHits[safeSelected]
@@ -316,13 +334,13 @@ export function GlobalModalsHost() {
                 }
               }}
               placeholder="ابحث عن مادة، درس، أو مصطلح (مثل: Linked List, SJF, Big-O)..."
-              className="w-full bg-transparent text-[13.5px] font-semibold outline-none"
+              className="w-full min-h-[38px] bg-transparent text-[13.5px] font-semibold outline-none"
               style={{ color: "var(--text-primary)" }}
             />
             <button
               type="button"
               onClick={closeModal}
-              className="text-[11px] font-mono-code px-2 py-1 rounded-lg border cursor-pointer"
+              className="text-[11px] font-mono-code px-2.5 py-1.5 rounded-lg border cursor-pointer shrink-0"
               style={{
                 background: "var(--bg-subtle)",
                 borderColor: "var(--border-soft)",
@@ -333,7 +351,12 @@ export function GlobalModalsHost() {
             </button>
           </div>
 
-          <div className="max-h-72 overflow-y-auto p-2.5 space-y-1.5">
+          <div
+            ref={cmdkListRef}
+            role="listbox"
+            aria-label="نتائج البحث السريع"
+            className="max-h-72 overflow-y-auto p-2.5 space-y-1.5"
+          >
             {searchLoading ? (
               <div
                 className="p-5 text-center text-[12.5px] font-bold"
@@ -350,7 +373,7 @@ export function GlobalModalsHost() {
                 <button
                   type="button"
                   onClick={() => void ensureSearchIndex()}
-                  className="px-3 py-1 rounded-lg border text-[11.5px] cursor-pointer"
+                  className="min-h-[38px] px-3.5 py-1.5 rounded-lg border text-[11.5px] cursor-pointer"
                   style={{
                     background: "var(--bg-canvas)",
                     borderColor: "var(--border-soft)",
@@ -374,11 +397,17 @@ export function GlobalModalsHost() {
                   <button
                     key={`${hit.courseSlug}-${hit.lessonId ?? "course"}-${idx}`}
                     type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    data-cmdk-index={idx}
                     onMouseEnter={() => setCmdkSelectedIndex(idx)}
                     onClick={() => handleSelectSearchHit(hit)}
-                    className="w-full text-right px-3.5 py-2.5 rounded-xl flex items-center justify-between gap-2 transition-colors cursor-pointer"
+                    className="w-full text-right px-3.5 py-2.5 min-h-[48px] rounded-xl border flex items-center justify-between gap-2 transition-colors cursor-pointer"
                     style={{
                       background: isSelected ? "var(--bg-hover)" : "transparent",
+                      borderColor: isSelected
+                        ? "var(--accent-warm)"
+                        : "transparent",
                     }}
                   >
                     <div className="min-w-0">
@@ -395,25 +424,62 @@ export function GlobalModalsHost() {
                         {hit.sub}
                       </div>
                     </div>
-                    <span
-                      className="text-[10.5px] font-bold px-2 py-0.5 rounded-md shrink-0"
-                      style={{
-                        background:
-                          hit.type === "مقرر"
-                            ? "var(--brand-soft)"
-                            : "var(--bg-subtle)",
-                        color:
-                          hit.type === "مقرر"
-                            ? "var(--brand-soft-text)"
-                            : "var(--text-secondary)",
-                      }}
-                    >
-                      {hit.type}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span
+                        className="text-[10.5px] font-bold px-2 py-0.5 rounded-md"
+                        style={{
+                          background:
+                            hit.type === "مقرر"
+                              ? "var(--brand-soft)"
+                              : "var(--bg-subtle)",
+                          color:
+                            hit.type === "مقرر"
+                              ? "var(--brand-soft-text)"
+                              : "var(--text-secondary)",
+                        }}
+                      >
+                        {hit.type}
+                      </span>
+                      {isSelected && (
+                        <span
+                          aria-hidden="true"
+                          className="font-mono-code text-[10px] font-bold px-1.5 py-0.5 rounded"
+                          style={{
+                            background: "var(--accent-warm-soft)",
+                            color: "var(--accent-warm-text)",
+                          }}
+                        >
+                          ↵
+                        </span>
+                      )}
+                    </div>
                   </button>
                 );
               })
             )}
+          </div>
+
+          <div
+            className="px-4 py-2.5 border-t flex items-center justify-between gap-2 text-[11px] font-semibold"
+            style={{
+              borderColor: "var(--border-soft)",
+              background: "var(--bg-canvas)",
+              color: "var(--text-muted)",
+            }}
+          >
+            <span>
+              <kbd className="font-mono-code px-1.5 py-0.5 rounded border text-[10px] mx-0.5">
+                ↑↓
+              </kbd>{" "}
+              للتنقل ·{" "}
+              <kbd className="font-mono-code px-1.5 py-0.5 rounded border text-[10px] mx-0.5">
+                Enter
+              </kbd>{" "}
+              للفتح
+            </span>
+            <span className="font-mono-code text-[10.5px]">
+              {filteredSearchHits.length} نتيجة
+            </span>
           </div>
         </div>
       </div>
@@ -430,9 +496,15 @@ export function GlobalModalsHost() {
         onClick={(e) => {
           if (e.target === e.currentTarget) closeModal();
         }}
-        className="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4"
+        className="fixed inset-0 z-50 modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
       >
-        <div className="surface-card rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4">
+        <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90svh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
+          <div
+            aria-hidden="true"
+            className="w-10 h-1 rounded-full mx-auto mb-3 sm:hidden"
+            style={{ background: "var(--border-strong)" }}
+          />
+
           <div className="flex items-center justify-between gap-3">
             <div>
               <h3
@@ -452,7 +524,7 @@ export function GlobalModalsHost() {
               type="button"
               onClick={closeModal}
               aria-label="إغلاق"
-              className="w-8 h-8 rounded-xl border flex items-center justify-center font-bold shrink-0 cursor-pointer"
+              className="w-9 h-9 rounded-xl border flex items-center justify-center font-bold shrink-0 cursor-pointer"
               style={{
                 background: "var(--bg-subtle)",
                 borderColor: "var(--border-soft)",
@@ -478,7 +550,7 @@ export function GlobalModalsHost() {
                 value={profileName}
                 onChange={(e) => setProfileName(e.target.value)}
                 placeholder="مثال: أحمد"
-                className="w-full px-3.5 py-2.5 rounded-xl border text-[13.5px] outline-none"
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border text-[13.5px] outline-none"
                 style={{
                   background: "var(--bg-canvas)",
                   borderColor: "var(--border-soft)",
@@ -500,7 +572,7 @@ export function GlobalModalsHost() {
                     key={y}
                     type="button"
                     onClick={() => setProfileYear(y)}
-                    className={`filter-pill py-2 rounded-xl text-[12.5px] cursor-pointer ${
+                    className={`filter-pill min-h-[44px] py-2 rounded-xl text-[12.5px] cursor-pointer ${
                       profileYear === y ? "active" : ""
                     }`}
                   >
@@ -523,7 +595,7 @@ export function GlobalModalsHost() {
                     key={d}
                     type="button"
                     onClick={() => setProfileDept(d)}
-                    className={`filter-pill py-2 rounded-xl text-[12.5px] font-en cursor-pointer ${
+                    className={`filter-pill min-h-[44px] py-2 rounded-xl text-[12.5px] font-en cursor-pointer ${
                       profileDept === d ? "active" : ""
                     }`}
                   >
@@ -535,7 +607,7 @@ export function GlobalModalsHost() {
 
             <button
               type="submit"
-              className="w-full py-2.5 rounded-xl text-[13.5px] font-extrabold text-white cursor-pointer transition-opacity hover:opacity-95"
+              className="w-full min-h-[44px] py-2.5 rounded-xl text-[13.5px] font-extrabold text-white cursor-pointer transition-opacity hover:opacity-95"
               style={{ background: "#c25e33" }}
             >
               حفظ وتفعيل مقررات فرقتي ←
@@ -556,9 +628,15 @@ export function GlobalModalsHost() {
         onClick={(e) => {
           if (e.target === e.currentTarget) closeModal();
         }}
-        className="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4"
+        className="fixed inset-0 z-50 modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
       >
-        <div className="surface-card rounded-3xl max-w-lg w-full max-h-[82vh] overflow-y-auto p-5 sm:p-6 space-y-4">
+        <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[90svh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
+          <div
+            aria-hidden="true"
+            className="w-10 h-1 rounded-full mx-auto mb-3 sm:hidden"
+            style={{ background: "var(--border-strong)" }}
+          />
+
           <div className="flex items-center justify-between gap-3">
             <div>
               <h3
@@ -578,7 +656,7 @@ export function GlobalModalsHost() {
               type="button"
               onClick={closeModal}
               aria-label="إغلاق"
-              className="w-8 h-8 rounded-xl border flex items-center justify-center font-bold shrink-0 cursor-pointer"
+              className="w-9 h-9 rounded-xl border flex items-center justify-center font-bold shrink-0 cursor-pointer"
               style={{
                 background: "var(--bg-subtle)",
                 borderColor: "var(--border-soft)",
@@ -627,8 +705,11 @@ export function GlobalModalsHost() {
                         removeMistake(idx);
                         emitToast("تمت إزالة السؤال من بنك الأخطاء ✓");
                       }}
-                      className="text-[11px] font-bold hover:underline cursor-pointer"
-                      style={{ color: "var(--success-fg)" }}
+                      className="min-h-[32px] px-2.5 py-1 rounded-lg text-[11px] font-bold hover:underline cursor-pointer"
+                      style={{
+                        background: "var(--success-soft)",
+                        color: "var(--success-fg)",
+                      }}
                     >
                       تمت المراجعة ✓
                     </button>
@@ -664,9 +745,15 @@ export function GlobalModalsHost() {
         onClick={(e) => {
           if (e.target === e.currentTarget) closeModal();
         }}
-        className="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4"
+        className="fixed inset-0 z-50 modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
       >
-        <div className="surface-card rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4">
+        <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90svh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
+          <div
+            aria-hidden="true"
+            className="w-10 h-1 rounded-full mx-auto mb-3 sm:hidden"
+            style={{ background: "var(--border-strong)" }}
+          />
+
           <div className="flex items-center justify-between gap-3">
             <h3
               className="text-lg font-extrabold"
@@ -678,7 +765,7 @@ export function GlobalModalsHost() {
               type="button"
               onClick={closeModal}
               aria-label="إغلاق"
-              className="w-8 h-8 rounded-xl border flex items-center justify-center font-bold shrink-0 cursor-pointer"
+              className="w-9 h-9 rounded-xl border flex items-center justify-center font-bold shrink-0 cursor-pointer"
               style={{
                 background: "var(--bg-subtle)",
                 borderColor: "var(--border-soft)",
@@ -696,7 +783,7 @@ export function GlobalModalsHost() {
               value={fbTitle}
               onChange={(e) => setFbTitle(e.target.value)}
               placeholder="اسم المادة أو عنوان الملاحظة"
-              className="w-full px-3.5 py-2.5 rounded-xl border text-[13px] outline-none"
+              className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border text-[13px] outline-none"
               style={{
                 background: "var(--bg-canvas)",
                 borderColor: "var(--border-soft)",
@@ -718,7 +805,7 @@ export function GlobalModalsHost() {
             />
             <button
               type="submit"
-              className="w-full py-2.5 rounded-xl text-[13.5px] font-extrabold text-white cursor-pointer transition-opacity hover:opacity-95"
+              className="w-full min-h-[44px] py-2.5 rounded-xl text-[13.5px] font-extrabold text-white cursor-pointer transition-opacity hover:opacity-95"
               style={{ background: "var(--hero-bg)" }}
             >
               إرسال الملاحظة
@@ -740,9 +827,15 @@ export function GlobalModalsHost() {
       onClick={(e) => {
         if (e.target === e.currentTarget) closeModal();
       }}
-      className="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
     >
-      <div className="surface-card rounded-3xl max-w-md w-full p-6 space-y-4">
+      <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90svh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
+        <div
+          aria-hidden="true"
+          className="w-10 h-1 rounded-full mx-auto mb-3 sm:hidden"
+          style={{ background: "var(--border-strong)" }}
+        />
+
         <div className="flex items-center justify-between gap-3">
           <div>
             <span
@@ -762,7 +855,7 @@ export function GlobalModalsHost() {
             type="button"
             onClick={closeModal}
             aria-label="إغلاق"
-            className="w-8 h-8 rounded-xl border flex items-center justify-center font-bold shrink-0 cursor-pointer"
+            className="w-9 h-9 rounded-xl border flex items-center justify-center font-bold shrink-0 cursor-pointer"
             style={{
               background: "var(--bg-subtle)",
               borderColor: "var(--border-soft)",
@@ -805,7 +898,7 @@ export function GlobalModalsHost() {
               if (unlockError) setUnlockError(null);
             }}
             placeholder={`Enter code: ${displayCode}`}
-            className="w-full px-3.5 py-2.5 rounded-xl border font-mono-code text-[13px] font-bold outline-none"
+            className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border font-mono-code text-[13px] font-bold outline-none"
             style={{
               background: "var(--bg-canvas)",
               borderColor: unlockError
@@ -824,7 +917,7 @@ export function GlobalModalsHost() {
           )}
           <button
             type="submit"
-            className="w-full py-2.5 rounded-xl text-[13px] font-extrabold text-white cursor-pointer transition-opacity hover:opacity-95"
+            className="w-full min-h-[44px] py-2.5 rounded-xl text-[13px] font-extrabold text-white cursor-pointer transition-opacity hover:opacity-95"
             style={{ background: "#c25e33" }}
           >
             تفعيل المقرر الآن ←

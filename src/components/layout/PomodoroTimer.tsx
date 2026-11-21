@@ -207,20 +207,22 @@ export function PomodoroTimer({ className = "" }: PomodoroTimerProps) {
 
   return (
     <div
-      className={`items-center gap-1.5 px-2.5 h-9 rounded-xl border text-[12px] transition-colors ${
-        className || "flex"
+      className={`items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 min-h-[38px] h-9.5 rounded-xl border text-[11.5px] sm:text-[12px] transition-colors shrink-0 ${
+        className || "inline-flex"
       }`}
       style={{
-        background: "var(--bg-surface)",
+        background: isRunning ? "var(--accent-warm-soft)" : "var(--bg-surface)",
         borderColor: isRunning ? "var(--accent-warm)" : "var(--border-soft)",
       }}
     >
       <button
         type="button"
         onClick={handleToggle}
-        className="flex items-center gap-1.5 font-en font-semibold cursor-pointer"
-        style={{ color: "var(--text-primary)" }}
-        title={isRunning ? "إيقاف مؤقت للتركيز" : "تشغيل مؤقت التركيز"}
+        className="inline-flex items-center gap-1 sm:gap-1.5 font-en font-bold cursor-pointer min-h-[32px]"
+        style={{
+          color: isRunning ? "var(--accent-warm-text)" : "var(--text-primary)",
+        }}
+        title={isRunning ? "إيقاف مؤقت للتركيز" : "تشغيل مؤقت التركيز (25 دقيقة)"}
         aria-label={isRunning ? "إيقاف مؤقت التركيز" : "تشغيل مؤقت التركيز"}
       >
         {isRunning ? (
@@ -234,15 +236,17 @@ export function PomodoroTimer({ className = "" }: PomodoroTimerProps) {
             style={{ color: "var(--accent-warm)" }}
           />
         )}
-        <span className="tabular-nums">{formatClock(liveRemainingSec)}</span>
+        <span className="tabular-nums tracking-tight">
+          {formatClock(liveRemainingSec)}
+        </span>
       </button>
 
       <button
         type="button"
         onClick={handleReset}
-        className="p-0.5 rounded hover:opacity-75 transition-opacity cursor-pointer"
+        className="p-1 rounded-lg hover:opacity-75 transition-opacity cursor-pointer"
         style={{ color: "var(--text-muted)" }}
-        title="إعادة ضبط"
+        title="إعادة ضبط المؤقت"
         aria-label="إعادة ضبط مؤقت التركيز"
       >
         <RotateCcw className="w-3 h-3" />

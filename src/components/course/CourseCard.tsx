@@ -66,15 +66,15 @@ export function CourseCard({
       : "افتح المقرر";
 
   return (
-    <article className="spotlight-card bp-course-card bp-course-grid p-6 flex flex-col justify-between gap-5">
+    <article className="spotlight-card bp-course-card bp-course-grid p-5 sm:p-6 flex flex-col justify-between gap-5">
       <div className="bp-fold-corner" aria-hidden="true" />
 
       <div className="space-y-4">
         {/* Header: Icon + Code/Meta + Transparent Index */}
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start justify-between gap-2.5">
           <div className="flex items-center gap-3 min-w-0">
             <div
-              className="bp-course-icon w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm"
+              className="bp-course-icon w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm"
               style={{
                 background: `color-mix(in srgb, ${accent} 14%, var(--bg-surface))`,
                 color: accent,
@@ -114,7 +114,7 @@ export function CourseCard({
 
           <span
             aria-hidden="true"
-            className="font-en text-3xl font-black leading-none opacity-[0.14] pl-5 shrink-0 select-none"
+            className="font-en text-2xl sm:text-3xl font-black leading-none opacity-[0.14] pl-6 sm:pl-7 pt-0.5 shrink-0 select-none"
             style={{ color: "var(--text-primary)" }}
           >
             {orderNum}
@@ -124,7 +124,7 @@ export function CourseCard({
         {/* Title & Summary */}
         <div className="space-y-1.5">
           <h3
-            className="text-[18.5px] font-black leading-snug"
+            className="text-[17.5px] sm:text-[18.5px] font-black leading-snug"
             style={{ color: "var(--text-primary)" }}
           >
             {course.title}
@@ -186,7 +186,7 @@ export function CourseCard({
         </div>
 
         {/* Price Pill + Primary CTA */}
-        <div className="flex items-center justify-between gap-2 pt-1">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
           {!course.is_paid ? (
             <span
               className="text-[11px] font-extrabold px-2.5 py-1 rounded-full"
@@ -232,7 +232,7 @@ export function CourseCard({
 
           <Link
             href={`/courses/${course.slug}`}
-            className="px-3.5 py-2 rounded-xl text-[12px] font-extrabold text-white inline-flex items-center gap-1.5 transition-transform hover:-translate-y-0.5 shadow-sm shrink-0"
+            className="min-h-[42px] px-4 py-2 rounded-xl text-[12px] font-extrabold text-white inline-flex items-center justify-center gap-1.5 transition-transform hover:-translate-y-0.5 shadow-sm shrink-0"
             style={{ background: "var(--hero-bg)" }}
           >
             <span>{ctaText}</span>
