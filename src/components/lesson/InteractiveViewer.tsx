@@ -412,7 +412,7 @@ export default function InteractiveViewer({
                 key={`${loadedLab.id}-${resetKey}`}
                 src={resolvedExternalUrl}
                 title={loadedLab.title}
-                sandbox="allow-scripts allow-same-origin"
+                sandbox="allow-scripts"
                 referrerPolicy="no-referrer"
                 className="block w-full border-0 bg-[var(--paper)]"
                 style={{

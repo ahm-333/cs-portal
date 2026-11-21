@@ -20,17 +20,18 @@
 # production
 /build
 
-# misc
+# misc & OS artifacts
 .DS_Store
+Thumbs.db
 *.pem
 
-# debug
+# debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files (opt-in only for .env.example)
 .env*
 !.env.example
 
@@ -39,4 +40,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+tsconfig.tsbuildinfo
 next-env.d.ts
+
+# personal / scratch PDFs & local reference documents
+*.pdf
+ؤسسسؤ.pdf

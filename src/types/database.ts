@@ -2,6 +2,27 @@ export type UserRole = "student" | "admin";
 export type VideoProvider = "youtube" | "bunny";
 export type InteractiveSourceType = "html_code" | "external_url";
 export type EnrollmentStatus = "active" | "expired";
+export type CourseLabType = "linked-list" | "binary-search" | "cpu-scheduling";
+
+export interface CheatSheet {
+  headers: string[];
+  rows: string[][];
+}
+
+export interface VideoChapter {
+  time: string;
+  name: string;
+  pct: string;
+  visual: string;
+}
+
+export interface SearchIndexItem {
+  type: "مقرر" | "درس";
+  title: string;
+  sub: string;
+  courseSlug: string;
+  lessonId?: string;
+}
 
 export interface Profile {
   id: string;
@@ -16,7 +37,9 @@ export interface Profile {
 export interface Course {
   id: string;
   slug: string;
+  code: string;
   title: string;
+  title_en: string;
   description: string | null;
   thumbnail_url: string | null;
   year_level: number; // 1 | 2 | 3 | 4
@@ -24,6 +47,16 @@ export interface Course {
   is_paid: boolean;
   price: number;
   is_published: boolean;
+  accent: string;
+  icon: "git-fork" | "workflow" | "cpu" | string;
+  duration_minutes: number;
+  site_url: string;
+  exam_tip: string;
+  cheat_sheet: CheatSheet;
+  lab_type: CourseLabType;
+  lab_title: string;
+  lab_hint: string;
+  unlock_code?: string;
   created_at: string;
 }
 
@@ -40,9 +73,13 @@ export interface LessonSummaryItem {
   course_id: string;
   section_title: string;
   title: string;
+  title_en?: string;
   order_index: number;
   is_free_preview: boolean;
   duration_minutes?: number | null;
+  chapters?: VideoChapter[];
+  key_code?: string;
+  exam_tip?: string;
 }
 
 export interface Lesson extends LessonSummaryItem {

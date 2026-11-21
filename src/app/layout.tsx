@@ -1,28 +1,34 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans_Arabic, JetBrains_Mono } from "next/font/google";
+import { Cairo, Inter, JetBrains_Mono } from "next/font/google";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 import { SITE_CONFIG } from "@/lib/config";
-import { Navbar } from "@/components/layout/Navbar";
-import { AppNavRail } from "@/components/layout/AppNavRail";
-import { MainShell } from "@/components/layout/MainShell";
-import { Footer } from "@/components/layout/Footer";
+import { MotionEffects } from "@/components/layout/MotionEffects";
+import { ToastProvider } from "@/components/layout/ToastProvider";
+import { GlobalModalsHost } from "@/components/modals/GlobalModalsHost";
 
-const ibmPlexArabic = IBM_Plex_Sans_Arabic({
+const cairo = Cairo({
   subsets: ["arabic", "latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-ibm-arabic",
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-cairo",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-inter",
   display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
   variable: "--font-jetbrains-mono",
   display: "swap",
 });
 
-const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("cs_portal_theme");if(t==="light"||t==="reading"||t==="dark"){document.documentElement.dataset.theme=t;if(t==="dark"){document.documentElement.classList.add("dark");}else{document.documentElement.classList.remove("dark");}}}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("cs_portal_theme");var isDark=t==="dark";document.documentElement.dataset.theme=isDark?"dark":"light";if(isDark){document.documentElement.classList.add("dark");}else{document.documentElement.classList.remove("dark");}}catch(e){}})();`;
 
 function getSafeMetadataBase(): URL {
   try {
@@ -35,44 +41,49 @@ function getSafeMetadataBase(): URL {
 export const metadata: Metadata = {
   metadataBase: getSafeMetadataBase(),
   title: {
-    default: `${SITE_CONFIG.arabicName} — ${SITE_CONFIG.name}`,
-    template: `%s | ${SITE_CONFIG.arabicName}`,
+    default: "Ahmed Amir Ahmed — مساحة مذاكرة هندسية منظمة",
+    template: "%s | Ahmed Amir Ahmed — CS Portal",
   },
-  description: SITE_CONFIG.description,
+  description:
+    "منصة شرح مواد حاسبات والذكاء الاصطناعي — فيديوهات شرح مرتبة، ملخصات منظمة بالأكواد ومعادلات الرياضة، معامل تفاعلية، وكويزات تثبيت مع حفظ تلقائي للتقدم.",
   keywords: [
+    "Ahmed Amir Ahmed",
     "بوابة حاسبات",
     "حاسبات ومعلومات",
+    "ذكاء اصطناعي",
+    "جامعة الزقازيق",
     "علوم الحاسب",
     "هياكل البيانات",
     "الخوارزميات",
     "نظم التشغيل",
     "CS Portal",
-    "Computer Science",
     "Data Structures",
     "Algorithms",
-    "Interactive Labs",
+    "Operating Systems",
   ],
-  authors: [{ name: SITE_CONFIG.name }],
+  authors: [{ name: "Ahmed Amir Ahmed" }],
   openGraph: {
     type: "website",
     locale: "ar_EG",
     alternateLocale: ["en_US"],
     url: SITE_CONFIG.url,
-    siteName: `${SITE_CONFIG.arabicName} (${SITE_CONFIG.name})`,
-    title: `${SITE_CONFIG.arabicName} — ${SITE_CONFIG.name}`,
-    description: SITE_CONFIG.description,
+    siteName: "Ahmed Amir Ahmed — CS Portal",
+    title: "Ahmed Amir Ahmed — مساحة مذاكرة هندسية منظمة",
+    description:
+      "منصة شرح مواد حاسبات والذكاء الاصطناعي — فيديوهات، ملخصات، معامل تفاعلية، وكويزات تثبيت في مكان واحد.",
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_CONFIG.arabicName} — ${SITE_CONFIG.name}`,
-    description: SITE_CONFIG.description,
+    title: "Ahmed Amir Ahmed — مساحة مذاكرة هندسية منظمة",
+    description:
+      "منصة شرح مواد حاسبات والذكاء الاصطناعي — فيديوهات، ملخصات، معامل تفاعلية، وكويزات تثبيت في مكان واحد.",
   },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f6f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#0c0f12" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f5f1" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f1319" },
   ],
 };
 
@@ -87,19 +98,18 @@ export default function RootLayout({
       dir="rtl"
       data-theme="light"
       suppressHydrationWarning
-      className={`${ibmPlexArabic.variable} ${jetbrainsMono.variable}`}
+      className={`${cairo.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
       <head>
         {/* Static anti-flash theme bootstrap script — reads user preference before paint */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--ink)] font-sans antialiased selection:bg-[var(--signal-soft)] selection:text-[var(--signal)]">
-        <Navbar />
-        <AppNavRail />
-        <MainShell>
-          <main className="flex flex-1 flex-col">{children}</main>
-          <Footer />
-        </MainShell>
+      <body className="min-h-screen flex flex-col bg-[var(--bg-canvas)] text-[var(--text-primary)] font-sans antialiased selection:bg-[var(--brand-soft)] selection:text-[var(--brand-soft-text)]">
+        <MotionEffects />
+        <ToastProvider>
+          {children}
+          <GlobalModalsHost />
+        </ToastProvider>
       </body>
     </html>
   );

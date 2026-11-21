@@ -15,8 +15,8 @@ export function MainShell({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className={`atelier-canvas flex min-h-[calc(100vh-72px)] flex-1 flex-col transition-all ${
-        isLessonPage ? "pb-0 lg:pr-0" : "pb-20 lg:pb-0 lg:pr-[224px]"
+      className={`atelier-canvas flex min-h-[calc(100vh-72px)] flex-1 flex-col ${
+        isLessonPage ? "pb-0" : "pb-20 md:pb-0"
       }`}
     >
       {children}

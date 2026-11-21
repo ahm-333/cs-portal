@@ -1991,43 +1991,106 @@ export const MOCK_COURSES: Course[] = [
   {
     id: COURSE_IDS.DATA_STRUCTURES,
     slug: "data-structures",
-    title: "هياكل البيانات (Data Structures)",
+    code: "CS-213",
+    title: "هياكل البيانات",
+    title_en: "Data Structures",
     description:
-      "إتقان تنظيم البيانات في الذاكرة من المصفوفات والبحث الثنائي وحتى القوائم المترابطة والمكدسات، مع تطبيقات C++ و Python ومعامل محاكاة تفاعلية.",
+      "بناء وفهم هياكل البيانات الأساسية من المصفوفات والقوائم المترابطة وحتى المكدسات والطوابير بتطبيقات C++ عملية ومعامل محاكاة تفاعلية.",
     thumbnail_url: null,
     year_level: 2,
     term: 1,
     is_paid: false,
     price: 0,
     is_published: true,
+    accent: "#1d6b52",
+    icon: "git-fork",
+    duration_minutes: 45,
+    site_url: "cs-portal.app/courses/data-structures",
+    exam_tip:
+      "💡 فكرة امتحان متكررة: لو نسيت تربط n->next = head قبل ما تغيّر head = n، هتفقد باقي القائمة بالكامل (Memory Leak).",
+    cheat_sheet: {
+      headers: ["العملية", "Array", "Singly Linked List"],
+      rows: [
+        ["Access by Index", "O(1)", "O(n)"],
+        ["Insert at Head", "O(n)", "O(1) ✓"],
+        ["Delete at Head", "O(n)", "O(1) ✓"],
+        ["Memory Layout", "متجاور (Contiguous)", "ديناميكي بالمؤشرات"],
+      ],
+    },
+    lab_type: "linked-list",
+    lab_title: "معمل القائمة المترابطة (Live Linked List)",
+    lab_hint:
+      "اضغط على Push Head لإضافة عقدة جديدة في البداية في زمن O(1)، أو Pop Head لحذف أول عقدة فوراً.",
     created_at: "2025-09-01T10:00:00Z",
   },
   {
     id: COURSE_IDS.ALGORITHMS,
     slug: "algorithms",
-    title: "تحليل وتصميم الخوارزميات (Algorithms)",
+    code: "CS-214",
+    title: "تحليل وتصميم الخوارزميات",
+    title_en: "Algorithms",
     description:
-      "تحليل التعقيد الزمني والمكاني (Big-O)، حل علاقات التكرار، وفهم خوارزميات الترتيب الأساسية عملياً عبر محاكي بصري تفاعلي.",
+      "استراتيجيات تصميم الخوارزميات الفعّالة: تحليل التعقيد Big-O، فرّق تسد، البحث الثنائي، وخوارزميات الترتيب الأساسية عملياً عبر محاكي بصري تفاعلي.",
     thumbnail_url: null,
     year_level: 2,
     term: 2,
     is_paid: false,
     price: 0,
     is_published: true,
+    accent: "#1e355c",
+    icon: "workflow",
+    duration_minutes: 35,
+    site_url: "cs-portal.app/courses/algorithms",
+    exam_tip:
+      "💡 فكرة امتحان: نكتب low + (high - low) / 2 بدل (low + high) / 2 لتجنب حدوث Integer Overflow في الأرقام الكبيرة.",
+    cheat_sheet: {
+      headers: ["الخوارزمية", "Best / Avg", "Worst Case"],
+      rows: [
+        ["Binary Search", "O(1) / O(log n)", "O(log n) ✓"],
+        ["Merge Sort", "O(n log n)", "O(n log n) ✓"],
+        ["Quick Sort", "O(n log n)", "O(n²)"],
+        ["Linear Search", "O(1) / O(n)", "O(n)"],
+      ],
+    },
+    lab_type: "binary-search",
+    lab_title: "معمل البحث الثنائي (Interactive Binary Search)",
+    lab_hint:
+      'اضغط "الخطوة التالية" وشوف إزاي الخوارزمية بتقسم المصفوفة للنص في كل مقارنة للوصول للرقم 31.',
     created_at: "2025-09-02T10:00:00Z",
   },
   {
     id: COURSE_IDS.OPERATING_SYSTEMS,
     slug: "operating-systems",
-    title: "نظم التشغيل (Operating Systems)",
+    code: "CS-311",
+    title: "نظم التشغيل",
+    title_en: "Operating Systems",
     description:
-      "فهم عميق لنواة نظام التشغيل: إدارة العمليات والخيوط، خوارزميات جدولة المعالج (CPU Scheduling)، التزامن، والذاكرة الافتراضية.",
+      "فهم آلية عمل نظام التشغيل: إدارة العمليات والخيوط، جدولة المعالج (CPU Scheduling)، التزامن، وإدارة الذاكرة بشرح منظم وكويزات.",
     thumbnail_url: null,
     year_level: 3,
     term: 1,
     is_paid: true,
     price: 150,
     is_published: true,
+    accent: "#c25e33",
+    icon: "cpu",
+    duration_minutes: 40,
+    site_url: "cs-portal.app/courses/operating-systems",
+    exam_tip:
+      "💡 فكرة امتحان مهمة: خوارزمية SJF تعطي أقل Average Waiting Time لكنها قد تسبب Starvation للعمليات الطويلة (الحل: Aging).",
+    cheat_sheet: {
+      headers: ["الخوارزمية", "الميزة الأساسية", "أشهر عيب"],
+      rows: [
+        ["FCFS", "بسيطة جداً في التنفيذ", "Convoy Effect"],
+        ["SJF", "أقل Average Waiting Time ✓", "Starvation للعمليات الطويلة"],
+        ["Round Robin", "عادلة للـ Time-Sharing", "زيادة Context Switch لو q صغير"],
+      ],
+    },
+    lab_type: "cpu-scheduling",
+    lab_title: "محاكي جدولة المعالج (CPU Scheduling Gantt Chart)",
+    lab_hint:
+      "بدّل بين خوارزمية FCFS و SJF وشوف إزاي ترتيب العمليات بيقلل متوسط وقت الانتظار (Average Waiting Time).",
+    unlock_code: "AI2026",
     created_at: "2025-09-03T10:00:00Z",
   },
 ];
@@ -2041,12 +2104,46 @@ export const MOCK_LESSONS: Lesson[] = [
     id: LESSON_IDS.DS_ARRAYS,
     course_id: COURSE_IDS.DATA_STRUCTURES,
     section_title: "الأسبوع الأول: الأساسيات والبحث",
-    title: "المصفوفات وتمثيل الذاكرة (Arrays & Memory Layout)",
+    title: "المصفوفات والمؤشرات وتحليل التعقيد",
+    title_en: "Arrays, Pointers & Big-O",
     order_index: 1,
     is_free_preview: true,
-    duration_minutes: 22,
+    duration_minutes: 15,
     video_provider: "youtube",
     video_id: "RBSGKlAvoiM",
+    chapters: [
+      {
+        time: "00:00",
+        name: "تمثيل المصفوفة في الذاكرة المتجاورة",
+        pct: "28%",
+        visual: "Address(A[i]) = Base + i × sizeof(T)  ⇒  O(1)",
+      },
+      {
+        time: "05:30",
+        name: "المصفوفة الديناميكية ومضاعفة السعة",
+        pct: "64%",
+        visual: "std::vector::push_back()  ⇒  O(1) Amortized",
+      },
+      {
+        time: "10:45",
+        name: "الإزاحة Shifting وتكلفة الإدراج في البداية",
+        pct: "92%",
+        visual: "insert(begin) shifts n elements  ⇒  O(n)",
+      },
+    ],
+    key_code: `struct Node {
+  int data;
+  Node* next;
+  Node(int v) : data(v), next(nullptr) {}
+};
+
+void insertHead(Node*& head, int val) {
+  Node* n = new Node(val);
+  n->next = head;
+  head = n;
+}`,
+    exam_tip:
+      "💡 فكرة امتحان متكررة: الوصول لعنصر في المصفوفة A[i] زمنه ثابت O(1) بفضل التجاور في الذاكرة، لكن الإدراج في البداية O(n) بسبب الإزاحة (Shifting).",
     summary_md: `## ما هي المصفوفة (Array)؟
 
 المصفوفة هي **هيكل بيانات خطي متجاور في الذاكرة (Contiguous Memory)** يخزّن عناصر من نفس النوع. سر قوتها أن المعالج يستطيع حساب عنوان أي عنصر \`A[i]\` مباشرة في زمن ثابت $O(1)$ دون المرور على العناصر السابقة:
@@ -2110,11 +2207,44 @@ int main() {
     course_id: COURSE_IDS.DATA_STRUCTURES,
     section_title: "الأسبوع الأول: الأساسيات والبحث",
     title: "البحث الثنائي (Binary Search)",
+    title_en: "Binary Search & Divide-and-Conquer",
     order_index: 2,
     is_free_preview: true,
-    duration_minutes: 18,
+    duration_minutes: 16,
     video_provider: "youtube",
     video_id: "P3YID7liBug",
+    chapters: [
+      {
+        time: "00:00",
+        name: "شرط الترتيب وفكرة استبعاد نصف المجال",
+        pct: "30%",
+        visual: "Sorted Array ⇒ T(n) = T(n/2) + O(1) ⇒ O(log n)",
+      },
+      {
+        time: "06:10",
+        name: "حساب المنتصف بأمان ضد Integer Overflow",
+        pct: "65%",
+        visual: "int mid = low + (high - low) / 2;",
+      },
+      {
+        time: "11:40",
+        name: "تحديث المؤشرات low و high وتجنب Infinite Loop",
+        pct: "94%",
+        visual: "low = mid + 1  |  high = mid - 1",
+      },
+    ],
+    key_code: `int binarySearch(int arr[], int n, int target) {
+  int low = 0, high = n - 1;
+  while (low <= high) {
+    int mid = low + (high - low) / 2;
+    if (arr[mid] == target) return mid;
+    if (arr[mid] < target) low = mid + 1;
+    else high = mid - 1;
+  }
+  return -1;
+}`,
+    exam_tip:
+      "💡 فكرة امتحان: نكتب low + (high - low) / 2 بدل (low + high) / 2 لتجنب حدوث Integer Overflow في الأرقام الكبيرة.",
     summary_md: `## فكرة البحث الثنائي (Divide & Conquer)
 
 بدلاً من فحص العناصر واحداً تلو الآخر بزمن $O(n)$، يستغل البحث الثنائي **شرط أن تكون المصفوفة مرتّبة (Sorted)** ليقارن القيمة المطلوبة بعنصر المنتصف \`arr[mid]\` ويستبعد **نصف مجال البحث كاملاً** في كل خطوة!
@@ -2190,11 +2320,45 @@ int binarySearch(const vector<int>& arr, int target) {
     course_id: COURSE_IDS.DATA_STRUCTURES,
     section_title: "الأسبوع الثاني: هياكل البيانات الخطية",
     title: "القوائم المترابطة والمكدسات (Linked Lists & Stacks)",
+    title_en: "Singly & Doubly Linked Lists, Stacks",
     order_index: 3,
     is_free_preview: true,
-    duration_minutes: 28,
+    duration_minutes: 14,
     video_provider: "youtube",
     video_id: "njTh_OwMljA",
+    chapters: [
+      {
+        time: "00:00",
+        name: "بنية العقدة Node في الذاكرة",
+        pct: "28%",
+        visual: "Struct Node { int data; Node* next; }",
+      },
+      {
+        time: "05:40",
+        name: "الإدراج في البداية Insert Head",
+        pct: "64%",
+        visual: "HEAD → [NEW] → [14] → [29] → NULL",
+      },
+      {
+        time: "11:20",
+        name: "حذف عقدة وتحليل Big-O والمكدس Stack",
+        pct: "92%",
+        visual: "Time Complexity: O(1) at Head · O(n) at Tail",
+      },
+    ],
+    key_code: `struct Node {
+  int data;
+  Node* next;
+  Node(int v) : data(v), next(nullptr) {}
+};
+
+void insertHead(Node*& head, int val) {
+  Node* n = new Node(val);
+  n->next = head;
+  head = n;
+}`,
+    exam_tip:
+      "💡 فكرة امتحان متكررة: لو نسيت تربط n->next = head قبل ما تغيّر head = n، هتفقد باقي القائمة بالكامل (Memory Leak).",
     summary_md: `## القوائم المترابطة (Linked Lists)
 
 تتكوّن القائمة المترابطة من **عُقد (Nodes)** موزعة في الذاكرة، بحيث تحتوي كل عقدة على البيانات (\`data\`) ومؤشر للعقدة التالية (\`next\`). يتيح ذلك الإدراج والحذف في البداية بزمن $O(1)$ دون إزاحة، لكنه يفقد ميزة الوصول العشوائي فيصبح الوصول للعنصر رقم $k$ بتكلفة $O(k)$.
@@ -2259,12 +2423,45 @@ print(is_balanced("([)]"))      # False
     id: LESSON_IDS.ALGO_BIG_O,
     course_id: COURSE_IDS.ALGORITHMS,
     section_title: "الأسبوع الأول: تحليل التعقيد",
-    title: "مقدمة في تعقيد الوقت Big-O",
+    title: "التعقيد الزمني وتحليل Big-O وفرّق تسد",
+    title_en: "Asymptotic Analysis & Divide & Conquer",
     order_index: 1,
     is_free_preview: true,
-    duration_minutes: 25,
+    duration_minutes: 18,
     video_provider: "youtube",
     video_id: "8hly31xKli0",
+    chapters: [
+      {
+        time: "00:00",
+        name: "فكرة Divide & Conquer والتحليل التقاربي",
+        pct: "30%",
+        visual: "Divide → Conquer → Combine",
+      },
+      {
+        time: "07:10",
+        name: "تحليل Binary Search خطوة بخطوة",
+        pct: "66%",
+        visual: "T(n) = T(n/2) + O(1)  ⇒  O(log n)",
+      },
+      {
+        time: "13:05",
+        name: "مقارنة Merge Sort و Quick Sort و Master Theorem",
+        pct: "94%",
+        visual: "Worst Case: Merge O(n log n) vs Quick O(n²)",
+      },
+    ],
+    key_code: `int binarySearch(int arr[], int n, int target) {
+  int low = 0, high = n - 1;
+  while (low <= high) {
+    int mid = low + (high - low) / 2;
+    if (arr[mid] == target) return mid;
+    if (arr[mid] < target) low = mid + 1;
+    else high = mid - 1;
+  }
+  return -1;
+}`,
+    exam_tip:
+      "💡 فكرة امتحان: نكتب low + (high - low) / 2 بدل (low + high) / 2 لتجنب حدوث Integer Overflow في الأرقام الكبيرة.",
     summary_md: `## لماذا ندرس التحليل التقاربي (Asymptotic Analysis)؟
 
 قياس سرعة الخوارزمية بالثواني يعتمد على سرعة المعالج ولغة البرمجة. لذلك نستخدم **التحليل التقاربي** لقياس معدل نمو عدد العمليات بالنسبة لحجم المدخلات $n$ عندما $n \\to \\infty$:
@@ -2330,11 +2527,45 @@ $$T(n) = a\\,T\\left(\\frac{n}{b}\\right) + f(n)$$
     course_id: COURSE_IDS.ALGORITHMS,
     section_title: "الأسبوع الثاني: الترتيب",
     title: "خوارزميات الترتيب الأساسية",
+    title_en: "Sorting Algorithms (Bubble, Selection, Insertion)",
     order_index: 2,
     is_free_preview: true,
-    duration_minutes: 30,
+    duration_minutes: 17,
     video_provider: "youtube",
     video_id: "kPRA0W1kECg",
+    chapters: [
+      {
+        time: "00:00",
+        name: "مقارنة Bubble و Selection و Insertion Sort",
+        pct: "28%",
+        visual: "Best Case Insertion: O(n) · Selection: O(n²)",
+      },
+      {
+        time: "06:45",
+        name: "حساب عدد المقارنات في أسوأ حالة",
+        pct: "65%",
+        visual: "Σ i (1..n-1) = n(n - 1) / 2 = Θ(n²)",
+      },
+      {
+        time: "12:30",
+        name: "الاستقرار (Stability) وأقل عدد تبديلات",
+        pct: "95%",
+        visual: "Selection Sort Swaps ≤ n - 1  |  Insertion is Stable",
+      },
+    ],
+    key_code: `void insertionSort(vector<int>& arr) {
+  int n = static_cast<int>(arr.size());
+  for (int i = 1; i < n; i++) {
+    int key = arr[i], j = i - 1;
+    while (j >= 0 && arr[j] > key) {
+      arr[j + 1] = arr[j];
+      j--;
+    }
+    arr[j + 1] = key;
+  }
+}`,
+    exam_tip:
+      "💡 فكرة امتحان: خوارزمية Insertion Sort تحقق O(n) على المصفوفات شبه المرتّبة ومستقرة (Stable)، بينما Selection Sort لا تتجاوز n - 1 تبديلاً.",
     summary_md: `## خوارزميات الترتيب التربيعية $O(n^2)$
 
 رغم وجود خوارزميات أسرع مثل Merge Sort بزمن $O(n \\log n)$، تظل خوارزميات الترتيب الأساسية (**Bubble**, **Selection**, **Insertion**) حجر الأساس لفهم تحليل الخوارزميات، بل إن **Insertion Sort** يُستخدم فعلياً داخل مكتبات الترتيب الهجينة (مثل Timsort في Python) عندما يكون حجم الجزء صغيراً أو شبه مرتّب!
@@ -2405,11 +2636,40 @@ void insertionSort(vector<int>& arr) {
     course_id: COURSE_IDS.OPERATING_SYSTEMS,
     section_title: "الوحدة الأولى: إدارة العمليات",
     title: "العمليات والخيوط ودورة حياتها (Processes & Threads)",
+    title_en: "OS Architecture, Processes & Threads",
     order_index: 1,
     is_free_preview: true,
-    duration_minutes: 24,
+    duration_minutes: 20,
     video_provider: "youtube",
     video_id: "26QPDBe-NB8",
+    chapters: [
+      {
+        time: "00:00",
+        name: "دورة حياة العملية Process States",
+        pct: "25%",
+        visual: "New → Ready → Running → Waiting → Terminated",
+      },
+      {
+        time: "08:15",
+        name: "كتلة التحكم PCB و Context Switch",
+        pct: "65%",
+        visual: "PCB stores: PID · State · Program Counter · Registers",
+      },
+      {
+        time: "15:30",
+        name: "الفرق بين Processes و Threads في الذاكرة",
+        pct: "95%",
+        visual: "Shared: Code, Data, Heap  |  Private: Stack, Registers",
+      },
+    ],
+    key_code: `// Waiting Time = Turnaround Time - Burst Time
+// FCFS Order: P1(8ms) -> P2(2ms) -> P3(4ms)
+// Wait Times: P1=0, P2=8, P3=10  => Avg = 6.00 ms
+
+// SJF Order:  P2(2ms) -> P3(4ms) -> P1(8ms)
+// Wait Times: P2=0, P3=2, P1=6   => Avg = 2.67 ms (Optimal!)`,
+    exam_tip:
+      "💡 فكرة امتحان: خيوط نفس العملية (Threads) تتشارك Code و Data و Heap، لكن كل Thread يحتفظ بـ Stack و Registers و Program Counter مستقل.",
     summary_md: `## الفرق بين البرنامج والعملية (Program vs. Process)
 
 - **البرنامج (Program):** كيان ساكن (Passive) مخزّن على القرص الصلب (ملف تنفيذي).
@@ -2469,11 +2729,40 @@ for t in threads:
     course_id: COURSE_IDS.OPERATING_SYSTEMS,
     section_title: "الوحدة الثانية: جدولة المعالج",
     title: "خوارزميات جدولة المعالج (CPU Scheduling: FCFS, SJF, RR)",
+    title_en: "Processes & CPU Scheduling",
     order_index: 2,
     is_free_preview: false,
-    duration_minutes: 32,
+    duration_minutes: 20,
     video_provider: "youtube",
     video_id: "EWkQl0n0w5M",
+    chapters: [
+      {
+        time: "00:00",
+        name: "دورة حياة العملية Process States",
+        pct: "25%",
+        visual: "New → Ready → Running → Terminated",
+      },
+      {
+        time: "08:15",
+        name: "جدولة المعالج FCFS مقابل SJF",
+        pct: "65%",
+        visual: "Gantt Chart: | P1 (0-4) | P2 (4-7) | P3 (7-12) |",
+      },
+      {
+        time: "15:30",
+        name: "حساب Average Waiting Time و Round Robin",
+        pct: "95%",
+        visual: "Avg WT = (0 + 4 + 7) / 3 = 3.67 ms",
+      },
+    ],
+    key_code: `// Waiting Time = Turnaround Time - Burst Time
+// FCFS Order: P1(8ms) -> P2(2ms) -> P3(4ms)
+// Wait Times: P1=0, P2=8, P3=10  => Avg = 6.00 ms
+
+// SJF Order:  P2(2ms) -> P3(4ms) -> P1(8ms)
+// Wait Times: P2=0, P3=2, P1=6   => Avg = 2.67 ms (Optimal!)`,
+    exam_tip:
+      "💡 فكرة امتحان مهمة: خوارزمية SJF تعطي أقل Average Waiting Time لكنها قد تسبب Starvation للعمليات الطويلة (الحل: Aging).",
     summary_md: `## مقاييس أداء جدولة المعالج (Scheduling Metrics)
 
 عندما تتنافس عدة عمليات في الـ **Ready Queue** على المعالج، نقيس كفاءة خوارزمية الجدولة عبر معادلتين أساسيتين:

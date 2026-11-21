@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import confetti from "canvas-confetti";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import {
-  ArrowLeft,
   Award,
+  Bookmark,
+  BookmarkCheck,
   CheckCircle2,
-  ClipboardCheck,
   Code2,
   HelpCircle,
   RotateCcw,
@@ -15,10 +16,18 @@ import {
   Trophy,
   XCircle,
 } from "lucide-react";
+import { emitToast } from "@/lib/stores/events";
+import {
+  addMistake,
+  saveQuizScore,
+  usePortalState,
+} from "@/lib/stores/portalStore";
 import type { Question } from "@/types/database";
 
 interface QuizEngineProps {
   lessonId: string;
+  courseId?: string;
+  courseCode?: string;
   questions: Question[];
   bestScore: number | null;
   onScoreUpdate: (score: number) => void;
@@ -26,12 +35,33 @@ interface QuizEngineProps {
 
 const OPTION_LETTERS = ["A", "B", "C", "D", "E", "F"] as const;
 
+function fireQuizConfetti(particleCount = 45, spread = 60): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    void confetti({
+      particleCount,
+      spread,
+      origin: { y: 0.72 },
+      colors: ["#c25e33", "#66c7a6", "#7ca7f0"],
+    });
+  } catch {
+    // ignore canvas-confetti environment errors
+  }
+}
+
 export default function QuizEngine({
   lessonId,
+  courseId = "",
+  courseCode = "CS",
   questions,
   bestScore,
   onScoreUpdate,
 }: QuizEngineProps) {
+  const portal = usePortalState();
+
   const sortedQuestions = useMemo(
     () => [...questions].sort((a, b) => a.order_index - b.order_index),
     [questions]
@@ -47,28 +77,50 @@ export default function QuizEngine({
 
   if (sortedQuestions.length === 0) {
     return (
-      <div className="studio-card flex flex-col items-center justify-center px-6 py-14 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--soft)] text-[var(--accent)]">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-[var(--border-soft)] bg-[var(--bg-canvas)] px-6 py-14 text-center">
+        <div
+          className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border"
+          style={{
+            borderColor: "var(--border-soft)",
+            background: "var(--bg-subtle)",
+            color: "var(--brand-primary)",
+          }}
+        >
           <HelpCircle className="h-6 w-6" />
         </div>
-        <h3 className="text-base font-bold text-[var(--ink)]">
+        <h3 className="text-base font-extrabold text-[var(--text-primary)]">
           لا توجد أسئلة كويز لهذا الدرس حالياً
         </h3>
-        <p className="mt-1 max-w-sm text-sm text-[var(--muted)]">
+        <p className="mt-1 max-w-sm text-sm text-[var(--text-muted)]">
           ستُضاف أسئلة اختيار من متعدد لتقييم فهمك للدرس قريباً.
         </p>
       </div>
     );
   }
 
-  const currentQuestion = sortedQuestions[currentIndex];
+  const safeIndex = Math.min(currentIndex, sortedQuestions.length - 1);
+  const currentQuestion = sortedQuestions[safeIndex];
   const selectedOption = selectedAnswers[currentQuestion.id];
   const hasAnswered = selectedOption !== undefined;
   const isCorrectSelection =
     hasAnswered && selectedOption === currentQuestion.correct_index;
 
+  const currentCorrectCount = sortedQuestions.reduce((acc, q) => {
+    return acc + (selectedAnswers[q.id] === q.correct_index ? 1 : 0);
+  }, 0);
+
+  const isBookmarked = portal.mistakes.some(
+    (m) =>
+      m.q === currentQuestion.question_text.trim() &&
+      (!courseId || m.courseId === courseId)
+  );
+
   const progressPercent = Math.round(
-    ((currentIndex + (hasAnswered ? 1 : 0)) / sortedQuestions.length) * 100
+    ((safeIndex + (hasAnswered ? 1 : 0)) / sortedQuestions.length) * 100
+  );
+
+  const useTwoColOptions = currentQuestion.options.every(
+    (opt) => opt.length <= 42
   );
 
   function handleSelectOption(optionIndex: number) {
@@ -77,6 +129,38 @@ export default function QuizEngine({
       ...prev,
       [currentQuestion.id]: optionIndex,
     }));
+
+    const isRight = optionIndex === currentQuestion.correct_index;
+    if (isRight) {
+      fireQuizConfetti(45, 60);
+    } else {
+      const added = addMistake({
+        courseId,
+        courseCode,
+        lessonId,
+        q: currentQuestion.question_text,
+        ansText:
+          currentQuestion.options[currentQuestion.correct_index] ?? "—",
+      });
+      if (added) {
+        emitToast("تم حفظ السؤال في بنك الأخطاء للمراجعة");
+      }
+    }
+  }
+
+  function handleBookmarkQuestion() {
+    const added = addMistake({
+      courseId,
+      courseCode,
+      lessonId,
+      q: currentQuestion.question_text,
+      ansText: currentQuestion.options[currentQuestion.correct_index] ?? "—",
+    });
+    if (added) {
+      emitToast("تم حفظ السؤال في بنك المراجعة ⭐");
+    } else {
+      emitToast("السؤال محفوظ بالفعل في بنك المراجعة");
+    }
   }
 
   async function persistQuizScore(scorePercent: number) {
@@ -93,29 +177,29 @@ export default function QuizEngine({
         }),
       });
     } catch {
-      // Best-effort server sync; parent/localStorage already holds the score
+      // Best-effort server sync; local portalStore already persists the score
     } finally {
       setIsSyncing(false);
     }
   }
 
   function handleNext() {
-    if (currentIndex + 1 < sortedQuestions.length) {
-      setCurrentIndex((prev) => prev + 1);
+    if (safeIndex + 1 < sortedQuestions.length) {
+      setCurrentIndex(safeIndex + 1);
       return;
     }
 
-    const correctCount = sortedQuestions.reduce((acc, q) => {
-      return acc + (selectedAnswers[q.id] === q.correct_index ? 1 : 0);
-    }, 0);
-
     const scorePercent = Math.round(
-      (correctCount / sortedQuestions.length) * 100
+      (currentCorrectCount / sortedQuestions.length) * 100
     );
 
     setLastScore(scorePercent);
     setIsFinished(true);
+    saveQuizScore(lessonId, scorePercent);
     onScoreUpdate(scorePercent);
+    if (scorePercent >= 80) {
+      fireQuizConfetti(60, 72);
+    }
     void persistQuizScore(scorePercent);
   }
 
@@ -127,84 +211,90 @@ export default function QuizEngine({
   }
 
   if (isFinished && lastScore !== null) {
-    const correctCount = sortedQuestions.filter(
-      (q) => selectedAnswers[q.id] === q.correct_index
-    ).length;
-
+    const bestStored = Math.max(bestScore ?? 0, lastScore);
     const feedbackTier =
       lastScore >= 85
         ? {
             title: "ممتاز! إتقان رائع للدرس",
             subtitle:
               "إجاباتك دقيقة جداً — أنت جاهز تماماً للانتقال للدرس التالي.",
-            accentClass: "text-[var(--pos)]",
-            ringClass: "border-[var(--pos)]/35 bg-[var(--pos-soft)]",
+            fg: "var(--success-fg)",
+            bg: "var(--success-soft)",
           }
         : lastScore >= 60
           ? {
               title: "أداء جيد جداً!",
               subtitle:
-                "فهمك ممتاز لمعظم المفاهيم، يمكنك مراجعة الأسئلة التي أخطأت فيها لرفع درجتك.",
-              accentClass: "text-[var(--accent)]",
-              ringClass: "border-[var(--accent)]/35 bg-[var(--soft)]",
+                "فهمك ممتاز لمعظم المفاهيم، يمكنك مراجعة الأسئلة المحفوظة في بنك الأخطاء لرفع درجتك.",
+              fg: "var(--brand-primary)",
+              bg: "var(--brand-soft)",
             }
           : {
               title: "بداية جيدة — حاول مرة أخرى",
               subtitle:
-                "ننصحك بمراجعة الملخص وتجربة المعمل التفاعلي ثم إعادة الكويز.",
-              accentClass: "text-[var(--signal)]",
-              ringClass: "border-[var(--signal)]/35 bg-[var(--signal-soft)]",
+                "ننصحك بمراجعة الملخص وتجربة الشرح التفاعلي ثم إعادة الكويز.",
+              fg: "var(--accent-warm-text)",
+              bg: "var(--accent-warm-soft)",
             };
 
     return (
-      <div className="studio-card p-6 sm:p-8">
-        <div className="mx-auto flex max-w-xl flex-col items-center text-center">
+      <div className="space-y-5">
+        <div className="mx-auto flex max-w-2xl flex-col items-center rounded-2xl border border-[var(--border-soft)] bg-[var(--bg-canvas)] p-6 text-center sm:p-7">
           <div
-            className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border ${feedbackTier.ringClass}`}
+            className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border"
+            style={{
+              background: feedbackTier.bg,
+              borderColor: feedbackTier.fg,
+              color: feedbackTier.fg,
+            }}
           >
-            <Award className={`h-8 w-8 ${feedbackTier.accentClass}`} />
+            <Award className="h-7 w-7" />
           </div>
 
-          <h3 className="text-2xl font-extrabold text-[var(--ink)]">
+          <h3 className="text-xl font-black text-[var(--text-primary)] sm:text-2xl">
             {feedbackTier.title}
           </h3>
-          <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+          <p className="mt-1.5 text-[13.5px] leading-relaxed text-[var(--text-secondary)]">
             {feedbackTier.subtitle}
           </p>
 
-          {/* Score Cards */}
-          <div className="mt-6 grid w-full grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-[var(--line)] bg-[var(--bg)] p-4">
-              <p className="text-xs font-medium text-[var(--muted)]">
+          {/* Score Metrics */}
+          <div className="mt-5 grid w-full grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--bg-surface)] p-3.5">
+              <p className="text-[11.5px] font-bold text-[var(--text-muted)]">
                 نتيجتك الآن
               </p>
               <p
-                className={`mt-1 font-mono text-2xl font-extrabold ${feedbackTier.accentClass}`}
+                className="font-mono-code mt-1 text-2xl font-black"
+                style={{ color: feedbackTier.fg }}
               >
                 {lastScore}%
               </p>
             </div>
-            <div className="rounded-xl border border-[var(--line)] bg-[var(--bg)] p-4">
-              <p className="text-xs font-medium text-[var(--muted)]">
+            <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--bg-surface)] p-3.5">
+              <p className="text-[11.5px] font-bold text-[var(--text-muted)]">
                 الإجابات الصحيحة
               </p>
-              <p className="mt-1 font-mono text-2xl font-extrabold text-[var(--ink)]">
-                {correctCount} / {sortedQuestions.length}
+              <p className="font-mono-code mt-1 text-2xl font-black text-[var(--text-primary)]">
+                {currentCorrectCount} / {sortedQuestions.length}
               </p>
             </div>
-            <div className="col-span-2 rounded-xl border border-[var(--line)] bg-[var(--bg)] p-4 sm:col-span-1">
-              <p className="text-xs font-medium text-[var(--muted)]">
+            <div className="col-span-2 rounded-xl border border-[var(--border-soft)] bg-[var(--bg-surface)] p-3.5 sm:col-span-1">
+              <p className="text-[11.5px] font-bold text-[var(--text-muted)]">
                 أفضل نتيجة محفوظة
               </p>
-              <p className="mt-1 font-mono text-2xl font-extrabold text-[var(--pos)]">
-                {Math.max(bestScore ?? 0, lastScore)}%
+              <p
+                className="font-mono-code mt-1 text-2xl font-black"
+                style={{ color: "var(--success-fg)" }}
+              >
+                {bestStored}%
               </p>
             </div>
           </div>
 
-          {/* Per-question summary */}
-          <div className="mt-6 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] p-4 text-start">
-            <p className="mb-3 text-xs font-bold text-[var(--ink)]">
+          {/* Per-question review */}
+          <div className="mt-5 w-full rounded-xl border border-[var(--border-soft)] bg-[var(--bg-surface)] p-4 text-right">
+            <p className="mb-3 text-xs font-extrabold text-[var(--text-primary)]">
               ملخص إجاباتك:
             </p>
             <ul className="space-y-2.5">
@@ -214,19 +304,28 @@ export default function QuizEngine({
                 return (
                   <li
                     key={q.id}
-                    className="flex items-start gap-2.5 text-xs text-[var(--ink)]"
+                    className="flex items-start gap-2.5 text-[12.5px] text-[var(--text-primary)]"
                   >
                     {ok ? (
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--pos)]" />
+                      <CheckCircle2
+                        className="mt-0.5 h-4 w-4 shrink-0"
+                        style={{ color: "var(--success-fg)" }}
+                      />
                     ) : (
-                      <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--neg)]" />
+                      <XCircle
+                        className="mt-0.5 h-4 w-4 shrink-0"
+                        style={{ color: "var(--accent-warm)" }}
+                      />
                     )}
                     <div className="min-w-0 flex-1">
-                      <span className="font-bold">س{idx + 1}:</span>{" "}
+                      <span className="font-extrabold">س{idx + 1}:</span>{" "}
                       <span>{q.question_text}</span>
                       {!ok ? (
-                        <p className="mt-0.5 text-[11px] font-semibold text-[var(--pos)]">
-                          الإجابة الصحيحة: {q.options[q.correct_index] ?? "—"}
+                        <p
+                          className="mt-0.5 text-[11.5px] font-bold"
+                          style={{ color: "var(--success-fg)" }}
+                        >
+                          الإجابة الصح: {q.options[q.correct_index] ?? "—"}
                         </p>
                       ) : null}
                     </div>
@@ -236,11 +335,12 @@ export default function QuizEngine({
             </ul>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
               onClick={handleRetake}
-              className="inline-flex items-center gap-2 rounded-xl bg-[var(--hero)] px-5 py-2.5 text-sm font-bold text-[var(--hero-ink)] transition-colors hover:bg-[var(--hero-deep)]"
+              className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-extrabold text-white transition-opacity hover:opacity-95"
+              style={{ background: "var(--hero-bg)" }}
             >
               <RotateCcw className="h-4 w-4" />
               <span>إعادة الكويز</span>
@@ -248,7 +348,7 @@ export default function QuizEngine({
           </div>
 
           {isSyncing ? (
-            <p className="mt-3 text-xs text-[var(--muted)]">
+            <p className="mt-2.5 text-[11.5px] text-[var(--text-muted)]">
               جاري حفظ النتيجة...
             </p>
           ) : null}
@@ -258,174 +358,265 @@ export default function QuizEngine({
   }
 
   return (
-    <div className="studio-card p-5 sm:p-7">
-      {/* Header + progress */}
-      <div className="mb-6 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
-          <div className="inline-flex items-center gap-2 font-bold text-[var(--ink)]">
-            <ClipboardCheck className="h-4 w-4 text-[var(--accent)]" />
-            <span>
-              السؤال {currentIndex + 1} من {sortedQuestions.length}
+    <div className="space-y-5">
+      {/* Header matching #cwPane-quiz */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span
+              className="text-[11px] font-extrabold"
+              style={{ color: "var(--success-fg)" }}
+            >
+              كويز تثبيت المقرر
             </span>
+            <h3 className="mt-0.5 text-lg font-black text-[var(--text-primary)]">
+              سؤال {safeIndex + 1} من {sortedQuestions.length}
+            </h3>
           </div>
 
-          {bestScore !== null ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--pos)]/30 bg-[var(--pos-soft)] px-3 py-1 font-mono text-xs font-bold text-[var(--pos)]">
-              <Trophy className="h-3.5 w-3.5" />
-              <span>أفضل نتيجة: {bestScore}%</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className="font-mono-code rounded-full px-3 py-1 text-[12px] font-bold"
+              style={{
+                background: "var(--success-soft)",
+                color: "var(--success-fg)",
+              }}
+            >
+              Score: {currentCorrectCount}/{sortedQuestions.length}
             </span>
-          ) : null}
+            {bestScore !== null ? (
+              <span
+                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold"
+                style={{
+                  background: "var(--brand-soft)",
+                  color: "var(--brand-soft-text)",
+                }}
+              >
+                <Trophy className="h-3.5 w-3.5" />
+                <span className="font-mono-code">{bestScore}%</span>
+              </span>
+            ) : null}
+          </div>
         </div>
 
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--soft)]">
+        <div
+          className="h-1.5 w-full overflow-hidden rounded-full"
+          style={{ background: "var(--bg-subtle)" }}
+        >
           <div
-            className="h-full rounded-full bg-[var(--signal)] transition-all duration-300"
-            style={{ width: `${progressPercent}%` }}
+            className="h-full rounded-full transition-all duration-300"
+            style={{
+              width: `${progressPercent}%`,
+              background: "var(--accent-warm)",
+            }}
           />
         </div>
       </div>
 
-      {/* Question text */}
-      <h3 className="text-base font-bold leading-relaxed text-[var(--ink)] sm:text-lg">
-        {currentQuestion.question_text}
-      </h3>
+      {/* Question Card */}
+      <div
+        className="space-y-4 rounded-2xl border p-5"
+        style={{
+          background: "var(--bg-canvas)",
+          borderColor: "var(--border-soft)",
+        }}
+      >
+        <p className="text-[15px] font-extrabold leading-relaxed text-[var(--text-primary)]">
+          {currentQuestion.question_text}
+        </p>
 
-      {/* Optional code snippet (always crisp obsidian editor surface, LTR) */}
-      {currentQuestion.code_snippet ? (
-        <div
-          dir="ltr"
-          className="mt-4 overflow-hidden rounded-xl border border-[var(--code-border)] bg-[var(--code-bg)] text-[#f2efe9]"
-        >
-          <div className="flex items-center gap-2 border-b border-[var(--code-border)] bg-[var(--code-header)] px-3.5 py-1.5 text-xs font-semibold text-[#d0dbdd]">
-            <Code2 className="h-3.5 w-3.5 text-[#52b7be]" />
-            <span className="font-mono uppercase">
-              {currentQuestion.code_lang || "cpp"}
-            </span>
-          </div>
-          <div className="overflow-x-auto">
-            <SyntaxHighlighter
-              language={(currentQuestion.code_lang || "cpp").toLowerCase()}
-              style={vscDarkPlus}
-              customStyle={{
-                margin: 0,
-                padding: "0.9rem 1.15rem",
-                background: "transparent",
-                fontSize: "0.85rem",
-                lineHeight: "1.6",
-                fontFamily:
-                  "var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
-              }}
-            >
-              {currentQuestion.code_snippet}
-            </SyntaxHighlighter>
-          </div>
-        </div>
-      ) : null}
-
-      {/* Options */}
-      <div className="mt-5 grid grid-cols-1 gap-3">
-        {currentQuestion.options.map((optionText, optionIndex) => {
-          const letter =
-            OPTION_LETTERS[optionIndex] ?? String(optionIndex + 1);
-          const isSelected = selectedOption === optionIndex;
-          const isCorrectOption = optionIndex === currentQuestion.correct_index;
-
-          let stateClasses =
-            "border-[var(--line)] bg-[var(--bg)] text-[var(--ink)] hover:border-[var(--accent)] hover:bg-[var(--soft)]";
-          let badgeClasses =
-            "border-[var(--line-strong)] bg-[var(--paper)] text-[var(--ink)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)]";
-
-          if (hasAnswered) {
-            if (isCorrectOption) {
-              stateClasses =
-                "border-[var(--pos)] bg-[var(--pos-soft)] text-[var(--pos)]";
-              badgeClasses =
-                "border-[var(--pos)] bg-[var(--paper)] text-[var(--pos)]";
-            } else if (isSelected) {
-              stateClasses =
-                "border-[var(--neg)] bg-[var(--neg-soft)] text-[var(--neg)]";
-              badgeClasses =
-                "border-[var(--neg)] bg-[var(--paper)] text-[var(--neg)]";
-            } else {
-              stateClasses =
-                "border-[var(--line)] bg-[var(--bg)] text-[var(--muted)] opacity-60";
-              badgeClasses =
-                "border-[var(--line)] bg-[var(--paper)] text-[var(--muted)]";
-            }
-          }
-
-          return (
-            <button
-              key={`${currentQuestion.id}-opt-${optionIndex}`}
-              type="button"
-              disabled={hasAnswered}
-              onClick={() => handleSelectOption(optionIndex)}
-              className={`group flex w-full items-center gap-3.5 rounded-xl border px-4 py-3.5 text-start text-sm font-semibold transition-all disabled:cursor-default sm:text-[15px] ${stateClasses}`}
-            >
-              <span
-                dir="ltr"
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border font-mono text-xs font-bold transition-colors ${badgeClasses}`}
-              >
-                {letter}
+        {/* Optional LTR Code Snippet */}
+        {currentQuestion.code_snippet ? (
+          <div
+            dir="ltr"
+            className="overflow-hidden rounded-xl border border-white/10 bg-[#0d131d] text-[#e4ebf5]"
+          >
+            <div className="flex items-center gap-2 border-b border-white/10 bg-[#141d2b] px-3.5 py-1.5 text-xs font-semibold text-slate-300">
+              <Code2 className="h-3.5 w-3.5 text-[#66c7a6]" />
+              <span className="font-mono-code uppercase">
+                {currentQuestion.code_lang || "cpp"}
               </span>
-              <span className="flex-1 leading-relaxed">{optionText}</span>
+            </div>
+            <div className="overflow-x-auto">
+              <SyntaxHighlighter
+                language={(currentQuestion.code_lang || "cpp").toLowerCase()}
+                style={vscDarkPlus}
+                customStyle={{
+                  margin: 0,
+                  padding: "0.85rem 1.1rem",
+                  background: "transparent",
+                  fontSize: "0.84rem",
+                  lineHeight: "1.6",
+                  fontFamily:
+                    "var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
+                }}
+              >
+                {currentQuestion.code_snippet}
+              </SyntaxHighlighter>
+            </div>
+          </div>
+        ) : null}
 
-              {hasAnswered && isCorrectOption ? (
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-[var(--pos)]" />
-              ) : null}
-              {hasAnswered && isSelected && !isCorrectOption ? (
-                <XCircle className="h-5 w-5 shrink-0 text-[var(--neg)]" />
-              ) : null}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Instant feedback + explanation */}
-      {hasAnswered ? (
+        {/* Options Grid */}
         <div
-          className={`mt-5 rounded-xl border p-4 ${
-            isCorrectSelection
-              ? "border-[var(--pos)]/40 bg-[var(--pos-soft)]"
-              : "border-[var(--neg)]/40 bg-[var(--neg-soft)]"
+          className={`grid grid-cols-1 gap-2.5 ${
+            useTwoColOptions ? "sm:grid-cols-2" : ""
           }`}
         >
-          <div className="flex items-center gap-2 text-sm font-bold">
-            {isCorrectSelection ? (
-              <>
-                <Sparkles className="h-4 w-4 text-[var(--pos)]" />
-                <span className="text-[var(--pos)]">إجابة صحيحة! أحسنت</span>
-              </>
-            ) : (
-              <>
-                <XCircle className="h-4 w-4 text-[var(--neg)]" />
-                <span className="text-[var(--neg)]">إجابة غير صحيحة</span>
-              </>
-            )}
-          </div>
+          {currentQuestion.options.map((optionText, optionIndex) => {
+            const letter =
+              OPTION_LETTERS[optionIndex] ?? String(optionIndex + 1);
+            const isSelected = selectedOption === optionIndex;
+            const isCorrectOption =
+              optionIndex === currentQuestion.correct_index;
 
-          {currentQuestion.explanation ? (
-            <p className="mt-2 text-sm leading-relaxed text-[var(--ink)]">
-              {currentQuestion.explanation}
-            </p>
-          ) : null}
+            let borderColor = "var(--border-soft)";
+            let background = "var(--bg-surface)";
+            let color = "var(--text-primary)";
+
+            if (hasAnswered) {
+              if (isCorrectOption) {
+                borderColor = "var(--success-fg)";
+                background = "var(--success-soft)";
+                color = "var(--success-fg)";
+              } else if (isSelected) {
+                borderColor = "var(--accent-warm)";
+                background = "var(--accent-warm-soft)";
+                color = "var(--accent-warm-text)";
+              } else {
+                color = "var(--text-muted)";
+              }
+            }
+
+            return (
+              <button
+                key={`${currentQuestion.id}-opt-${optionIndex}`}
+                type="button"
+                disabled={hasAnswered}
+                onClick={() => handleSelectOption(optionIndex)}
+                className="flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-right text-[13px] font-bold transition-all hover:opacity-95 disabled:cursor-default"
+                style={{
+                  borderColor,
+                  background,
+                  color,
+                  opacity:
+                    hasAnswered && !isCorrectOption && !isSelected ? 0.65 : 1,
+                }}
+              >
+                <span
+                  dir="ltr"
+                  className="font-mono-code flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[11px] font-extrabold"
+                  style={{
+                    borderColor: hasAnswered ? borderColor : "var(--border-strong)",
+                    background: "var(--bg-canvas)",
+                    color: hasAnswered ? color : "var(--text-primary)",
+                  }}
+                >
+                  {letter}
+                </span>
+                <span className="flex-1 leading-relaxed">{optionText}</span>
+
+                {hasAnswered && isCorrectOption ? (
+                  <CheckCircle2
+                    className="h-4 w-4 shrink-0"
+                    style={{ color: "var(--success-fg)" }}
+                  />
+                ) : null}
+                {hasAnswered && isSelected && !isCorrectOption ? (
+                  <XCircle
+                    className="h-4 w-4 shrink-0"
+                    style={{ color: "var(--accent-warm)" }}
+                  />
+                ) : null}
+              </button>
+            );
+          })}
         </div>
-      ) : null}
 
-      {/* Footer Action */}
-      <div className="mt-6 flex items-center justify-end">
+        {/* Instant Explanation Box */}
+        {hasAnswered ? (
+          <div
+            className="rounded-xl border p-3.5 text-[13px] leading-relaxed"
+            style={{
+              background: isCorrectSelection
+                ? "var(--success-soft)"
+                : "var(--accent-warm-soft)",
+              borderColor: isCorrectSelection
+                ? "var(--success-fg)"
+                : "var(--accent-warm)",
+              color: isCorrectSelection
+                ? "var(--success-fg)"
+                : "var(--accent-warm-text)",
+            }}
+          >
+            <div className="flex items-center gap-1.5 font-extrabold">
+              {isCorrectSelection ? (
+                <>
+                  <Sparkles className="h-4 w-4 shrink-0" />
+                  <span>إجابة صحيحة! أحسنت</span>
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-4 w-4 shrink-0" />
+                  <span>
+                    إجابة غير صحيحة — تم حفظ السؤال تلقائياً في بنك الأخطاء
+                  </span>
+                </>
+              )}
+            </div>
+            {currentQuestion.explanation ? (
+              <p className="mt-1.5 font-semibold text-[var(--text-primary)]">
+                {currentQuestion.explanation}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      {/* Footer Actions: Bookmark to Mistake Bank + Next Question */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <button
+          type="button"
+          onClick={handleBookmarkQuestion}
+          className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-[12px] font-bold transition-colors hover:opacity-85"
+          style={{
+            background: isBookmarked
+              ? "var(--accent-warm-soft)"
+              : "var(--bg-canvas)",
+            borderColor: isBookmarked
+              ? "var(--accent-warm)"
+              : "var(--border-soft)",
+            color: isBookmarked
+              ? "var(--accent-warm-text)"
+              : "var(--text-primary)",
+          }}
+        >
+          {isBookmarked ? (
+            <BookmarkCheck
+              className="h-3.5 w-3.5"
+              style={{ color: "var(--accent-warm)" }}
+            />
+          ) : (
+            <Bookmark
+              className="h-3.5 w-3.5"
+              style={{ color: "var(--accent-warm)" }}
+            />
+          )}
+          <span>
+            {isBookmarked ? "محفوظ في بنك المراجعة ✓" : "حفظ في بنك المراجعة"}
+          </span>
+        </button>
+
         <button
           type="button"
           onClick={handleNext}
           disabled={!hasAnswered}
-          className="inline-flex items-center gap-2 rounded-xl bg-[var(--hero)] px-5 py-2.5 text-sm font-bold text-[var(--hero-ink)] transition-all hover:bg-[var(--hero-deep)] disabled:cursor-not-allowed disabled:bg-[var(--soft)] disabled:text-[var(--muted)]"
+          className="rounded-xl px-5 py-2 text-[12.5px] font-extrabold text-white transition-all hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-45"
+          style={{ background: "var(--hero-bg)" }}
         >
-          <span>
-            {currentIndex + 1 < sortedQuestions.length
-              ? "السؤال التالي"
-              : "عرض النتيجة النهائية"}
-          </span>
-          <ArrowLeft className="h-4 w-4" />
+          {safeIndex + 1 < sortedQuestions.length
+            ? "السؤال التالي ←"
+            : "عرض النتيجة النهائية ←"}
         </button>
       </div>
     </div>

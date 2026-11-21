@@ -12,6 +12,7 @@ import "katex/dist/katex.min.css";
 
 interface MarkdownViewerProps {
   content: string | null;
+  embedded?: boolean;
 }
 
 const LANGUAGE_LABELS: Record<string, string> = {
@@ -60,6 +61,30 @@ function normalizePrismLanguage(lang: string): string {
   return key || "text";
 }
 
+function sanitizeMarkdownHref(rawHref?: string): {
+  href: string | undefined;
+  isExternal: boolean;
+} {
+  if (!rawHref) return { href: undefined, isExternal: false };
+  const trimmed = rawHref.trim();
+  if (!trimmed) return { href: undefined, isExternal: false };
+
+  if (trimmed.startsWith("#") || trimmed.startsWith("/")) {
+    return { href: trimmed, isExternal: false };
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return { href: parsed.toString(), isExternal: true };
+    }
+  } catch {
+    return { href: undefined, isExternal: false };
+  }
+
+  return { href: undefined, isExternal: false };
+}
+
 function extractTextContent(node: React.ReactNode): string {
   if (typeof node === "string") return node;
   if (typeof node === "number") return String(node);
@@ -105,27 +130,27 @@ function CodeBlock({ code, language }: CodeBlockProps) {
   return (
     <div
       dir="ltr"
-      className="my-5 overflow-hidden rounded-xl border border-[var(--code-border)] bg-[var(--code-bg)] text-[#f2efe9] shadow-[var(--shadow-pill)]"
+      className="my-5 overflow-hidden rounded-[16px] border border-white/10 bg-[#0d131d] text-[#e4ebf5] shadow-sm"
     >
-      <div className="flex items-center justify-between border-b border-[var(--code-border)] bg-[var(--code-header)] px-4 py-2">
-        <div className="flex items-center gap-2 text-xs font-semibold tracking-wide text-[#d0dbdd]">
-          <Terminal className="h-3.5 w-3.5 text-[#52b7be]" />
-          <span className="font-mono">{displayLang}</span>
+      <div className="flex items-center justify-between border-b border-white/10 bg-[#141d2b] px-4 py-2">
+        <div className="flex items-center gap-2 text-xs font-semibold tracking-wide text-slate-300">
+          <Terminal className="h-3.5 w-3.5 text-[#66c7a6]" />
+          <span className="font-mono-code">{displayLang}</span>
         </div>
 
         <button
           type="button"
           onClick={handleCopy}
           dir="rtl"
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-bold transition-all ${
             copied
-              ? "border-[#6dd3a6]/50 bg-[#173026] text-[#6dd3a6]"
-              : "border-[var(--code-border)] bg-[#1c282e] text-[#e7ecee] hover:border-[#e8845b] hover:text-white"
+              ? "border-[#66c7a6]/50 bg-[#173026] text-[#66c7a6]"
+              : "border-white/15 bg-white/5 text-slate-200 hover:border-[#e58a62] hover:text-white"
           }`}
         >
           {copied ? (
             <>
-              <Check className="h-3.5 w-3.5 text-[#6dd3a6]" />
+              <Check className="h-3.5 w-3.5 text-[#66c7a6]" />
               <span>تم النسخ ✓</span>
             </>
           ) : (
@@ -145,15 +170,15 @@ function CodeBlock({ code, language }: CodeBlockProps) {
           lineNumberStyle={{
             minWidth: "2.4em",
             paddingRight: "1em",
-            color: "#60727c",
+            color: "#607288",
             userSelect: "none",
           }}
           customStyle={{
             margin: 0,
             padding: "1rem 1.25rem",
             background: "transparent",
-            fontSize: "0.875rem",
-            lineHeight: "1.65",
+            fontSize: "0.84rem",
+            lineHeight: "1.7",
             fontFamily:
               "var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
           }}
@@ -173,17 +198,17 @@ function CodeBlock({ code, language }: CodeBlockProps) {
 const markdownComponents: Components = {
   h1({ children }) {
     return (
-      <h1 className="mb-4 mt-2 border-b border-[var(--line)] pb-3 text-[1.55em] font-extrabold leading-snug tracking-tight text-[var(--ink)]">
+      <h1 className="mb-4 mt-2 border-b border-[var(--border-soft)] pb-3 text-[1.45em] font-black leading-snug tracking-tight text-[var(--text-primary)]">
         {children}
       </h1>
     );
   },
   h2({ children }) {
     return (
-      <h2 className="mb-3 mt-8 flex items-center gap-2.5 border-b border-[var(--line)] pb-2 text-[1.28em] font-bold leading-snug text-[var(--ink)]">
+      <h2 className="mb-3 mt-7 flex items-center gap-2.5 border-b border-[var(--border-soft)] pb-2 text-[1.22em] font-extrabold leading-snug text-[var(--text-primary)] first:mt-0">
         <span
           aria-hidden="true"
-          className="h-5 w-1 shrink-0 rounded-full bg-[var(--signal)]"
+          className="h-5 w-1 shrink-0 rounded-full bg-[var(--accent-warm)]"
         />
         <span>{children}</span>
       </h2>
@@ -191,35 +216,35 @@ const markdownComponents: Components = {
   },
   h3({ children }) {
     return (
-      <h3 className="mb-2.5 mt-6 text-[1.12em] font-bold leading-snug text-[var(--ink)]">
+      <h3 className="mb-2.5 mt-5 text-[1.08em] font-extrabold leading-snug text-[var(--text-primary)]">
         {children}
       </h3>
     );
   },
   h4({ children }) {
     return (
-      <h4 className="mb-2 mt-4 text-[1.04em] font-bold text-[var(--ink)]">
+      <h4 className="mb-2 mt-4 text-[1em] font-bold text-[var(--text-primary)]">
         {children}
       </h4>
     );
   },
   p({ children }) {
     return (
-      <p className="my-3.5 text-[1em] leading-[inherit] text-[var(--ink)]">
+      <p className="my-3 text-[0.95em] leading-[1.85] text-[var(--text-secondary)]">
         {children}
       </p>
     );
   },
   ul({ children }) {
     return (
-      <ul className="my-3.5 list-disc space-y-2 ps-6 text-[1em] leading-[inherit] text-[var(--ink)] marker:text-[var(--signal)]">
+      <ul className="my-3 list-disc space-y-2 ps-6 text-[0.95em] leading-[1.8] text-[var(--text-secondary)] marker:text-[var(--accent-warm)]">
         {children}
       </ul>
     );
   },
   ol({ children }) {
     return (
-      <ol className="my-3.5 list-decimal space-y-2 ps-6 text-[1em] leading-[inherit] text-[var(--ink)] marker:font-bold marker:text-[var(--accent)]">
+      <ol className="my-3 list-decimal space-y-2 ps-6 text-[0.95em] leading-[1.8] text-[var(--text-secondary)] marker:font-bold marker:text-[var(--brand-primary)]">
         {children}
       </ol>
     );
@@ -229,30 +254,35 @@ const markdownComponents: Components = {
   },
   strong({ children }) {
     return (
-      <strong className="font-extrabold text-[var(--ink)]">{children}</strong>
+      <strong className="font-extrabold text-[var(--text-primary)]">
+        {children}
+      </strong>
     );
   },
   em({ children }) {
-    return <em className="italic text-[var(--accent)]">{children}</em>;
+    return <em className="italic text-[var(--brand-primary)]">{children}</em>;
   },
   blockquote({ children }) {
     return (
-      <blockquote className="my-5 rounded-e-xl border-s-4 border-[var(--signal)] bg-[var(--soft)] px-4 py-3 text-[var(--ink)] [&>p]:my-1.5">
+      <blockquote className="my-4 rounded-2xl border border-[var(--accent-warm)]/30 bg-[var(--accent-warm-soft)] px-4 py-3 text-[var(--accent-warm-text)] [&>p]:my-1 [&>p]:text-[var(--accent-warm-text)]">
         {children}
       </blockquote>
     );
   },
   hr() {
-    return <hr className="my-7 border-[var(--line)]" />;
+    return <hr className="my-6 border-[var(--border-soft)]" />;
   },
   a({ href, children }) {
-    const isExternal = href ? /^https?:\/\//i.test(href) : false;
+    const safe = sanitizeMarkdownHref(href);
+    if (!safe.href) {
+      return <span className="font-semibold text-[var(--text-primary)]">{children}</span>;
+    }
     return (
       <a
-        href={href}
-        target={isExternal ? "_blank" : undefined}
-        rel={isExternal ? "noopener noreferrer" : undefined}
-        className="font-semibold text-[var(--accent)] underline decoration-[var(--accent)]/40 underline-offset-4 transition-colors hover:text-[var(--accent-hover)] hover:decoration-[var(--accent)]"
+        href={safe.href}
+        target={safe.isExternal ? "_blank" : undefined}
+        rel={safe.isExternal ? "noopener noreferrer" : undefined}
+        className="font-bold text-[var(--brand-primary)] underline decoration-[var(--brand-primary)]/40 underline-offset-4 transition-colors hover:text-[var(--accent-warm)] hover:decoration-[var(--accent-warm)]"
       >
         {children}
       </a>
@@ -260,8 +290,8 @@ const markdownComponents: Components = {
   },
   table({ children }) {
     return (
-      <div className="my-5 overflow-x-auto rounded-xl border border-[var(--line)] bg-[var(--paper)]">
-        <table className="w-full border-collapse text-start text-[0.92em]">
+      <div className="my-4 overflow-x-auto rounded-2xl border border-[var(--border-soft)] bg-[var(--bg-surface)]">
+        <table className="w-full border-collapse text-start text-[12.5px]">
           {children}
         </table>
       </div>
@@ -269,28 +299,32 @@ const markdownComponents: Components = {
   },
   thead({ children }) {
     return (
-      <thead className="border-b border-[var(--line)] bg-[var(--soft)] text-[0.88em] font-bold text-[var(--ink)]">
+      <thead className="border-b border-[var(--border-soft)] bg-[var(--bg-subtle)] text-[12px] font-extrabold text-[var(--text-primary)]">
         {children}
       </thead>
     );
   },
   tbody({ children }) {
-    return <tbody className="divide-y divide-[var(--line)]">{children}</tbody>;
+    return <tbody className="divide-y divide-[var(--border-soft)]">{children}</tbody>;
   },
   tr({ children }) {
     return (
-      <tr className="transition-colors hover:bg-[var(--bg)]">{children}</tr>
+      <tr className="transition-colors hover:bg-[var(--bg-hover)]">
+        {children}
+      </tr>
     );
   },
   th({ children }) {
     return (
-      <th className="whitespace-nowrap px-4 py-3 text-start font-bold text-[var(--ink)]">
+      <th className="whitespace-nowrap px-3.5 py-2.5 text-start font-extrabold text-[var(--text-primary)]">
         {children}
       </th>
     );
   },
   td({ children }) {
-    return <td className="px-4 py-3 text-[var(--ink)]">{children}</td>;
+    return (
+      <td className="px-3.5 py-2.5 text-[var(--text-secondary)]">{children}</td>
+    );
   },
   pre({ children }) {
     if (
@@ -309,10 +343,7 @@ const markdownComponents: Components = {
     }
 
     return (
-      <pre
-        dir="ltr"
-        className="my-5 overflow-x-auto rounded-xl border border-[var(--code-border)] bg-[var(--code-bg)] p-4 font-mono text-sm text-[#f2efe9]"
-      >
+      <pre dir="ltr" className="code-ltr my-4 text-[12.5px]">
         {children}
       </pre>
     );
@@ -321,7 +352,7 @@ const markdownComponents: Components = {
     return (
       <code
         dir="ltr"
-        className={`inline-block rounded-md border border-[var(--line)] bg-[var(--soft)] px-1.5 py-0.5 align-baseline font-mono text-[0.86em] font-medium text-[var(--accent)] ${
+        className={`inline-block rounded-md border border-[var(--border-soft)] bg-[var(--bg-subtle)] px-1.5 py-0.5 align-baseline font-mono-code text-[0.85em] font-semibold text-[var(--brand-soft-text)] ${
           className ?? ""
         }`}
       >
@@ -331,25 +362,39 @@ const markdownComponents: Components = {
   },
 };
 
-export default function MarkdownViewer({ content }: MarkdownViewerProps) {
+export default function MarkdownViewer({
+  content,
+  embedded = false,
+}: MarkdownViewerProps) {
   if (!content || !content.trim()) {
     return (
-      <div className="studio-card flex flex-col items-center justify-center px-6 py-14 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--soft)] text-[var(--accent)]">
-          <FileText className="h-6 w-6" />
+      <div
+        className={`flex flex-col items-center justify-center rounded-2xl border border-[var(--border-soft)] px-6 py-10 text-center ${
+          embedded ? "bg-[var(--bg-canvas)]" : "surface-card"
+        }`}
+      >
+        <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--border-soft)] bg-[var(--bg-subtle)] text-[var(--brand-primary)]">
+          <FileText className="h-5 w-5" />
         </div>
-        <h3 className="text-base font-bold text-[var(--ink)]">
+        <h3 className="text-sm font-extrabold text-[var(--text-primary)]">
           لا يوجد ملخص مكتوب لهذا الدرس بعد
         </h3>
-        <p className="mt-1 max-w-sm text-sm text-[var(--muted)]">
-          يمكنك متابعة شرح الفيديو أو تجربة المعمل التفاعلي والكويز.
+        <p className="mt-1 max-w-sm text-xs text-[var(--text-muted)]">
+          يمكنك الاعتماد على الكود الأساسي وورقة القوانين والمعمل التفاعلي
+          والكويز لإتقان الدرس.
         </p>
       </div>
     );
   }
 
   return (
-    <article className="studio-card p-5 sm:p-8 [&_.katex-display]:my-4 [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display]:rounded-xl [&_.katex-display]:border [&_.katex-display]:border-[var(--line)] [&_.katex-display]:bg-[var(--bg)] [&_.katex-display]:px-4 [&_.katex-display]:py-3 [&_.katex-display]:text-[var(--ink)] [&_.katex-display]:[direction:ltr] [&_.katex-display]:[unicode-bidi:isolate] [&_.katex]:text-[var(--ink)] [&_.katex]:[direction:ltr] [&_.katex]:[unicode-bidi:isolate]">
+    <article
+      className={`${
+        embedded
+          ? "rounded-2xl border border-[var(--border-soft)] bg-[var(--bg-canvas)] p-4 sm:p-6"
+          : "surface-card rounded-[22px] p-5 sm:p-7"
+      } [&_.katex-display]:my-4 [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display]:rounded-xl [&_.katex-display]:border [&_.katex-display]:border-[var(--border-soft)] [&_.katex-display]:bg-[var(--bg-surface)] [&_.katex-display]:px-4 [&_.katex-display]:py-3 [&_.katex-display]:text-[var(--text-primary)] [&_.katex-display]:[direction:ltr] [&_.katex-display]:[unicode-bidi:isolate] [&_.katex]:text-[var(--text-primary)] [&_.katex]:[direction:ltr] [&_.katex]:[unicode-bidi:isolate]`}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}

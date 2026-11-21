@@ -1,98 +1,123 @@
-import Link from "next/link";
-import { Cpu, MessageSquarePlus } from "lucide-react";
-import { SITE_CONFIG } from "@/lib/config";
-import { FounderBadge } from "@/components/layout/FounderBadge";
+export interface FooterProps {
+  variant?: "default" | "compact";
+  className?: string;
+}
 
-export function Footer() {
-  const year = new Date().getFullYear();
+export function Footer({ variant = "default", className = "" }: FooterProps) {
+  if (variant === "compact") {
+    return (
+      <footer
+        className={`border-t mt-8 ${className}`}
+        style={{
+          background: "var(--bg-surface)",
+          borderColor: "var(--border-soft)",
+        }}
+      >
+        <div
+          className="max-w-[1220px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[12px]"
+          style={{ color: "var(--text-muted)" }}
+        >
+          <span>
+            Ahmed Amir Ahmed · منصة مذاكرة منظمة لطلبة الحاسبات والذكاء الاصطناعي
+          </span>
+          <span className="font-en font-semibold">
+            Built by Ahmed Amir Ahmed
+          </span>
+        </div>
+      </footer>
+    );
+  }
 
   return (
-    <footer className="mt-auto border-t border-[var(--line)] bg-[var(--paper)]">
-      <div className="mx-auto max-w-6xl px-4 py-9 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-12 md:items-start">
-          {/* Brand + Quiet Colophon */}
-          <div className="space-y-4 md:col-span-5">
-            <Link href="/" className="inline-flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--hero)] text-[var(--hero-ink)]">
-                <Cpu className="h-4 w-4" />
-              </span>
-              <span className="text-base font-bold text-[var(--ink)]">
-                {SITE_CONFIG.arabicName}
-              </span>
-              <span
-                dir="ltr"
-                className="rounded-md border border-[var(--line)] bg-[var(--bg)] px-2 py-0.5 font-mono text-[11px] font-semibold text-[var(--accent)]"
+    <footer
+      className={`border-t ${className}`}
+      style={{
+        background: "var(--bg-surface)",
+        borderColor: "var(--border-soft)",
+      }}
+    >
+      <div className="max-w-[1220px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0"
+              style={{ background: "var(--hero-bg)" }}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
               >
-                {SITE_CONFIG.name}
-              </span>
-            </Link>
-            <p className="max-w-sm text-sm leading-relaxed text-[var(--muted)]">
-              {SITE_CONFIG.tagline}. مساحة مذاكرة هندسية هادئة لطلبة علوم
-              الحاسب.
-            </p>
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+                <path d="M9 12l2 2 4-4" />
+              </svg>
+            </div>
             <div>
-              <FounderBadge variant="footer-colophon" />
+              <div
+                className="font-en font-extrabold text-[14.5px]"
+                style={{ color: "var(--text-primary)" }}
+              >
+                Ahmed Amir Ahmed{" "}
+                <span
+                  className="text-[12px] font-semibold"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  · AI · Zagazig University
+                </span>
+              </div>
+              <div
+                className="text-[12px]"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                مبادرة طلابية مفتوحة لطلبة الحاسبات والذكاء الاصطناعي
+              </div>
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div className="md:col-span-3">
-            <h3 className="text-xs font-bold text-[var(--ink)]">روابط سريعة</h3>
-            <ul className="mt-3 space-y-2 text-sm">
-              <li>
-                <Link
-                  href="/"
-                  className="text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
-                >
-                  المقررات الدراسية
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/dashboard"
-                  className="text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
-                >
-                  كمّل رحلتك
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/login"
-                  className="text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
-                >
-                  ملف الطالب
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Feedback / Suggestions */}
-          <div className="md:col-span-4">
-            <h3 className="text-xs font-bold text-[var(--ink)]">
-              شاركنا التطوير
-            </h3>
-            <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
-              تحتاج شرحاً لمادة معينة أو لاحظت خطأً في ملخص أو كود؟ يسعدنا
-              تواصلك.
-            </p>
-            <a
-              href={SITE_CONFIG.feedbackUrl}
-              className="mt-3.5 inline-flex items-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3.5 py-2 text-xs font-bold text-[var(--ink)] transition-colors hover:border-[var(--signal)] hover:bg-[var(--signal-soft)] hover:text-[var(--signal)]"
+          <div className="flex flex-wrap items-center gap-3">
+            <span
+              className="font-en text-[10.5px] font-bold tracking-widest uppercase"
+              style={{ color: "var(--text-muted)" }}
             >
-              <MessageSquarePlus className="h-4 w-4 text-[var(--signal)]" />
-              <span>اقترح مادة / بلغ عن خطأ</span>
-            </a>
+              BUILT BY
+            </span>
+            <span
+              className="px-3 py-1.5 rounded-full border text-[12.5px] font-semibold font-en"
+              style={{
+                background: "var(--bg-canvas)",
+                borderColor: "var(--border-soft)",
+                color: "var(--text-primary)",
+              }}
+            >
+              Ahmed Amir Ahmed
+            </span>
+            <span
+              className="px-3 py-1.5 rounded-full text-[11.5px] font-bold"
+              style={{
+                background: "var(--brand-soft)",
+                color: "var(--brand-soft-text)",
+              }}
+            >
+              من طلاب لطلاب
+            </span>
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-[var(--line)] pt-5 text-xs text-[var(--muted)] sm:flex-row">
-          <p>
-            © {year} {SITE_CONFIG.arabicName} ({SITE_CONFIG.name}). جميع الحقوق
-            محفوظة.
-          </p>
-          <p className="font-mono text-[11px]" dir="ltr">
-            CS PORTAL // SWISS ACADEMIC ATELIER
-          </p>
+        <div
+          className="pt-3.5 border-t flex flex-col sm:flex-row items-center justify-between gap-2 text-[11.5px]"
+          style={{
+            borderColor: "var(--border-soft)",
+            color: "var(--text-muted)",
+          }}
+        >
+          <span>كل الحقوق محفوظة لمبادرة بوابة حاسبات التعليمية</span>
+          <span className="font-en">CS Portal · Editorial Landing Concept</span>
         </div>
       </div>
     </footer>

@@ -14,6 +14,7 @@ import type {
   LessonInteractiveMeta,
   LessonPageData,
   LessonSummaryItem,
+  SearchIndexItem,
 } from "@/types/database";
 
 // ============================================================================
@@ -28,9 +29,13 @@ function toLessonSummaryItem(lesson: LessonSummaryItem): LessonSummaryItem {
     course_id: lesson.course_id,
     section_title: lesson.section_title,
     title: lesson.title,
+    title_en: lesson.title_en,
     order_index: lesson.order_index,
     is_free_preview: lesson.is_free_preview,
     duration_minutes: lesson.duration_minutes ?? null,
+    chapters: lesson.chapters,
+    key_code: lesson.key_code,
+    exam_tip: lesson.exam_tip,
   };
 }
 
@@ -257,4 +262,44 @@ export async function getInteractiveById(
   }
 
   return interactive;
+}
+
+// ============================================================================
+// 7. getSearchIndex (Command Palette Ctrl+K index — lightweight, no html/md)
+// ============================================================================
+
+export async function getSearchIndex(): Promise<SearchIndexItem[]> {
+  const publishedCourses = MOCK_COURSES.filter((c) => c.is_published).sort(
+    (a, b) =>
+      a.year_level - b.year_level ||
+      a.term - b.term ||
+      a.created_at.localeCompare(b.created_at)
+  );
+
+  const items: SearchIndexItem[] = [];
+
+  for (const course of publishedCourses) {
+    items.push({
+      type: "مقرر",
+      title: `${course.code} · ${course.title}`,
+      sub: course.title_en,
+      courseSlug: course.slug,
+    });
+
+    const courseLessons = MOCK_LESSONS.filter(
+      (l) => l.course_id === course.id
+    ).sort((a, b) => a.order_index - b.order_index);
+
+    for (const lesson of courseLessons) {
+      items.push({
+        type: "درس",
+        title: lesson.title,
+        sub: `${course.code} · ${lesson.title_en ?? course.title_en}`,
+        courseSlug: course.slug,
+        lessonId: lesson.id,
+      });
+    }
+  }
+
+  return items;
 }

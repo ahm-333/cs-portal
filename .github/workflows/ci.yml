@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - dev
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,8 +20,14 @@ concurrency:
 
 jobs:
   verify:
-    name: Typecheck, Lint & Build
+    name: Typecheck, Lint & Production Build (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: true
+      matrix:
+        node-version: ["22"]
 
     env:
       NEXT_TELEMETRY_DISABLED: "1"
@@ -30,20 +37,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 24
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: ${{ matrix.node-version }}
           cache: "npm"
+
+      - name: Cache Next.js build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('src/**/*', 'next.config.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-nextjs-${{ matrix.node-version }}-
 
       - name: Install dependencies
         run: npm ci
 
-      - name: TypeScript type check
+      - name: TypeScript strict typecheck
         run: npx tsc --noEmit
 
-      - name: ESLint check
+      - name: ESLint verification
         run: npm run lint
 
-      - name: Production build
+      - name: Next.js production build
         run: npm run build

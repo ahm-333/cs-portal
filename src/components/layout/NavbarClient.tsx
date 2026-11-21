@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { UserCircle2 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { BookOpen, Compass, UserCircle2 } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/config";
 import { useLocalProfile } from "./localProfile";
 import { PomodoroTimer } from "./PomodoroTimer";
@@ -42,44 +43,83 @@ function BrandChipIcon() {
   );
 }
 
+const NAV_LINKS = [
+  { href: "/", label: "المواد", icon: BookOpen },
+  { href: "/dashboard", label: "كمّل رحلتك", icon: Compass },
+] as const;
+
 export function NavbarClient() {
+  const pathname = usePathname();
   const profile = useLocalProfile();
+
+  const isActive = (href: string): boolean => {
+    if (href === "/") {
+      return pathname === "/" || pathname.startsWith("/courses");
+    }
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   return (
     <header className="sticky top-0 z-40 h-[72px] border-b border-[var(--line)] bg-[var(--paper)]/95 backdrop-blur-md">
-      <div className="mx-auto flex h-full max-w-[1440px] items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6">
-        {/* Brand */}
-        <Link
-          href="/"
-          className="group flex shrink-0 items-center gap-2.5 focus:outline-none"
-        >
-          <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--hero)] text-[var(--hero-ink)] shadow-[var(--shadow-pill)] transition-transform group-hover:scale-[1.03]">
-            <BrandChipIcon />
-            <span
-              aria-hidden="true"
-              className="absolute -left-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[var(--signal)] ring-2 ring-[var(--paper)]"
-            />
-          </span>
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-bold tracking-tight text-[var(--ink)] sm:text-base">
-              {SITE_CONFIG.arabicName}
+      <div className="mx-auto flex h-full max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:px-8">
+        {/* Brand + Clean Inline Navigation */}
+        <div className="flex items-center gap-5 lg:gap-7">
+          <Link
+            href="/"
+            className="group flex shrink-0 items-center gap-2.5 focus:outline-none"
+          >
+            <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--hero)] text-[var(--hero-ink)] shadow-[var(--shadow-pill)] transition-transform group-hover:scale-[1.03]">
+              <BrandChipIcon />
+              <span
+                aria-hidden="true"
+                className="absolute -left-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[var(--signal)] ring-2 ring-[var(--paper)]"
+              />
             </span>
-            <span
-              dir="ltr"
-              className="font-mono text-[11px] font-semibold text-[var(--accent)]"
-            >
-              {SITE_CONFIG.name}
-            </span>
-          </div>
-        </Link>
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm font-bold tracking-tight text-[var(--ink)] sm:text-base">
+                {SITE_CONFIG.arabicName}
+              </span>
+              <span
+                dir="ltr"
+                className="font-mono text-[11px] font-semibold text-[var(--accent)]"
+              >
+                {SITE_CONFIG.name}
+              </span>
+            </div>
+          </Link>
 
-        {/* Right Utility Cluster (Left in RTL): Pomodoro + Profile Pill + 3-Mode Theme Switcher */}
+          <nav
+            aria-label="التنقل الرئيسي"
+            className="hidden items-center gap-1 md:flex"
+          >
+            {NAV_LINKS.map(({ href, label, icon: Icon }) => {
+              const active = isActive(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={`inline-flex min-h-[40px] items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-colors sm:text-sm ${
+                    active
+                      ? "bg-[var(--signal-soft)] text-[var(--accent)]"
+                      : "text-[var(--muted)] hover:bg-[var(--soft)] hover:text-[var(--ink)]"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Utility Cluster: Pomodoro + Profile Pill + 3-Mode Theme Switcher */}
         <div className="flex items-center gap-2 sm:gap-2.5">
           <PomodoroTimer />
 
           <Link
             href="/login"
-            className="hidden min-h-[44px] items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--bg)] px-3.5 py-1.5 text-xs font-bold text-[var(--ink)] transition-colors hover:border-[var(--signal)] hover:text-[var(--signal)] sm:inline-flex"
+            className="hidden min-h-[42px] items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--bg)] px-3.5 py-1.5 text-xs font-bold text-[var(--ink)] transition-colors hover:border-[var(--signal)] hover:text-[var(--accent)] sm:inline-flex"
           >
             <UserCircle2 className="h-4 w-4 shrink-0 text-[var(--accent)]" />
             <span className="max-w-[140px] truncate">

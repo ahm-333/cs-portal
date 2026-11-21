@@ -5,7 +5,6 @@ import {
   AlignJustify,
   ArrowLeft,
   ArrowRight,
-  BookOpen,
   Lock,
   Maximize2,
   Minimize2,
@@ -39,7 +38,6 @@ const THEME_OPTIONS: ReadonlyArray<{
   label: string;
   Icon: typeof Sun;
 }> = [
-  { mode: "reading", label: "قراءة", Icon: BookOpen },
   { mode: "light", label: "فاتح", Icon: Sun },
   { mode: "dark", label: "داكن", Icon: Moon },
 ];
