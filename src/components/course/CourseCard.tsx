@@ -1,7 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, BookOpen, Cpu, GitFork, Workflow } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  Box,
+  CircuitBoard,
+  Cpu,
+  Database,
+  GitFork,
+  Workflow,
+} from "lucide-react";
 import { usePortalState } from "@/lib/stores/portalStore";
 import { TiltedCard } from "@/components/ui/ReactBits";
 import type { CourseWithStats } from "@/types/database";
@@ -20,6 +29,12 @@ function CourseIcon({ icon }: { icon: string }) {
       return <Workflow className="w-5 h-5" />;
     case "cpu":
       return <Cpu className="w-5 h-5" />;
+    case "circuit-board":
+      return <CircuitBoard className="w-5 h-5" />;
+    case "database":
+      return <Database className="w-5 h-5" />;
+    case "box":
+      return <Box className="w-5 h-5" />;
     default:
       return <BookOpen className="w-5 h-5" />;
   }
@@ -59,8 +74,11 @@ export function CourseCard({
   const accent = course.accent || "#1e355c";
   const orderNum = String(index + 1).padStart(2, "0");
 
-  const ctaText =
-    completedCount > 0
+  const isPreparedShell = totalLessons === 0;
+
+  const ctaText = isPreparedShell
+    ? "استعراض المادة"
+    : completedCount > 0
       ? pct === 100
         ? "مراجعة المقرر ✓"
         : "أكمل المذاكرة"
@@ -164,16 +182,21 @@ export function CourseCard({
         <div className="space-y-1">
           <div className="flex items-center justify-between text-[11px] font-bold">
             <span style={{ color: "var(--text-muted)" }}>
-              {completedCount} / {totalLessons} دروس · {course.duration_minutes}{" "}
-              د
+              {isPreparedShell
+                ? "قريباً · جاري رفع المحاضرات"
+                : `${completedCount} / ${totalLessons} دروس · ${course.duration_minutes} د`}
             </span>
             <span
               className="font-mono-code"
               style={{
-                color: pct > 0 ? "var(--success-fg)" : "var(--text-muted)",
+                color: isPreparedShell
+                  ? "var(--accent-warm)"
+                  : pct > 0
+                    ? "var(--success-fg)"
+                    : "var(--text-muted)",
               }}
             >
-              {pct}%
+              {isPreparedShell ? "SOON" : `${pct}%`}
             </span>
           </div>
           <div
@@ -189,7 +212,17 @@ export function CourseCard({
 
         {/* Price Pill + Primary CTA */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-          {!course.is_paid ? (
+          {isPreparedShell ? (
+            <span
+              className="text-[11px] font-extrabold px-2.5 py-1 rounded-full"
+              style={{
+                background: "var(--brand-soft)",
+                color: "var(--brand-soft-text)",
+              }}
+            >
+              مجهّز للترم
+            </span>
+          ) : !course.is_paid ? (
             <span
               className="text-[11px] font-extrabold px-2.5 py-1 rounded-full"
               style={{

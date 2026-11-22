@@ -173,6 +173,14 @@ export function PomodoroTimer({ className = "" }: PomodoroTimerProps) {
       ? Math.max(0, Math.ceil((state.targetEndMs - nowMs) / 1000))
       : state.remainingSec;
 
+  const progressRatio =
+    state.durationSec > 0
+      ? Math.max(0, Math.min(1, 1 - liveRemainingSec / state.durationSec))
+      : 0;
+  const ringCircumference = 2 * Math.PI * 12; // r=12 -> ~75.4
+  const ringOffset = ringCircumference * (1 - progressRatio);
+  const isDirty = isRunning || liveRemainingSec < state.durationSec;
+
   function handleToggle() {
     if (isRunning) {
       const remaining =
@@ -207,7 +215,7 @@ export function PomodoroTimer({ className = "" }: PomodoroTimerProps) {
 
   return (
     <div
-      className={`items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 min-h-[38px] h-9.5 rounded-xl border text-[11.5px] sm:text-[12px] transition-colors shrink-0 ${
+      className={`items-center gap-2 pl-2.5 pr-1.5 h-10 rounded-full border shadow-xs transition-all shrink-0 ${
         className || "inline-flex"
       }`}
       style={{
@@ -215,42 +223,92 @@ export function PomodoroTimer({ className = "" }: PomodoroTimerProps) {
         borderColor: isRunning ? "var(--accent-warm)" : "var(--border-soft)",
       }}
     >
+      {/* Play / Pause Button with Live Circular SVG Progress Ring */}
       <button
         type="button"
         onClick={handleToggle}
-        className="inline-flex items-center gap-1 sm:gap-1.5 font-en font-bold cursor-pointer min-h-[32px]"
-        style={{
-          color: isRunning ? "var(--accent-warm-text)" : "var(--text-primary)",
-        }}
-        title={isRunning ? "إيقاف مؤقت للتركيز" : "تشغيل مؤقت التركيز (25 دقيقة)"}
+        className="inline-flex items-center gap-2 cursor-pointer group"
+        title={isRunning ? "إيقاف مؤقت للتركيز" : "ابدأ جلسة تركيز (25 دقيقة)"}
         aria-label={isRunning ? "إيقاف مؤقت التركيز" : "تشغيل مؤقت التركيز"}
       >
-        {isRunning ? (
-          <Pause
-            className="w-3.5 h-3.5 shrink-0"
-            style={{ color: "var(--accent-warm)" }}
-          />
-        ) : (
-          <Play
-            className="w-3.5 h-3.5 shrink-0"
-            style={{ color: "var(--accent-warm)" }}
-          />
-        )}
-        <span className="tabular-nums tracking-tight">
-          {formatClock(liveRemainingSec)}
+        <span className="relative w-7 h-7 flex items-center justify-center shrink-0">
+          <svg
+            className="absolute inset-0 w-full h-full -rotate-90"
+            viewBox="0 0 28 28"
+            aria-hidden="true"
+          >
+            <circle
+              cx="14"
+              cy="14"
+              r="12"
+              fill="none"
+              stroke="var(--border-soft)"
+              strokeWidth="2"
+            />
+            <circle
+              cx="14"
+              cy="14"
+              r="12"
+              fill="none"
+              stroke={isRunning ? "#c25e33" : "var(--brand-primary)"}
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeDasharray={ringCircumference}
+              strokeDashoffset={ringOffset}
+              className="transition-[stroke-dashoffset] duration-300"
+            />
+          </svg>
+          <span
+            className="relative w-5 h-5 rounded-full flex items-center justify-center text-white transition-transform group-hover:scale-105"
+            style={{
+              background: isRunning ? "#c25e33" : "var(--hero-bg)",
+            }}
+          >
+            {isRunning ? (
+              <Pause className="w-2.5 h-2.5 fill-white" />
+            ) : (
+              <Play className="w-2.5 h-2.5 fill-white ml-0.5" />
+            )}
+          </span>
         </span>
+
+        <div className="flex flex-col items-start leading-none text-right">
+          <span
+            className="font-mono-code text-[12.5px] font-black tabular-nums tracking-tight"
+            style={{
+              color: isRunning
+                ? "var(--accent-warm-text)"
+                : "var(--text-primary)",
+            }}
+          >
+            {formatClock(liveRemainingSec)}
+          </span>
+          <span
+            className="text-[9.5px] font-bold mt-0.5"
+            style={{
+              color: isRunning
+                ? "var(--accent-warm)"
+                : "var(--text-muted)",
+            }}
+          >
+            {isRunning ? "تركيز نشط" : "بومودورو"}
+          </span>
+        </div>
       </button>
 
-      <button
-        type="button"
-        onClick={handleReset}
-        className="p-1 rounded-lg hover:opacity-75 transition-opacity cursor-pointer"
-        style={{ color: "var(--text-muted)" }}
-        title="إعادة ضبط المؤقت"
-        aria-label="إعادة ضبط مؤقت التركيز"
-      >
-        <RotateCcw className="w-3 h-3" />
-      </button>
+      {/* Clean Reset Trigger (only visible once timer has started/modified) */}
+      {isDirty && (
+        <button
+          type="button"
+          onClick={handleReset}
+          className="w-6 h-6 rounded-full inline-flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+          style={{ color: "var(--text-muted)" }}
+          title="إعادة ضبط المؤقت"
+          aria-label="إعادة ضبط مؤقت التركيز"
+        >
+          <RotateCcw className="w-3 h-3" />
+        </button>
+      )}
     </div>
   );
 }

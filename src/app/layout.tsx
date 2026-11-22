@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Cairo, Inter, JetBrains_Mono } from "next/font/google";
+import { Cairo, Inter, JetBrains_Mono, Syne } from "next/font/google";
+import Script from "next/script";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 import { SITE_CONFIG } from "@/lib/config";
@@ -28,6 +29,13 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const syne = Syne({
+  subsets: ["latin"],
+  weight: ["700", "800"],
+  variable: "--font-syne",
+  display: "swap",
+});
+
 const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("cs_portal_theme");var isDark=t==="dark";document.documentElement.dataset.theme=isDark?"dark":"light";if(isDark){document.documentElement.classList.add("dark");}else{document.documentElement.classList.remove("dark");}}catch(e){}})();`;
 
 function getSafeMetadataBase(): URL {
@@ -41,42 +49,46 @@ function getSafeMetadataBase(): URL {
 export const metadata: Metadata = {
   metadataBase: getSafeMetadataBase(),
   title: {
-    default: "Ahmed Amir Ahmed — مساحة مذاكرة هندسية منظمة",
-    template: "%s | Ahmed Amir Ahmed — CS Portal",
+    default: "Eng. Ahmed Amir — مساحة مذاكرة هندسية منظمة",
+    template: "%s | Eng. Ahmed Amir — CS Portal",
   },
   description:
-    "منصة شرح مواد حاسبات والذكاء الاصطناعي — فيديوهات شرح مرتبة، ملخصات منظمة بالأكواد ومعادلات الرياضة، معامل تفاعلية، وكويزات تثبيت مع حفظ تلقائي للتقدم.",
+    "منصة مذاكرة منظمة لطلبة الحاسبات والذكاء الاصطناعي — فيديوهات مرتبة، ملخصات بالأكواد ومعادلات الرياضة، معامل تفاعلية، وكويزات تثبيت مع حفظ تلقائي للتقدم.",
   keywords: [
-    "Ahmed Amir Ahmed",
+    "Eng. Ahmed Amir",
     "بوابة حاسبات",
     "حاسبات ومعلومات",
     "ذكاء اصطناعي",
     "جامعة الزقازيق",
     "علوم الحاسب",
     "هياكل البيانات",
-    "الخوارزميات",
+    "تنظيم ومعمارية الحاسب",
     "نظم التشغيل",
+    "نظم قواعد البيانات",
+    "الرسوميات بالحاسب",
     "CS Portal",
     "Data Structures",
-    "Algorithms",
+    "Computer Organization and Architecture",
     "Operating Systems",
+    "Database Systems",
+    "Computer Graphics",
   ],
-  authors: [{ name: "Ahmed Amir Ahmed" }],
+  authors: [{ name: "Eng. Ahmed Amir" }],
   openGraph: {
     type: "website",
     locale: "ar_EG",
     alternateLocale: ["en_US"],
     url: SITE_CONFIG.url,
-    siteName: "Ahmed Amir Ahmed — CS Portal",
-    title: "Ahmed Amir Ahmed — مساحة مذاكرة هندسية منظمة",
+    siteName: "Eng. Ahmed Amir — CS Portal",
+    title: "Eng. Ahmed Amir — مساحة مذاكرة هندسية منظمة",
     description:
-      "منصة شرح مواد حاسبات والذكاء الاصطناعي — فيديوهات، ملخصات، معامل تفاعلية، وكويزات تثبيت في مكان واحد.",
+      "منصة مذاكرة منظمة لطلبة الحاسبات والذكاء الاصطناعي — فيديوهات، ملخصات، معامل تفاعلية، وكويزات تثبيت في مكان واحد.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ahmed Amir Ahmed — مساحة مذاكرة هندسية منظمة",
+    title: "Eng. Ahmed Amir — مساحة مذاكرة هندسية منظمة",
     description:
-      "منصة شرح مواد حاسبات والذكاء الاصطناعي — فيديوهات، ملخصات، معامل تفاعلية، وكويزات تثبيت في مكان واحد.",
+      "منصة مذاكرة منظمة لطلبة الحاسبات والذكاء الاصطناعي — فيديوهات، ملخصات، معامل تفاعلية، وكويزات تثبيت في مكان واحد.",
   },
 };
 
@@ -98,11 +110,13 @@ export default function RootLayout({
       dir="rtl"
       data-theme="light"
       suppressHydrationWarning
-      className={`${cairo.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${cairo.variable} ${inter.variable} ${jetbrainsMono.variable} ${syne.variable}`}
     >
       <head>
         {/* Static anti-flash theme bootstrap script — reads user preference before paint */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <Script id="cs-portal-theme-init" strategy="beforeInteractive">
+          {THEME_INIT_SCRIPT}
+        </Script>
       </head>
       <body className="min-h-screen flex flex-col bg-[var(--bg-canvas)] text-[var(--text-primary)] font-sans antialiased selection:bg-[var(--brand-soft)] selection:text-[var(--brand-soft-text)]">
         <MotionEffects />

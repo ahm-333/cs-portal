@@ -2,16 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import {
-  ArrowLeft,
   CheckSquare,
-  ChevronDown,
   FileText,
   Globe,
   PlayCircle,
   Sparkles,
 } from "lucide-react";
+import { BrandName } from "@/components/layout/BrandName";
 import { BlurText, ShinyText } from "@/components/ui/ReactBits";
 
 interface StageCopyItem {
@@ -32,13 +30,13 @@ interface StageCopyItem {
 const STAGE_COPY: readonly StageCopyItem[] = [
   {
     tag: "المرحلة 1 من 5 · الفوضى قبل المنصة",
-    title: "بدل فوضى الملفات والروابط المبعثرة...",
-    sub: "اسكرول بهدوء وشوف إزاي بوابة حاسبات بتبني مكتب مذاكرتك 3D قطعة قطعة.",
-    mob: "1/5 · فوضى ملفات وروابط متفرقة",
+    title: "بدل ما كل حاجة في حتة وتلف وتدوّر عشان تذاكر...",
+    sub: "انسى تشتيت تليجرام وروابط Drive المقفولة — اسكرول وشوف مكتب مذاكرتك الكامل بيتبني قدام عينك!",
+    mob: "1/5 · وداعاً لفوضى التشتيت",
     ariaLabel: "المرحلة 1: الفوضى",
     cardCode: "00 · البداية",
-    cardTitle: "وداعاً لفوضى الملفات المتفرقة",
-    cardDesc: "ملفات PDF، جروبات تليجرام، وروابط يوتيوب مبعثرة بتتجمع في مكتب واحد.",
+    cardTitle: "وداعاً لفوضى الملفات والروابط",
+    cardDesc: "ملفات PDF وجروبات تليجرام وروابط يوتيوب بتتجمعلك في مكان واحد.",
     cardAccent: "#f0a786",
     cardBorder: "rgba(229, 138, 98, 0.45)",
     cardIconBg: "rgba(229, 138, 98, 0.16)",
@@ -46,13 +44,13 @@ const STAGE_COPY: readonly StageCopyItem[] = [
   },
   {
     tag: "المرحلة 2 من 5 · ظهور اللابتوب",
-    title: "فيديوهات شرح مرتبة في مكان واحد",
-    sub: "الفوضى بتتلمّ، ويظهر اللابتوب بشرح منظم لكل درس بدون تشتيت.",
-    mob: "2/5 · اللابتوب: فيديوهات شرح مرتبة",
+    title: "كل فيديوهات الشرح مترتّبة ومستنياك في مكان واحد!",
+    sub: "شابترز دقيقة تدخلك على الفكرة اللي واقفة معاك في ثانية — صفر تشتيت، صفر تدوير.",
+    mob: "2/5 · فيديوهات شرح مترتّبة",
     ariaLabel: "المرحلة 2: فيديوهات الشرح",
     cardCode: "01 · اللابتوب نزل",
-    cardTitle: "فيديوهات شرح مرتبة بفصول زمنية",
-    cardDesc: "كل درس بفيديو واضح ومقسّم لشابترز عشان توصل للنقطة اللي محتاجها فوراً.",
+    cardTitle: "فيديوهات شرح جاهزة بفصول زمنية",
+    cardDesc: "ادخل على أي جزئية في الدرس فوراً بسرعة 1.5x أو 2.0x بدون إعلانات.",
     cardAccent: "#f0a786",
     cardBorder: "rgba(229, 138, 98, 0.52)",
     cardIconBg: "rgba(229, 138, 98, 0.18)",
@@ -60,13 +58,13 @@ const STAGE_COPY: readonly StageCopyItem[] = [
   },
   {
     tag: "المرحلة 3 من 5 · ظهور التابلت",
-    title: "ملخصات منظمة وأكواد واضحة للعين",
-    sub: "ينضم التابلت للمكتب عشان تراجع الملخصات والأكواد والمعادلات جنب الفيديو.",
-    mob: "3/5 · التابلت: ملخصات منظمة وأكواد",
+    title: "ملخصات تخلّصك وأكواد واضحة تتقري من أول نظرة!",
+    sub: "وداعاً لصور السبورة المهزوزة — أكواد C++ مظبوطة LTR ومعادلات جاهزة لليلة الامتحان.",
+    mob: "3/5 · ملخصات وأكواد LTR",
     ariaLabel: "المرحلة 3: الملخصات",
     cardCode: "02 · التابلت نزل",
-    cardTitle: "ملخصات هندسية وأكواد LTR واضحة",
-    cardDesc: "ملخص منسّق وأكواد C++/Python من اليسار لليمين ومعادلات جاهزة للمراجعة.",
+    cardTitle: "ملخصات هندسية وأكواد واضحة",
+    cardDesc: "ملخص منسّق وأكواد LTR بنسخ فوري ومعادلات KaTeX وورقة قوانين سريعة.",
     cardAccent: "#9dc0f7",
     cardBorder: "rgba(124, 167, 240, 0.52)",
     cardIconBg: "rgba(124, 167, 240, 0.18)",
@@ -74,13 +72,13 @@ const STAGE_COPY: readonly StageCopyItem[] = [
   },
   {
     tag: "المرحلة 4 من 5 · الشبكة المضيئة",
-    title: "شرح تفاعلي وموقع خاص لكل مادة",
-    sub: "تشتغل طبقة الشرح التفاعلي عشان تفهم وتطبّق الخوارزميات خطوة بخطوة.",
-    mob: "4/5 · شرح تفاعلي + موقع خاص للمادة",
+    title: "افهم بجد وطبّق بإيدك داخل معمل تفاعلي حي!",
+    sub: "ما تحفظش خوارزميات على الورق — شغّلها قدام عينك خطوة بخطوة وامتلك المادة.",
+    mob: "4/5 · معمل تفاعلي حي",
     ariaLabel: "المرحلة 4: الشرح التفاعلي والموقع",
     cardCode: "03 · الشبكة المضيئة",
-    cardTitle: "معمل تفاعلي حي + موقع لكل مادة",
-    cardDesc: "طبّق الخوارزميات وهياكل البيانات عملياً خطوة بخطوة داخل المتصفح.",
+    cardTitle: "معمل تفاعلي + خريطة للمادة",
+    cardDesc: "طبّق الـ Linked Lists و Binary Search وجدولة المعالج عملياً في المتصفح.",
     cardAccent: "#66c7a6",
     cardBorder: "rgba(102, 199, 166, 0.52)",
     cardIconBg: "rgba(102, 199, 166, 0.18)",
@@ -88,9 +86,9 @@ const STAGE_COPY: readonly StageCopyItem[] = [
   },
   {
     tag: "المرحلة 5 من 5 · مكتب مذاكرتك اكتمل",
-    title: "كويزات تثبيت وتركيز تام حتى الامتحان",
-    sub: "القهوة والسماعة جاهزين، وكل كويز بيشرحلك الإجابة ويحفظ تقدمك تلقائياً.",
-    mob: "5/5 · كويزات تثبيت واكتمال المكتب 100%",
+    title: "هنا هتلاقي كل حاجة... ادخل الامتحان وإنت ضامنها!",
+    sub: "كويزات فورية، بنك أخطاء ذكي، ومؤقت تركيز — مكتب مذاكرتك اكتمل 100% وجاهز تنطلق!",
+    mob: "5/5 · جاهز للامتحان 100%",
     ariaLabel: "المرحلة 5: الكويزات واكتمال المكتب",
     cardCode: "04 · المكتب اكتمل 100%",
     cardTitle: "كويزات تثبيت وبنك أخطاء ذكي",
@@ -178,9 +176,7 @@ function StageIcon({
 
 export function DeskScrollytellingCinema() {
   const [stageIdx, setStageIdx] = useState(0);
-  const [hasScrolled, setHasScrolled] = useState(false);
   const stageIdxRef = useRef(0);
-  const hasScrolledRef = useRef(false);
 
   const trackRef = useRef<HTMLDivElement | null>(null);
   const deskWrapRef = useRef<HTMLDivElement | null>(null);
@@ -209,12 +205,6 @@ export function DeskScrollytellingCinema() {
     const pct = Math.round(a * 100);
     if (pctLabelRef.current) {
       pctLabelRef.current.textContent = `${pct}%`;
-    }
-
-    const scrolledNow = p > 0.02;
-    if (scrolledNow !== hasScrolledRef.current) {
-      hasScrolledRef.current = scrolledNow;
-      setHasScrolled(scrolledNow);
     }
 
     const nextStageIdx =
@@ -350,7 +340,6 @@ export function DeskScrollytellingCinema() {
   };
 
   const currentCopy = STAGE_COPY[stageIdx] ?? STAGE_COPY[0];
-  const showScrollCue = stageIdx === 0 && !hasScrolled;
 
   return (
     <section id="desk-assembly" className="w-full">
@@ -366,24 +355,29 @@ export function DeskScrollytellingCinema() {
             aria-hidden="true"
           />
 
-          {/* Top Minimal Header Overlay + Skip Cinema Ghost Button */}
-          <div className="relative z-20 max-w-[1220px] w-full mx-auto px-3.5 sm:px-6 pt-2.5 sm:pt-4 flex flex-col items-center text-center">
-            <div className="w-full flex items-center justify-between sm:justify-center relative mb-1.5 sm:mb-2">
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] sm:text-[11.5px] font-bold text-[#f0a786]">
+          {/* Top Minimal Header Overlay (Founder Signature + Stage Badge + Mandatory Scroll) */}
+          <div className="relative z-20 max-w-[1220px] w-full mx-auto px-3.5 sm:px-6 pt-3 sm:pt-4 flex flex-col items-center text-center">
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+              <div className="inline-flex items-center gap-2 pl-3 pr-1 py-1 rounded-full bg-white/[0.08] border border-white/15 backdrop-blur-md">
+                <div className="relative w-6 h-6 rounded-full overflow-hidden ring-[1.5px] ring-[#e58a62] shrink-0">
+                  <Image
+                    src="/images/founder.jpg"
+                    alt="ENG. AHMED AMIR"
+                    fill
+                    sizes="24px"
+                    className="object-cover object-[50%_15%]"
+                    priority
+                  />
+                </div>
+                <BrandName inverted size="sm" />
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] sm:text-[11.5px] font-bold text-[#f0a786]">
                 <Sparkles className="w-3.5 h-3.5 shrink-0" />
                 <ShinyText id-tag="cinemaStageTag">
                   <span id="cinemaStageTag">{currentCopy.tag}</span>
                 </ShinyText>
               </div>
-
-              <a
-                id="skipCinemaBtn"
-                href="#interactive-showcase"
-                className="sm:absolute sm:left-0 sm:top-1/2 sm:-translate-y-1/2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.14] border border-white/15 text-[11px] font-bold text-slate-300 hover:text-white transition-colors"
-                aria-label="تخطي العرض والانتقال إلى أدوات المادة"
-              >
-                <span>تخطي ↓</span>
-              </a>
             </div>
 
             <h1
@@ -580,20 +574,6 @@ export function DeskScrollytellingCinema() {
 
           {/* Bottom Dynamic Mobile/Tablet Glass Feature Stage Card + Dots + CTA */}
           <div className="relative z-20 max-w-2xl w-full mx-auto px-3.5 sm:px-4 pb-3 sm:pb-5 flex flex-col items-center gap-2">
-            {/* Gentle Stage-0 Scroll Cue */}
-            <div
-              id="cinemaScrollCue"
-              className={`anim-scroll-cue inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/[0.07] border border-white/15 text-[11px] font-bold text-[#f0a786] transition-all duration-300 ${
-                showScrollCue
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-1 pointer-events-none h-0 py-0 overflow-hidden border-0"
-              }`}
-              aria-hidden={!showScrollCue}
-            >
-              <span>اسكرول لبناء مكتبك ↓</span>
-              <ChevronDown className="w-3.5 h-3.5" />
-            </div>
-
             {/* Dynamic Glass Feature Stage Card for Phones & Tablets (< 1024px) */}
             <div
               id="mobileCinemaPill"
@@ -613,14 +593,14 @@ export function DeskScrollytellingCinema() {
                   <StageIcon iconKey={currentCopy.iconKey} className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2 min-w-0">
                     <span
-                      className="text-[10.5px] font-extrabold tracking-wide"
+                      className="text-[10.5px] font-extrabold tracking-wide truncate"
                       style={{ color: currentCopy.cardAccent }}
                     >
                       {currentCopy.cardCode}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-400">
+                    <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap shrink-0">
                       {currentCopy.mob}
                     </span>
                   </div>
@@ -634,9 +614,9 @@ export function DeskScrollytellingCinema() {
               </div>
             </div>
 
-            {/* Touch-Friendly Stage Dots & Direct CTA */}
-            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
-              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/[0.07] border border-white/12">
+            {/* Stage Progress Dots & Percentage Only (Mandatory Scroll Experience) */}
+            <div className="flex items-center justify-center">
+              <div className="flex items-center gap-1 px-3.5 py-1 rounded-full bg-white/[0.07] border border-white/12">
                 {STAGE_COPY.map((stage, idx) => (
                   <button
                     key={stage.ariaLabel}
@@ -661,16 +641,6 @@ export function DeskScrollytellingCinema() {
                   0%
                 </span>
               </div>
-
-              <Link
-                id="cinemaQuickStartBtn"
-                href="/courses"
-                className="start-study-cta magnetic-btn cta-shimmer min-h-[36px] px-4 sm:px-5 py-2 rounded-full text-[12px] font-extrabold text-white inline-flex items-center gap-1.5 shadow-lg"
-                style={{ background: "#c25e33" }}
-              >
-                <span>ابدأ المذاكرة الآن</span>
-                <ArrowLeft className="w-3.5 h-3.5" />
-              </Link>
             </div>
           </div>
         </div>

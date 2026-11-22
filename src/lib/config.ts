@@ -7,15 +7,15 @@ export interface SocialLinkItem {
 }
 
 export const SITE_CONFIG = {
-  name: "Ahmed Amir Ahmed",
-  arabicName: "منصة شرح مواد حاسبات",
-  tagline: "منصة شرح مواد حاسبات — مساحة مذاكرة هندسية منظمة",
+  name: "Eng. Ahmed Amir",
+  arabicName: "بوابة حاسبات",
+  tagline: "Eng. Ahmed Amir — بوابة حاسبات والذكاء الاصطناعي",
   description:
-    "منصة شرح مواد حاسبات والذكاء الاصطناعي بأسلوب عملي منظّم يجمع بين الفيديوهات، الشرح التفاعلي، الملخصات بالأكواد ومعادلات الرياضة، والكويزات الفورية بالتفسير.",
-  instructorName: "Ahmed Amir Ahmed",
-  instructorTitle: "طالب فرقة تانية AI — جامعة الزقازيق",
+    "منصة مذاكرة هندسية منظمة لطلبة الحاسبات والذكاء الاصطناعي تجمع بين الفيديوهات، المعامل التفاعلية، الملخصات بالأكواد ومعادلات الرياضة، والكويزات الفورية.",
+  instructorName: "Eng. Ahmed Amir",
+  instructorTitle: "AI · Zagazig University",
   instructorBio:
-    "بشرح مواد الحاسبات والذكاء الاصطناعي بأسلوب عملي منظّم يجمع بين الفيديو، التطبيق التفاعلي، الملخصات الواضحة، والكويزات عشان تذاكر بهدوء وتفهم صح.",
+    "مساحة مذاكرة هادية ومنظمة تجمع الفيديو، المعمل التفاعلي، الملخصات الواضحة، والكويزات عشان تذاكر بهدوء وتفهم صح.",
   universityBadge: "AI · Zagazig Univ.",
   url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
   feedbackUrl: "mailto:support@cs-portal.dev?subject=CS%20Portal%20Feedback",

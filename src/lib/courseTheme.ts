@@ -42,6 +42,36 @@ const KNOWN_COURSE_META: Record<string, CourseVisualMeta> = {
     tintVar: "var(--tint-pink)",
     spineVar: "var(--spine-pink)",
   },
+  "computer-organization": {
+    code: "CS·215",
+    monographNumber: "02",
+    englishTitle: "Computer Organization and Architecture",
+    arabicSubtitle: "تنظيم ومعمارية الحاسب",
+    shortTagline: "بنية المعالج والـ Datapath والـ Pipelining وهرمية الذاكرة",
+    pastel: "blue",
+    tintVar: "var(--tint-blue)",
+    spineVar: "var(--spine-blue)",
+  },
+  "database-systems": {
+    code: "IS·211",
+    monographNumber: "04",
+    englishTitle: "Database Systems",
+    arabicSubtitle: "نظم قواعد البيانات العلائقية",
+    shortTagline: "مخططات ERD والتطبيع واستعلامات SQL العملية",
+    pastel: "sky",
+    tintVar: "var(--tint-sky)",
+    spineVar: "var(--spine-sky)",
+  },
+  "computer-graphics": {
+    code: "CS·321",
+    monographNumber: "05",
+    englishTitle: "Computer Graphics",
+    arabicSubtitle: "الرسوميات بالحاسب والتحويلات",
+    shortTagline: "خوارزميات الرسم والتحويلات الهندسية والـ Clipping",
+    pastel: "purple",
+    tintVar: "var(--tint-purple)",
+    spineVar: "var(--spine-purple)",
+  },
 };
 
 const FALLBACK_PASTELS: CoursePastelKey[] = [

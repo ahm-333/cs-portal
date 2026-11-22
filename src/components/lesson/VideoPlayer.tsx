@@ -267,12 +267,12 @@ export default function VideoPlayer({
 
         {/* Video Embed OR Visual Board */}
         {showEmbed && embedUrl ? (
-          <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-[#09111f]">
+          <div className="relative z-0 isolate aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-[#09111f]">
             <iframe
               key={embedUrl}
               src={embedUrl}
               title={title}
-              className="h-full w-full border-0"
+              className="relative z-0 h-full w-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
               loading="lazy"

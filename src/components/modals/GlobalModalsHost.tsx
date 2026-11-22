@@ -183,6 +183,15 @@ export function GlobalModalsHost() {
     openUnlock,
   ]);
 
+  useEffect(() => {
+    if (activeModal === null) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [activeModal]);
+
   const filteredSearchHits = useMemo(() => {
     const list = searchIndex ?? [];
     const term = cmdkQuery.trim().toLowerCase();
@@ -283,9 +292,9 @@ export function GlobalModalsHost() {
         onClick={(e) => {
           if (e.target === e.currentTarget) closeModal();
         }}
-        className="fixed inset-0 z-50 modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
+        className="fixed inset-0 z-[80] modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
       >
-        <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[90svh] overflow-y-auto pt-3 sm:pt-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-0 shadow-2xl">
+        <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[90dvh] overflow-y-auto pt-3 sm:pt-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-0 shadow-2xl">
           <div
             aria-hidden="true"
             className="w-10 h-1 rounded-full mx-auto mb-3 sm:hidden"
@@ -340,14 +349,18 @@ export function GlobalModalsHost() {
             <button
               type="button"
               onClick={closeModal}
-              className="text-[11px] font-mono-code px-2.5 py-1.5 rounded-lg border cursor-pointer shrink-0"
+              aria-label="إغلاق"
+              className="w-9 h-9 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1.5 rounded-lg border inline-flex items-center justify-center cursor-pointer shrink-0"
               style={{
                 background: "var(--bg-subtle)",
                 borderColor: "var(--border-soft)",
                 color: "var(--text-muted)",
               }}
             >
-              ESC
+              <X className="w-4 h-4 sm:hidden shrink-0" />
+              <span className="hidden sm:inline text-[11px] font-mono-code">
+                ESC
+              </span>
             </button>
           </div>
 
@@ -496,9 +509,9 @@ export function GlobalModalsHost() {
         onClick={(e) => {
           if (e.target === e.currentTarget) closeModal();
         }}
-        className="fixed inset-0 z-50 modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
+        className="fixed inset-0 z-[80] modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
       >
-        <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90svh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
+        <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90dvh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
           <div
             aria-hidden="true"
             className="w-10 h-1 rounded-full mx-auto mb-3 sm:hidden"
@@ -628,9 +641,9 @@ export function GlobalModalsHost() {
         onClick={(e) => {
           if (e.target === e.currentTarget) closeModal();
         }}
-        className="fixed inset-0 z-50 modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
+        className="fixed inset-0 z-[80] modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
       >
-        <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[90svh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
+        <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[90dvh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
           <div
             aria-hidden="true"
             className="w-10 h-1 rounded-full mx-auto mb-3 sm:hidden"
@@ -745,9 +758,9 @@ export function GlobalModalsHost() {
         onClick={(e) => {
           if (e.target === e.currentTarget) closeModal();
         }}
-        className="fixed inset-0 z-50 modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
+        className="fixed inset-0 z-[80] modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
       >
-        <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90svh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
+        <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90dvh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
           <div
             aria-hidden="true"
             className="w-10 h-1 rounded-full mx-auto mb-3 sm:hidden"
@@ -829,7 +842,7 @@ export function GlobalModalsHost() {
       }}
       className="fixed inset-0 z-50 modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
     >
-      <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90svh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
+      <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90dvh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
         <div
           aria-hidden="true"
           className="w-10 h-1 rounded-full mx-auto mb-3 sm:hidden"
@@ -872,7 +885,7 @@ export function GlobalModalsHost() {
         >
           تواصل مع{" "}
           <strong className="font-en" style={{ color: "var(--text-primary)" }}>
-            Ahmed Amir Ahmed
+            Eng. Ahmed Amir
           </strong>{" "}
           للحصول على كود التفعيل، أو جرّب الكود التجريبي{" "}
           <span

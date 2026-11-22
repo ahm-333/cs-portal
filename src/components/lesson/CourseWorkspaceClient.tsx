@@ -1,16 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import {
+  ArrowLeft,
   ArrowRight,
+  BookmarkCheck,
   Check,
-  CheckCircle2,
   CheckSquare,
   Copy,
   Cpu,
+  Download,
   ExternalLink,
   FileCode2,
   Globe,
@@ -25,19 +34,25 @@ import {
   Search,
   Sun,
   Table2,
+  Upload,
   X,
   Zap,
 } from "lucide-react";
 import { saveLastLesson } from "@/components/course/lastLessonStore";
+import { BrandName } from "@/components/layout/BrandName";
 import { Footer } from "@/components/layout/Footer";
+import { PomodoroTimer } from "@/components/layout/PomodoroTimer";
 import { toggleTheme, useTheme } from "@/components/layout/themeStore";
 import { splitBilingualTitle } from "@/lib/courseTheme";
 import {
   emitToast,
   openCommandPalette,
+  openMistakeBankModal,
   openUnlockModal,
 } from "@/lib/stores/events";
 import {
+  exportPortalBackupJson,
+  importPortalBackupJson,
   setLastVisited,
   setLessonNote,
   toggleLessonComplete,
@@ -310,7 +325,7 @@ function CheatSheetTable({ course }: { course: Course }) {
             {sheet.headers.map((header, idx) => (
               <th
                 key={idx}
-                className="whitespace-nowrap px-3.5 py-2.5 text-right font-extrabold"
+                className="px-2.5 py-2 text-right font-extrabold sm:whitespace-nowrap sm:px-3.5 sm:py-2.5"
               >
                 {header}
               </th>
@@ -337,9 +352,9 @@ function CheatSheetTable({ course }: { course: Course }) {
                   <td
                     key={cIdx}
                     dir={isLtrCode ? "ltr" : undefined}
-                    className={`px-3.5 py-2.5 ${
+                    className={`px-2.5 py-2 sm:px-3.5 sm:py-2.5 ${
                       cIdx === 0
-                        ? "whitespace-nowrap font-bold"
+                        ? "font-bold sm:whitespace-nowrap"
                         : isLtrCode
                           ? "font-mono-code text-right"
                           : "font-semibold"
@@ -627,6 +642,61 @@ export default function CourseWorkspaceClient({
     });
   }, [course.id, course.title, course.code, course.unlock_code]);
 
+  const backupInputRef = useRef<HTMLInputElement | null>(null);
+
+  const courseMistakesCount = useMemo(
+    () =>
+      portal.mistakes.filter(
+        (m) => m.courseId === course.id || m.courseCode === course.code
+      ).length,
+    [portal.mistakes, course.id, course.code]
+  );
+
+  const handleExportCourseBackup = useCallback(() => {
+    const json = exportPortalBackupJson();
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        void navigator.clipboard.writeText(json);
+      }
+    } catch {
+      // ignore
+    }
+    try {
+      const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `cs-portal-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // ignore
+    }
+    emitToast("تم نسخ وتحميل نسخة تقدمك الاحتياطية (JSON) ✓");
+  }, []);
+
+  const handleImportCourseBackup = useCallback(
+    async (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const result = importPortalBackupJson(text);
+        if (result.ok) {
+          emitToast("تمت استعادة تقدمك وبياناتك بنجاح ✓");
+        } else {
+          emitToast(result.error);
+        }
+      } catch {
+        emitToast("تعذّر قراءة ملف النسخة الاحتياطية.");
+      }
+    },
+    []
+  );
+
   const handleToggleNotes = useCallback(() => {
     setNotesOpen((prev) => {
       const next = !prev;
@@ -651,40 +721,61 @@ export default function CourseWorkspaceClient({
   return (
     <div className="flex min-h-screen w-full flex-1 flex-col">
       {/* ==================== WORKSPACE TOPBAR ==================== */}
-      <header className="topbar-shell sticky top-0 z-40">
-        <div className="mx-auto flex h-16 max-w-[1260px] items-center justify-between gap-2.5 px-3.5 sm:gap-3 sm:px-6 lg:px-8">
-          {/* Right side (RTL start): Back + Course Code + Title */}
-          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+      <header
+        className="sticky top-0 z-40 border-b backdrop-blur-xl shadow-[0_1px_16px_rgba(18,28,45,0.05)]"
+        style={{
+          background: isDark
+            ? "rgba(20, 27, 37, 0.90)"
+            : "rgba(255, 255, 255, 0.90)",
+          borderColor: "var(--border-soft)",
+        }}
+      >
+        <div className="mx-auto flex h-16 max-w-[1260px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+          {/* Right side (RTL start): Founder Avatar + Clean Breadcrumb (المقررات / المادة) */}
+          <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
             <Link
               href="/courses"
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-[12px] font-bold transition-colors hover:opacity-85 sm:px-3"
-              style={{
-                background: "var(--bg-surface)",
-                borderColor: "var(--border-soft)",
-                color: "var(--text-primary)",
-              }}
+              className="group inline-flex items-center gap-2 shrink-0 rounded-full py-1 pl-2.5 pr-1 transition-colors hover:bg-[var(--bg-subtle)]"
+              title="العودة لمكتبة المقررات"
             >
-              <ArrowRight className="h-3.5 w-3.5" />
-              <span>المقررات</span>
+              <span className="relative w-8 h-8 rounded-full overflow-hidden ring-[1.5px] ring-[#c25e33] shrink-0 shadow-xs">
+                <Image
+                  src="/images/founder.jpg"
+                  alt="ENG. AHMED AMIR"
+                  fill
+                  sizes="32px"
+                  className="object-cover object-[50%_15%]"
+                />
+              </span>
+              <span
+                className="inline-flex items-center gap-1 text-[12px] font-bold transition-colors group-hover:text-[var(--text-primary)]"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                <span className="hidden sm:inline">المقررات</span>
+              </span>
             </Link>
 
-            <div
-              className="hidden h-5 w-px shrink-0 sm:block"
-              style={{ background: "var(--border-strong)" }}
-            />
+            <span
+              aria-hidden="true"
+              className="text-[14px] font-light select-none shrink-0 opacity-40"
+              style={{ color: "var(--text-muted)" }}
+            >
+              /
+            </span>
 
-            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <span
-                className="font-mono-code shrink-0 rounded-md px-2 py-0.5 text-[10.5px] font-extrabold sm:text-[11px]"
+                className="font-mono-code shrink-0 rounded-md px-2 py-0.5 text-[10.5px] font-extrabold"
                 style={{
-                  background: "var(--brand-soft)",
-                  color: "var(--brand-soft-text)",
+                  background: "var(--bg-subtle)",
+                  color: "var(--text-primary)",
                 }}
               >
                 {course.code}
               </span>
               <span
-                className="truncate text-[13px] font-extrabold sm:text-[15px]"
+                className="truncate text-[13.5px] font-black sm:text-[15px]"
                 style={{ color: "var(--text-primary)" }}
               >
                 {course.title}
@@ -692,85 +783,66 @@ export default function CourseWorkspaceClient({
             </div>
           </div>
 
-          {/* Left side (RTL end): Progress, Desktop Actions (Ctrl+K, Cram Mode, Notes, Focus), Theme */}
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <span
-              className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-[11.5px] font-extrabold sm:gap-1.5 sm:px-3 sm:text-[12px]"
-              style={{
-                background: "var(--success-soft)",
-                color: "var(--success-fg)",
-              }}
-            >
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-              <span>{progressPct}%</span>
-              <span className="hidden sm:inline">مكتمل</span>
-            </span>
-
-            <button
-              type="button"
-              onClick={() => openCommandPalette()}
-              className="hidden h-9 items-center gap-1.5 rounded-xl border px-2.5 text-[11.5px] font-bold transition-colors hover:opacity-85 lg:inline-flex"
-              style={{
-                background: "var(--bg-surface)",
-                borderColor: "var(--border-soft)",
-                color: "var(--text-secondary)",
-              }}
-              title="بحث سريع في المقررات والدروس"
-            >
-              <Search className="h-3.5 w-3.5" />
-              <span className="font-mono-code text-[10px]">Ctrl+K</span>
-            </button>
-
+          {/* Center (Desktop): Unified Segmented Studio Controls Capsule */}
+          <div
+            role="toolbar"
+            aria-label="أدوات مساحة المذاكرة"
+            className="hidden lg:flex items-center gap-1 p-1 rounded-full border shrink-0"
+            style={{
+              background: "var(--bg-canvas)",
+              borderColor: "var(--border-soft)",
+            }}
+          >
             <button
               type="button"
               onClick={() => setExamNight((prev) => !prev)}
               aria-pressed={examNight}
-              className="hidden h-9 items-center gap-1.5 rounded-xl border px-3 text-[12px] font-extrabold transition-all lg:inline-flex"
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-extrabold transition-all cursor-pointer ${
+                examNight ? "shadow-xs" : "hover:text-[var(--text-primary)]"
+              }`}
               style={
                 examNight
                   ? {
-                      background: "var(--accent-warm)",
-                      borderColor: "var(--accent-warm)",
+                      background: "#c25e33",
                       color: "#ffffff",
                     }
                   : {
-                      background: "var(--accent-warm-soft)",
-                      borderColor: "var(--accent-warm)",
-                      color: "var(--accent-warm-text)",
+                      color: "var(--text-secondary)",
                     }
               }
             >
-              <Zap className="h-3.5 w-3.5" />
-              <span>{examNight ? "خروج من ليلة الامتحان" : "ليلة الامتحان"}</span>
+              <Zap
+                className="h-3.5 w-3.5 shrink-0"
+                style={{ color: examNight ? "#ffffff" : "var(--accent-warm)" }}
+              />
+              <span>{examNight ? "خروج ليلة الامتحان" : "ليلة الامتحان"}</span>
             </button>
 
             <button
               type="button"
               onClick={handleToggleNotes}
               aria-pressed={notesOpen}
-              className="hidden h-9 items-center gap-1.5 rounded-xl border px-3 text-[12px] font-bold transition-colors lg:inline-flex"
-              style={{
-                background: notesOpen
-                  ? "var(--brand-soft)"
-                  : "var(--bg-surface)",
-                borderColor: notesOpen
-                  ? "var(--brand-primary)"
-                  : "var(--border-soft)",
-                color: notesOpen
-                  ? "var(--brand-soft-text)"
-                  : "var(--text-primary)",
-              }}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all cursor-pointer ${
+                notesOpen ? "shadow-xs" : "hover:text-[var(--text-primary)]"
+              }`}
+              style={
+                notesOpen
+                  ? {
+                      background: "var(--bg-surface)",
+                      color: "var(--text-primary)",
+                    }
+                  : {
+                      color: "var(--text-secondary)",
+                    }
+              }
             >
-              <NotebookPen
-                className="h-3.5 w-3.5"
-                style={{ color: "var(--brand-primary)" }}
-              />
+              <NotebookPen className="h-3.5 w-3.5 shrink-0" />
               <span>نوتس</span>
               {currentNote.trim().length > 0 ? (
                 <span
                   aria-hidden="true"
-                  className="h-1.5 w-1.5 rounded-full"
-                  style={{ background: "var(--accent-warm)" }}
+                  className="h-1.5 w-1.5 rounded-full shrink-0"
+                  style={{ background: "#c25e33" }}
                 />
               ) : null}
             </button>
@@ -780,32 +852,39 @@ export default function CourseWorkspaceClient({
               onClick={() => setFocusMode((prev) => !prev)}
               aria-pressed={focusMode}
               title="إخفاء القائمة الجانبية للتركيز"
-              className="hidden h-9 items-center gap-1.5 rounded-xl border px-3 text-[12px] font-bold transition-colors lg:inline-flex"
-              style={{
-                background: focusMode
-                  ? "var(--brand-soft)"
-                  : "var(--bg-surface)",
-                borderColor: focusMode
-                  ? "var(--brand-primary)"
-                  : "var(--border-soft)",
-                color: focusMode
-                  ? "var(--brand-soft-text)"
-                  : "var(--text-primary)",
-              }}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all cursor-pointer ${
+                focusMode ? "shadow-xs" : "hover:text-[var(--text-primary)]"
+              }`}
+              style={
+                focusMode
+                  ? {
+                      background: "var(--bg-surface)",
+                      color: "var(--text-primary)",
+                    }
+                  : {
+                      color: "var(--text-secondary)",
+                    }
+              }
             >
               {focusMode ? (
-                <Minimize2 className="h-3.5 w-3.5" />
+                <Minimize2 className="h-3.5 w-3.5 shrink-0" />
               ) : (
-                <Maximize2 className="h-3.5 w-3.5" />
+                <Maximize2 className="h-3.5 w-3.5 shrink-0" />
               )}
               <span>{focusMode ? "إظهار الدروس" : "وضع التركيز"}</span>
             </button>
+          </div>
+
+          {/* Left side (RTL end): Pro Pomodoro + Circular Theme Button */}
+          <div className="flex shrink-0 items-center gap-2">
+            <PomodoroTimer className="hidden sm:inline-flex" />
 
             <button
               type="button"
               onClick={() => toggleTheme()}
-              title="تبديل الوضع الفاتح والداكن"
-              className="flex h-9 items-center gap-1.5 rounded-xl border px-2.5 text-[12px] font-semibold transition-colors"
+              title="تبديل المظهر"
+              aria-label="تبديل المظهر"
+              className="w-10 h-10 rounded-full border inline-flex items-center justify-center transition-all hover:border-[var(--border-strong)] cursor-pointer shrink-0 shadow-xs"
               style={{
                 background: "var(--bg-surface)",
                 borderColor: "var(--border-soft)",
@@ -814,25 +893,168 @@ export default function CourseWorkspaceClient({
             >
               {isDark ? (
                 <Sun
-                  className="h-4 w-4"
-                  style={{ color: "var(--brand-primary)" }}
+                  className="h-4 w-4 shrink-0"
+                  style={{ color: "var(--accent-warm)" }}
                 />
               ) : (
                 <Moon
-                  className="h-4 w-4"
+                  className="h-4 w-4 shrink-0"
                   style={{ color: "var(--brand-primary)" }}
                 />
               )}
-              <span className="hidden sm:inline">
-                {isDark ? "فاتح" : "داكن"}
-              </span>
             </button>
           </div>
+        </div>
+
+        {/* Hairline Course Progress Indicator along the bottom edge */}
+        <div
+          aria-hidden="true"
+          className="h-[2px] w-full overflow-hidden"
+          style={{ background: "transparent" }}
+        >
+          <div
+            className="h-full transition-all duration-500"
+            style={{
+              width: `${progressPct}%`,
+              background: "var(--success-fg)",
+            }}
+          />
         </div>
       </header>
 
       {/* ==================== WORKSPACE BODY ==================== */}
       <main className="mx-auto w-full max-w-[1260px] flex-1 space-y-6 px-4 py-6 pb-24 sm:px-6 lg:px-8 lg:pb-8">
+        {/* Per-Course Status Bar (Progress + Course Mistake Bank + Local Backup) */}
+        <section
+          className="surface-card rounded-2xl grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-[var(--border-soft)] overflow-hidden"
+          style={{ borderColor: "var(--border-soft)" }}
+        >
+          {/* Cell 1: Course Progress */}
+          <div className="px-4 py-3.5 flex items-center justify-between gap-3">
+            <div className="space-y-1 flex-1 min-w-0">
+              <div className="flex items-center justify-between text-[11.5px] font-bold">
+                <span style={{ color: "var(--text-secondary)" }}>
+                  إنجازك في {course.code}
+                </span>
+                <span
+                  className="font-mono-code font-black"
+                  style={{ color: "var(--success-fg)" }}
+                >
+                  {progressPct}%
+                </span>
+              </div>
+              <div
+                className="h-1.5 w-full rounded-full overflow-hidden"
+                style={{ background: "var(--bg-subtle)" }}
+              >
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{
+                    width: `${progressPct}%`,
+                    background: "var(--success-fg)",
+                  }}
+                />
+              </div>
+            </div>
+            <span
+              className="font-mono-code text-[11px] font-bold shrink-0 px-2 py-0.5 rounded-md"
+              style={{
+                background: "var(--bg-subtle)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              {doneCount}/{sortedLessons.length}
+            </span>
+          </div>
+
+          {/* Cell 2: Course Mistake Bank */}
+          <button
+            type="button"
+            onClick={openMistakeBankModal}
+            className="px-4 py-3.5 flex items-center justify-between gap-3 text-right transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <BookmarkCheck
+                className="w-4 h-4 shrink-0"
+                style={{
+                  color:
+                    courseMistakesCount > 0
+                      ? "var(--accent-warm)"
+                      : "var(--brand-primary)",
+                }}
+              />
+              <div className="min-w-0">
+                <div
+                  className="text-[12px] font-extrabold truncate"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  بنك أخطاء المقرر
+                </div>
+                <div
+                  className="text-[11px] font-semibold truncate"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {courseMistakesCount === 0
+                    ? "لا توجد أخطاء مسجلة بعد"
+                    : `${courseMistakesCount} سؤال جاهز للمراجعة`}
+                </div>
+              </div>
+            </div>
+            <ArrowLeft
+              className="w-3.5 h-3.5 shrink-0"
+              style={{ color: "var(--text-muted)" }}
+            />
+          </button>
+
+          {/* Cell 3: Local Backup */}
+          <div className="px-4 py-3.5 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <div
+                className="text-[12px] font-extrabold truncate"
+                style={{ color: "var(--text-primary)" }}
+              >
+                حفظ محلي تلقائي
+              </div>
+              <div
+                className="text-[11px] font-semibold truncate"
+                style={{ color: "var(--text-muted)" }}
+              >
+                انقل تقدمك بملف JSON
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0 text-[11.5px] font-extrabold">
+              <button
+                type="button"
+                onClick={handleExportCourseBackup}
+                className="inline-flex min-h-[36px] items-center gap-1 rounded-lg px-2 py-1 hover:bg-[var(--bg-subtle)] cursor-pointer"
+                style={{ color: "var(--brand-primary)" }}
+              >
+                <Download className="w-3.5 h-3.5 shrink-0" />
+                <span>تصدير</span>
+              </button>
+              <span style={{ color: "var(--border-strong)" }}>·</span>
+              <button
+                type="button"
+                onClick={() => backupInputRef.current?.click()}
+                className="inline-flex min-h-[36px] items-center gap-1 rounded-lg px-2 py-1 hover:bg-[var(--bg-subtle)] cursor-pointer"
+                style={{ color: "var(--accent-warm)" }}
+              >
+                <Upload className="w-3.5 h-3.5 shrink-0" />
+                <span>استعادة</span>
+              </button>
+              <input
+                ref={backupInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleImportCourseBackup}
+                className="hidden"
+                aria-label="استعادة نسخة احتياطية JSON"
+              />
+            </div>
+          </div>
+        </section>
+
         {/* Course Hero Strip + 5-Feature Switcher Dock */}
         <section className="surface-card space-y-5 rounded-[26px] p-4 sm:p-6">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
@@ -912,11 +1134,11 @@ export default function CourseWorkspaceClient({
             )}
           </div>
 
-          {/* 5 Real Course Features Dock — Horizontally Swipeable on Mobile */}
+          {/* 5 Real Course Features Dock — Clean Wrapped Grid on Mobile, All 5 Always Visible */}
           <div
             role="tablist"
             aria-label="أدوات دراسة الدرس"
-            className="hide-scrollbar flex flex-nowrap items-center gap-1.5 overflow-x-auto rounded-2xl border p-1.5 scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap"
+            className="flex flex-wrap items-center gap-1.5 rounded-2xl border p-1.5"
             style={{
               background: "var(--bg-canvas)",
               borderColor: "var(--border-soft)",
@@ -931,7 +1153,7 @@ export default function CourseWorkspaceClient({
                   role="tab"
                   aria-selected={isActive}
                   onClick={() => handleSelectTab(id)}
-                  className={`tool-dock-pill min-h-[42px] shrink-0 snap-start whitespace-nowrap ${
+                  className={`tool-dock-pill min-h-[40px] flex-1 sm:flex-initial justify-center whitespace-nowrap ${
                     isActive ? "active" : ""
                   }`}
                 >
@@ -1078,18 +1300,15 @@ export default function CourseWorkspaceClient({
                 <div className="flex min-w-0 items-center gap-2.5">
                   <Image
                     src="/images/founder.jpg"
-                    alt="Ahmed Amir Ahmed"
+                    alt="Eng. Ahmed Amir"
                     width={32}
                     height={32}
                     className="h-8 w-8 shrink-0 rounded-full border object-cover object-[50%_15%]"
                     style={{ borderColor: "var(--border-strong)" }}
                   />
                   <div className="min-w-0 text-right">
-                    <div
-                      className="truncate text-[11.5px] font-extrabold"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      شرح: <span className="font-en">Ahmed Amir Ahmed</span>
+                    <div className="truncate">
+                      <BrandName size="sm" />
                     </div>
                     <div
                       className="truncate text-[10px] font-semibold"
@@ -1309,18 +1528,18 @@ export default function CourseWorkspaceClient({
                         href={safeSiteUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-mono-code inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-[11px] font-bold hover:opacity-85"
+                        className="font-mono-code inline-flex max-w-full items-center gap-1.5 rounded-xl px-3 py-1 text-[11px] font-bold hover:opacity-85"
                         style={{
                           background: "var(--brand-soft)",
                           color: "var(--brand-soft-text)",
                         }}
                       >
-                        <span>{course.site_url}</span>
-                        <ExternalLink className="h-3 w-3" />
+                        <span className="truncate">{course.site_url}</span>
+                        <ExternalLink className="h-3 w-3 shrink-0" />
                       </a>
                     ) : (
                       <span
-                        className="font-mono-code rounded-xl px-3 py-1 text-[11px] font-bold"
+                        className="font-mono-code max-w-full truncate rounded-xl px-3 py-1 text-[11px] font-bold"
                         style={{
                           background: "var(--brand-soft)",
                           color: "var(--brand-soft-text)",
@@ -1654,7 +1873,7 @@ export default function CourseWorkspaceClient({
                     <button
                       type="button"
                       onClick={handleCopyNotes}
-                      className="inline-flex min-h-[36px] items-center rounded-xl border px-3 py-1 text-[11.5px] font-bold transition-colors hover:opacity-85"
+                      className="inline-flex min-h-[36px] items-center rounded-xl border px-3 py-1 text-[11.5px] font-bold transition-colors hover:opacity-85 cursor-pointer"
                       style={{
                         background: "var(--bg-canvas)",
                         borderColor: "var(--border-soft)",
@@ -1662,6 +1881,19 @@ export default function CourseWorkspaceClient({
                       }}
                     >
                       نسخ الملاحظات
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNotesOpen(false)}
+                      aria-label="إغلاق الملاحظات"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-colors hover:opacity-85 cursor-pointer"
+                      style={{
+                        background: "var(--bg-canvas)",
+                        borderColor: "var(--border-soft)",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      <X className="h-4 w-4 shrink-0" />
                     </button>
                   </div>
                 </div>
@@ -1689,9 +1921,9 @@ export default function CourseWorkspaceClient({
       {/* ==================== STICKY MOBILE BOTTOM THUMB-ZONE DOCK (< 1024px) ==================== */}
       <nav
         aria-label="شريط أدوات المذاكرة السريع للموبايل"
-        className="fixed inset-x-0 bottom-0 z-40 border-t px-2.5 pt-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-[60] [transform:translateZ(0)] border-t px-2.5 pt-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden"
         style={{
-          background: "color-mix(in srgb, var(--bg-surface) 92%, transparent)",
+          background: "color-mix(in srgb, var(--bg-surface) 94%, transparent)",
           borderColor: "var(--border-soft)",
           boxShadow: "0 -8px 28px rgba(15, 23, 42, 0.08)",
         }}
@@ -1702,7 +1934,7 @@ export default function CourseWorkspaceClient({
             type="button"
             onClick={() => setMobileLessonsOpen(true)}
             aria-expanded={mobileLessonsOpen}
-            className="flex min-h-[46px] flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[11px] font-extrabold transition-all"
+            className="flex min-h-[46px] min-w-0 overflow-hidden flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[10.5px] font-extrabold transition-all cursor-pointer"
             style={{
               background: mobileLessonsOpen
                 ? "var(--brand-soft)"
@@ -1719,7 +1951,7 @@ export default function CourseWorkspaceClient({
               className="h-4 w-4 shrink-0"
               style={{ color: "var(--brand-primary)" }}
             />
-            <span className="truncate">
+            <span className="max-w-full truncate">
               الدروس ({doneCount}/{sortedLessons.length})
             </span>
           </button>
@@ -1729,7 +1961,7 @@ export default function CourseWorkspaceClient({
             type="button"
             onClick={() => setExamNight((prev) => !prev)}
             aria-pressed={examNight}
-            className="flex min-h-[46px] flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[11px] font-extrabold transition-all"
+            className="flex min-h-[46px] min-w-0 overflow-hidden flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[10.5px] font-extrabold transition-all cursor-pointer"
             style={
               examNight
                 ? {
@@ -1745,7 +1977,7 @@ export default function CourseWorkspaceClient({
             }
           >
             <Zap className="h-4 w-4 shrink-0" />
-            <span className="truncate">ليلة الامتحان</span>
+            <span className="max-w-full truncate">ليلة الامتحان</span>
           </button>
 
           {/* 3. نوتس */}
@@ -1753,7 +1985,7 @@ export default function CourseWorkspaceClient({
             type="button"
             onClick={handleToggleNotes}
             aria-pressed={notesOpen}
-            className="relative flex min-h-[46px] flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[11px] font-extrabold transition-all"
+            className="relative flex min-h-[46px] min-w-0 overflow-hidden flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[10.5px] font-extrabold transition-all cursor-pointer"
             style={{
               background: notesOpen ? "var(--brand-soft)" : "var(--bg-canvas)",
               borderColor: notesOpen
@@ -1777,14 +2009,14 @@ export default function CourseWorkspaceClient({
                 />
               ) : null}
             </div>
-            <span className="truncate">نوتس</span>
+            <span className="max-w-full truncate">نوتس</span>
           </button>
 
           {/* 4. بحث */}
           <button
             type="button"
             onClick={() => openCommandPalette()}
-            className="flex min-h-[46px] flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[11px] font-extrabold transition-all"
+            className="flex min-h-[46px] min-w-0 overflow-hidden flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[10.5px] font-extrabold transition-all cursor-pointer"
             style={{
               background: "var(--bg-canvas)",
               borderColor: "var(--border-soft)",
@@ -1795,7 +2027,7 @@ export default function CourseWorkspaceClient({
               className="h-4 w-4 shrink-0"
               style={{ color: "var(--text-secondary)" }}
             />
-            <span className="truncate">بحث</span>
+            <span className="max-w-full truncate">بحث</span>
           </button>
         </div>
       </nav>
@@ -1806,7 +2038,7 @@ export default function CourseWorkspaceClient({
           role="dialog"
           aria-modal="true"
           aria-label="دروس المقرر"
-          className="fixed inset-0 z-50 flex lg:hidden"
+          className="fixed inset-0 z-[70] [transform:translateZ(0)] flex lg:hidden"
         >
           {/* Backdrop */}
           <div
@@ -1816,7 +2048,7 @@ export default function CourseWorkspaceClient({
 
           {/* Slide-Over Panel */}
           <div
-            className="relative z-10 flex h-full w-full max-w-[340px] flex-col border-e p-4 shadow-2xl sm:p-5"
+            className="relative z-10 flex h-full w-full max-w-[min(320px,86vw)] flex-col border-e p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl sm:p-5"
             style={{
               background: "var(--bg-surface)",
               borderColor: "var(--border-soft)",
@@ -1972,18 +2204,15 @@ export default function CourseWorkspaceClient({
               <div className="flex min-w-0 items-center gap-2.5">
                 <Image
                   src="/images/founder.jpg"
-                  alt="Ahmed Amir Ahmed"
+                  alt="Eng. Ahmed Amir"
                   width={32}
                   height={32}
                   className="h-8 w-8 shrink-0 rounded-full border object-cover object-[50%_15%]"
                   style={{ borderColor: "var(--border-strong)" }}
                 />
                 <div className="min-w-0 text-right">
-                  <div
-                    className="truncate text-[11.5px] font-extrabold"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    شرح: <span className="font-en">Ahmed Amir Ahmed</span>
+                  <div className="truncate">
+                    <BrandName size="sm" />
                   </div>
                   <div
                     className="truncate text-[10px] font-semibold"
