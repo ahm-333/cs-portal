@@ -2,12 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  BookOpen,
   Check,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Cpu,
   LayoutList,
   Lightbulb,
   Maximize2,
@@ -26,7 +24,6 @@ interface ChapterInteractiveViewerProps {
   onGoToQuiz?: () => void;
 }
 
-type ViewerSubTab = "slides" | "lab";
 type SlideDisplayMode = "single" | "all";
 
 const MASTERY_STORAGE_KEY = "cs_portal_chapter_mastery_v1";
@@ -60,11 +57,9 @@ export default function ChapterInteractiveViewer({
   chapter,
   onGoToQuiz,
 }: ChapterInteractiveViewerProps) {
-  const [subTab, setSubTab] = useState<ViewerSubTab>("slides");
   // Default to focused single-slide reading mode so each slide breathes cleanly
   const [displayMode, setDisplayMode] = useState<SlideDisplayMode>("single");
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-  const [activeLabStep, setActiveLabStep] = useState(0);
   const [masteredIds, setMasteredIds] = useState<string[]>(() =>
     loadMasteredSlideIds(chapter.lessonId)
   );
@@ -88,7 +83,7 @@ export default function ChapterInteractiveViewer({
         return;
       }
 
-      if (subTab !== "slides" || displayMode !== "single" || zoomedSlide) return;
+      if (displayMode !== "single" || zoomedSlide) return;
       const target = e.target as HTMLElement | null;
       if (
         target &&
@@ -108,7 +103,7 @@ export default function ChapterInteractiveViewer({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [zoomedSlide, isFullscreen, subTab, displayMode, totalSlides]);
+  }, [zoomedSlide, isFullscreen, displayMode, totalSlides]);
 
   useEffect(() => {
     if (!zoomedSlide && !isFullscreen) return;
@@ -141,7 +136,6 @@ export default function ChapterInteractiveViewer({
 
   const handleJumpToSlide = useCallback(
     (idx: number) => {
-      setSubTab("slides");
       setActiveSlideIndex(idx);
       if (displayMode === "all") {
         const slide = chapter.slides[idx];
@@ -177,9 +171,6 @@ export default function ChapterInteractiveViewer({
     return chapter.slides.map((slide, index) => ({ slide, index }));
   }, [chapter.slides, displayMode, activeSlideIndex]);
 
-  const currentLabStep =
-    chapter.lab.steps[activeLabStep] ?? chapter.lab.steps[0];
-
   return (
     <div
       ref={containerRef}
@@ -214,7 +205,7 @@ export default function ChapterInteractiveViewer({
                 className="text-[11.5px] font-semibold"
                 style={{ color: "var(--text-muted)" }}
               >
-                {totalSlides} سلايد + معمل تفاعلي
+                {totalSlides} سلايد تفاعلية
               </span>
             </div>
 
@@ -294,15 +285,13 @@ export default function ChapterInteractiveViewer({
           </div>
         </div>
 
-        {/* Clean Toolbar Row: Sub-tabs + Display Mode + Quiz Jump */}
+        {/* Clean Toolbar Row: Display Mode + Quiz Jump */}
         <div
           className="mt-3.5 flex flex-wrap items-center justify-between gap-2.5 border-t pt-3.5"
           style={{ borderColor: "var(--border-soft)" }}
         >
           <div
-            role="tablist"
-            aria-label="أقسام الشرح التفاعلي"
-            className="inline-flex items-center gap-1 rounded-xl border p-1"
+            className="inline-flex items-center gap-0.5 rounded-xl border p-0.5"
             style={{
               background: "var(--bg-surface)",
               borderColor: "var(--border-soft)",
@@ -310,120 +299,60 @@ export default function ChapterInteractiveViewer({
           >
             <button
               type="button"
-              role="tab"
-              aria-selected={subTab === "slides"}
-              onClick={() => setSubTab("slides")}
-              className="inline-flex min-h-[34px] items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-[12px] font-extrabold transition-all cursor-pointer"
+              onClick={() => setDisplayMode("single")}
+              className="inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-3 py-1 text-[12px] font-bold transition-colors cursor-pointer"
               style={
-                subTab === "slides"
+                displayMode === "single"
                   ? {
-                      background: "var(--brand-soft)",
-                      color: "var(--brand-soft-text)",
+                      background: "var(--bg-subtle)",
+                      color: "var(--text-primary)",
                     }
-                  : {
-                      background: "transparent",
-                      color: "var(--text-secondary)",
-                    }
+                  : { color: "var(--text-muted)" }
               }
             >
-              <BookOpen className="h-3.5 w-3.5" />
-              <span>شرح السلايدات</span>
-              <span className="font-mono-code text-[10.5px] opacity-75">
-                ({totalSlides})
-              </span>
+              <SquareStack className="h-3.5 w-3.5" />
+              <span>سلايد بسلايد</span>
             </button>
-
             <button
               type="button"
-              role="tab"
-              aria-selected={subTab === "lab"}
-              onClick={() => setSubTab("lab")}
-              className="inline-flex min-h-[34px] items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-[12px] font-extrabold transition-all cursor-pointer"
+              onClick={() => setDisplayMode("all")}
+              className="inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-3 py-1 text-[12px] font-bold transition-colors cursor-pointer"
               style={
-                subTab === "lab"
+                displayMode === "all"
                   ? {
-                      background: "var(--brand-soft)",
-                      color: "var(--brand-soft-text)",
+                      background: "var(--bg-subtle)",
+                      color: "var(--text-primary)",
                     }
-                  : {
-                      background: "transparent",
-                      color: "var(--text-secondary)",
-                    }
+                  : { color: "var(--text-muted)" }
               }
             >
-              <Cpu className="h-3.5 w-3.5" />
-              <span>المعمل التفاعلي</span>
+              <LayoutList className="h-3.5 w-3.5" />
+              <span>عرض الكل ({totalSlides})</span>
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {subTab === "slides" ? (
-              <div
-                className="inline-flex items-center gap-0.5 rounded-xl border p-0.5"
-                style={{
-                  background: "var(--bg-surface)",
-                  borderColor: "var(--border-soft)",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setDisplayMode("single")}
-                  className="inline-flex min-h-[30px] items-center gap-1 rounded-lg px-2.5 py-1 text-[11.5px] font-bold transition-colors cursor-pointer"
-                  style={
-                    displayMode === "single"
-                      ? {
-                          background: "var(--bg-subtle)",
-                          color: "var(--text-primary)",
-                        }
-                      : { color: "var(--text-muted)" }
-                  }
-                >
-                  <SquareStack className="h-3.5 w-3.5" />
-                  <span>سلايد بسلايد</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDisplayMode("all")}
-                  className="inline-flex min-h-[30px] items-center gap-1 rounded-lg px-2.5 py-1 text-[11.5px] font-bold transition-colors cursor-pointer"
-                  style={
-                    displayMode === "all"
-                      ? {
-                          background: "var(--bg-subtle)",
-                          color: "var(--text-primary)",
-                        }
-                      : { color: "var(--text-muted)" }
-                  }
-                >
-                  <LayoutList className="h-3.5 w-3.5" />
-                  <span>عرض الكل</span>
-                </button>
-              </div>
-            ) : null}
-
-            {onGoToQuiz ? (
-              <button
-                type="button"
-                onClick={onGoToQuiz}
-                className="inline-flex min-h-[32px] items-center gap-1.5 rounded-xl border px-3 py-1 text-[11.5px] font-bold transition-colors hover:opacity-85 cursor-pointer"
-                style={{
-                  background:
-                    "color-mix(in srgb, var(--success-soft) 70%, transparent)",
-                  borderColor:
-                    "color-mix(in srgb, var(--success-fg) 22%, transparent)",
-                  color: "var(--success-fg)",
-                }}
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>اختبر نفسك في الكويز</span>
-              </button>
-            ) : null}
-          </div>
+          {onGoToQuiz ? (
+            <button
+              type="button"
+              onClick={onGoToQuiz}
+              className="inline-flex min-h-[34px] items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-[12px] font-bold transition-colors hover:opacity-85 cursor-pointer"
+              style={{
+                background:
+                  "color-mix(in srgb, var(--success-soft) 70%, transparent)",
+                borderColor:
+                  "color-mix(in srgb, var(--success-fg) 22%, transparent)",
+                color: "var(--success-fg)",
+              }}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>اختبر نفسك في الكويز</span>
+            </button>
+          ) : null}
         </div>
       </div>
 
-      {/* ==================== TAB 1: REFINED SLIDE VIEWER ==================== */}
-      {subTab === "slides" ? (
-        <div ref={slideTopRef} className="space-y-4">
+      {/* ==================== REFINED SLIDE VIEWER ==================== */}
+      <div ref={slideTopRef} className="space-y-4">
           {/* Calm Quick-Jump Navigator Strip */}
           <div
             className="rounded-2xl border px-3 py-2.5"
@@ -861,107 +790,6 @@ export default function ChapterInteractiveViewer({
             </div>
           ) : null}
         </div>
-      ) : (
-        /* ==================== TAB 2: INTERACTIVE LAB ==================== */
-        <div
-          className="space-y-4 rounded-2xl border p-4 sm:p-6"
-          style={{
-            background: "var(--bg-surface)",
-            borderColor: "var(--border-soft)",
-          }}
-        >
-          <div className="space-y-1">
-            <span
-              className="text-[11px] font-bold"
-              style={{ color: "var(--success-fg)" }}
-            >
-              تطبيق عملي تفاعلي
-            </span>
-            <h4 className="text-[16px] font-black text-[var(--text-primary)] sm:text-[17.5px]">
-              {chapter.lab.title}
-            </h4>
-            <p
-              className="text-[13px] leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              {chapter.lab.subtitle}
-            </p>
-          </div>
-
-          {/* Calm Step Selector Pills */}
-          <div className="flex flex-wrap items-center gap-2">
-            {chapter.lab.steps.map((step, idx) => {
-              const active = idx === activeLabStep;
-              return (
-                <button
-                  key={`${step.btn}-${idx}`}
-                  type="button"
-                  onClick={() => setActiveLabStep(idx)}
-                  className="inline-flex min-h-[38px] items-center rounded-xl border px-3.5 py-1.5 text-[12px] font-bold transition-all cursor-pointer"
-                  style={
-                    active
-                      ? {
-                          background: "var(--hero-bg)",
-                          borderColor: "var(--hero-bg)",
-                          color: "#ffffff",
-                        }
-                      : {
-                          background: "var(--bg-canvas)",
-                          borderColor: "var(--border-soft)",
-                          color: "var(--text-primary)",
-                        }
-                  }
-                >
-                  {step.btn}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Soft Matte Dark Slate Lab Stage */}
-          {currentLabStep ? (
-            <div className="space-y-4 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111a2b] p-4 text-white sm:p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-white/10 pb-3">
-                <h5
-                  dir="ltr"
-                  className="font-en text-left text-[15px] font-extrabold text-white sm:text-[16px]"
-                >
-                  {currentLabStep.heading}
-                </h5>
-                <span className="font-mono-code rounded-md border border-[#66c7a6]/30 bg-[#66c7a6]/12 px-2.5 py-1 text-[11px] font-bold text-[#88d4b9]">
-                  {currentLabStep.badge}
-                </span>
-              </div>
-
-              {currentLabStep.visualHtml ? (
-                <div
-                  dir="ltr"
-                  className="chapter-lab-visual overflow-x-auto py-1"
-                  dangerouslySetInnerHTML={{
-                    __html: currentLabStep.visualHtml,
-                  }}
-                />
-              ) : null}
-
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-4 text-[13.5px] leading-[1.85] text-slate-100">
-                {currentLabStep.detail}
-              </div>
-
-              <div
-                dir="ltr"
-                className="font-mono-code flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3 text-[11.5px]"
-              >
-                <span className="text-slate-300">
-                  {currentLabStep.telemetryLeft}
-                </span>
-                <span className="font-semibold text-[#e8b398]">
-                  {currentLabStep.telemetryRight}
-                </span>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      )}
 
       {/* ==================== DIAGRAM ZOOM MODAL ==================== */}
       {zoomedSlide && zoomedSlide.svg ? (
