@@ -56,20 +56,20 @@ export async function generateMetadata({
     `ذاكر مادة ${course.title} (${yearLabel} — ${termLabel}) على ${SITE_CONFIG.arabicName} مع ${lessons.length} دروس وملخصات ومعامل تفاعلية وكويزات.`;
 
   return {
-    title: `${course.code} · ${course.title}`,
+    title: `${course.code} · ${course.title_en}`,
     description: metaDescription,
     openGraph: {
       type: "article",
       locale: "ar_EG",
       siteName: `${SITE_CONFIG.arabicName} (${SITE_CONFIG.name})`,
-      title: `${course.title} | ${SITE_CONFIG.arabicName}`,
+      title: `${course.title_en} | ${SITE_CONFIG.arabicName}`,
       description: metaDescription,
       url: `${SITE_CONFIG.url}/courses/${course.slug}`,
       ...(course.thumbnail_url ? { images: [course.thumbnail_url] } : {}),
     },
     twitter: {
       card: "summary_large_image",
-      title: `${course.title} | ${SITE_CONFIG.arabicName}`,
+      title: `${course.title_en} | ${SITE_CONFIG.arabicName}`,
       description: metaDescription,
       ...(course.thumbnail_url ? { images: [course.thumbnail_url] } : {}),
     },
@@ -206,16 +206,16 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
 
             <div className="space-y-2">
               <div
-                className="font-en text-[13px] font-bold tracking-wide"
+                className="text-[13px] font-bold"
                 style={{ color: course.accent || "var(--brand-primary)" }}
               >
-                {course.title_en}
+                {course.title}
               </div>
               <h1
-                className="text-2xl sm:text-3xl font-black tracking-tight"
+                className="font-en text-right text-2xl sm:text-3xl font-black tracking-tight"
                 style={{ color: "var(--text-primary)" }}
               >
-                {course.title}
+                {course.title_en}
               </h1>
               {course.description && (
                 <p

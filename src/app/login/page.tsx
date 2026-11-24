@@ -50,25 +50,20 @@ function getMatchedCoursesPreview(year: number): {
 } {
   if (year === 2) {
     return {
-      badge: "3 مقررات مخصصة لفرقتك هذا الترم",
-      items: [
-        "CS-213 · هياكل البيانات",
-        "CS-215 · تنظيم ومعمارية الحاسب",
-        "IS-211 · نظم قواعد البيانات",
-      ],
+      badge: "مقرران مخصصان لفرقتك هذا الترم",
+      items: ["CS-213 · Data Structures", "IS-211 · Database Systems"],
     };
   }
   if (year === 3) {
     return {
       badge: "مقرران أساسيان لفرقتك هذا الترم",
-      items: ["CS-311 · نظم التشغيل", "CS-321 · الرسوميات بالحاسب"],
+      items: ["CS-311 · Operating Systems", "CS-321 · Computer Graphics"],
     };
   }
   return {
-    badge: "5 مقررات جاهزة ومخططة لهذا الترم",
+    badge: "4 مقررات جاهزة ومخططة لهذا الترم",
     items: [
       "CS-213 · Data Structures",
-      "CS-215 · Computer Organization",
       "IS-211 · Database Systems",
       "CS-311 · Operating Systems",
       "CS-321 · Computer Graphics",

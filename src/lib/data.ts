@@ -281,8 +281,8 @@ export async function getSearchIndex(): Promise<SearchIndexItem[]> {
   for (const course of publishedCourses) {
     items.push({
       type: "مقرر",
-      title: `${course.code} · ${course.title}`,
-      sub: course.title_en,
+      title: `${course.code} · ${course.title_en}`,
+      sub: course.title,
       courseSlug: course.slug,
     });
 

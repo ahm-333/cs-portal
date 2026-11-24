@@ -495,7 +495,13 @@ export function CoursesHubClient({
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            <div
+              className={`grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 ${
+                filteredCourses.length === 3 || filteredCourses.length > 4
+                  ? "lg:grid-cols-3"
+                  : ""
+              }`}
+            >
               {filteredCourses.map((course, idx) => (
                 <CourseCard
                   key={course.id}

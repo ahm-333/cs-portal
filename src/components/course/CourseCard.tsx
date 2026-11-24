@@ -130,10 +130,10 @@ export function CourseCard({
                 </span>
               </div>
               <div
-                className="font-en text-[11.5px] font-semibold mt-0.5 truncate"
+                className="text-[11.5px] font-semibold mt-0.5 truncate"
                 style={{ color: "var(--text-muted)" }}
               >
-                {course.title_en}
+                {course.title}
               </div>
             </div>
           </div>
@@ -147,13 +147,13 @@ export function CourseCard({
           </span>
         </div>
 
-        {/* Title & Summary */}
+        {/* Title (Prominent English) & Summary */}
         <div className="space-y-1.5">
           <h3
-            className="text-[17.5px] sm:text-[18.5px] font-black leading-snug"
+            className="font-en text-right text-[18px] sm:text-[19px] font-black leading-snug tracking-tight"
             style={{ color: "var(--text-primary)" }}
           >
-            {course.title}
+            {course.title_en}
           </h3>
           <p
             className="text-[12.5px] leading-relaxed"

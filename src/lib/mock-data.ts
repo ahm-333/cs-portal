@@ -2109,7 +2109,7 @@ export const MOCK_COURSES: Course[] = [
     term: 1,
     is_paid: false,
     price: 0,
-    is_published: true,
+    is_published: false,
     accent: "#1e355c",
     icon: "circuit-board",
     duration_minutes: 0,

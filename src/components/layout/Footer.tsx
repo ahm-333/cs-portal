@@ -8,11 +8,10 @@ export interface FooterProps {
 }
 
 const COURSE_SHORTCUTS = [
-  { code: "CS-213", label: "هياكل البيانات", href: "/courses/data-structures" },
-  { code: "CS-215", label: "تنظيم ومعمارية الحاسب", href: "/courses/computer-organization" },
-  { code: "IS-211", label: "نظم قواعد البيانات", href: "/courses/database-systems" },
-  { code: "CS-311", label: "نظم التشغيل", href: "/courses/operating-systems" },
-  { code: "CS-321", label: "الرسوميات بالحاسب", href: "/courses/computer-graphics" },
+  { code: "CS-213", label: "Data Structures", href: "/courses/data-structures" },
+  { code: "IS-211", label: "Database Systems", href: "/courses/database-systems" },
+  { code: "CS-311", label: "Operating Systems", href: "/courses/operating-systems" },
+  { code: "CS-321", label: "Computer Graphics", href: "/courses/computer-graphics" },
 ] as const;
 
 const QUICK_LINKS = [

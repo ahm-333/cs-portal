@@ -769,10 +769,10 @@ export default function CourseWorkspaceClient({
                 {course.code}
               </span>
               <span
-                className="truncate text-[13.5px] font-black sm:text-[15px]"
+                className="font-en truncate text-[13.5px] font-black sm:text-[15px]"
                 style={{ color: "var(--text-primary)" }}
               >
-                {course.title}
+                {course.title_en}
               </span>
             </div>
           </div>
@@ -1312,7 +1312,8 @@ export default function CourseWorkspaceClient({
                       وضع ليلة الامتحان · مراجعة سريعة في 5 دقائق
                     </div>
                     <h2 className="text-base font-black sm:text-lg">
-                      خلاصة ليلة الامتحان · {course.title}
+                      خلاصة ليلة الامتحان ·{" "}
+                      <span className="font-en">{course.title_en}</span>
                     </h2>
                   </div>
                   <button
@@ -1396,7 +1397,8 @@ export default function CourseWorkspaceClient({
                   className="text-xl font-black sm:text-2xl"
                   style={{ color: "var(--text-primary)" }}
                 >
-                  هذا الدرس جزء من مقرر {course.title}
+                  هذا الدرس جزء من مقرر{" "}
+                  <span className="font-en">{course.title_en}</span>
                 </h2>
 
                 <p

@@ -267,7 +267,13 @@ export function LandingCoursesShelf({
       {/* Always-Visible Courses Grid */}
       <div key={effectiveTab} className="animate-[paneIn_0.28s_ease_both]">
         {filteredCourses.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <div
+            className={`grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 ${
+              filteredCourses.length === 3 || filteredCourses.length > 4
+                ? "lg:grid-cols-3"
+                : ""
+            }`}
+          >
             {filteredCourses.map((course, idx) => (
               <CourseCard
                 key={course.id}
