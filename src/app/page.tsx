@@ -1,13 +1,11 @@
 import { CompactContactStrip } from "@/components/landing/CompactContactStrip";
-import { CsMarqueeStrip } from "@/components/landing/CsMarqueeStrip";
-import { DeskScrollytellingCinema } from "@/components/landing/DeskScrollytellingCinema";
-import { ExpandingToolsStrips } from "@/components/landing/ExpandingToolsStrips";
 import { FinalCtaSection } from "@/components/landing/FinalCtaSection";
+import { InteractiveDeskHero } from "@/components/landing/InteractiveDeskHero";
 import { LandingCoursesShelf } from "@/components/landing/LandingCoursesShelf";
 import { LandingFaqSection } from "@/components/landing/LandingFaqSection";
 import { LandingTopbar } from "@/components/landing/LandingTopbar";
-import { ScrollChaosCompare } from "@/components/landing/ScrollChaosCompare";
-import { StudyStepsBridge } from "@/components/landing/StudyStepsBridge";
+import { LiveChapterPreview } from "@/components/landing/LiveChapterPreview";
+import { WithWithoutCompare } from "@/components/landing/WithWithoutCompare";
 import { Footer } from "@/components/layout/Footer";
 import { getCourseDetailBySlug, getPublishedCourses } from "@/lib/data";
 
@@ -27,12 +25,10 @@ export default async function HomePage() {
     <div id="landingView" className="flex-1 flex flex-col w-full">
       <LandingTopbar />
 
-      <main id="top" className="flex-1 w-full">
-        <DeskScrollytellingCinema />
-        <StudyStepsBridge />
-        <ExpandingToolsStrips />
-        <CsMarqueeStrip />
-        <ScrollChaosCompare />
+      <main className="flex-1 w-full">
+        <InteractiveDeskHero />
+        <LiveChapterPreview />
+        <WithWithoutCompare />
         <LandingCoursesShelf
           courses={courses}
           courseLessonIdsMap={courseLessonIdsMap}

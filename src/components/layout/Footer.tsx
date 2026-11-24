@@ -18,10 +18,10 @@ const COURSE_SHORTCUTS = [
 const QUICK_LINKS = [
   { label: "مكتبة المقررات", href: "/courses" },
   { label: "إعداد كارنيه الطالب", href: "/login" },
-  { label: "اختر فرقتك", href: "/#courses-picker" },
-  { label: "الفرق بينا ومن غيرنا", href: "/#chaos-compare" },
-  { label: "الأدوات الخمسة", href: "/#five-tools" },
-  { label: "التواصل والمجتمع", href: "/#community" },
+  { label: "شاشة الفصل (4 أركان)", href: "/#chapter-preview" },
+  { label: "بينا ومن غيرنا", href: "/#compare" },
+  { label: "المقررات المتاحة", href: "/#courses-picker" },
+  { label: "الأسئلة الشائعة", href: "/#faq" },
 ] as const;
 
 export function Footer({ variant = "default", className = "" }: FooterProps) {
@@ -98,7 +98,7 @@ export function Footer({ variant = "default", className = "" }: FooterProps) {
                 }}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                <span>100% Free · Local Privacy</span>
+                <span>دروس مجانية للمعاينة · حفظ محلي آمن</span>
               </span>
               <span
                 className="px-3 py-1 rounded-full text-[11px] font-bold"
@@ -167,23 +167,6 @@ export function Footer({ variant = "default", className = "" }: FooterProps) {
                   </span>
                 </Link>
               ))}
-            </div>
-            <div
-              className="pt-1 text-[11px] font-semibold flex flex-wrap items-center gap-1.5"
-              style={{ color: "var(--text-muted)" }}
-            >
-              <span>نصيحة: اضغط</span>
-              <kbd
-                className="font-mono-code px-1.5 py-0.5 rounded border text-[10px]"
-                style={{
-                  background: "var(--bg-canvas)",
-                  borderColor: "var(--border-strong)",
-                  color: "var(--text-primary)",
-                }}
-              >
-                Ctrl+K
-              </kbd>
-              <span>للبحث الفوري من أي صفحة.</span>
             </div>
           </div>
         </div>

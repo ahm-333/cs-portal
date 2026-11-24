@@ -3,40 +3,35 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Menu, Moon, Search, Sun, X } from "lucide-react";
+import { ArrowLeft, Menu, Moon, Sun, X } from "lucide-react";
 import { BrandName } from "@/components/layout/BrandName";
 import { toggleTheme, useTheme } from "@/components/layout/themeStore";
 import { SITE_CONFIG } from "@/lib/config";
-import { openCommandPalette } from "@/lib/stores/events";
 
 const NAV_LINKS = [
-  { id: "five-tools", href: "#five-tools", label: "الأدوات" },
-  { id: "chaos-compare", href: "#chaos-compare", label: "بينا ومن غيرنا" },
+  { id: "chapter-preview", href: "#chapter-preview", label: "شاشة الفصل" },
+  { id: "compare", href: "#compare", label: "بينا ومن غيرنا" },
   { id: "courses-picker", href: "#courses-picker", label: "المقررات" },
   { id: "faq", href: "#faq", label: "الأسئلة" },
+  { id: "community", href: "#community", label: "التواصل" },
 ] as const;
 
 export function LandingTopbar() {
   const theme = useTheme();
-  const [isVisible, setIsVisible] = useState(false);
-  const [activeId, setActiveId] = useState<string>("courses-picker");
+  const [isOverHero, setIsOverHero] = useState(true);
+  const [activeId, setActiveId] = useState<string>("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const syncScroll = () => {
-      const cinemaEl = document.getElementById("desk-assembly");
-      if (!cinemaEl) {
-        setIsVisible(true);
-      } else {
-        const rect = cinemaEl.getBoundingClientRect();
-        const pastCinema = rect.bottom <= 110;
-        setIsVisible(pastCinema);
-        if (!pastCinema) setMobileMenuOpen(false);
-      }
+      const heroEl = document.getElementById("top");
+      const overHero = heroEl
+        ? heroEl.getBoundingClientRect().bottom > 88
+        : window.scrollY < 480;
+      setIsOverHero(overHero);
 
-      // Highlight active section smoothly
       const probeY = window.scrollY + 180;
-      let current: string = NAV_LINKS[0].id;
+      let current = "";
       for (const item of NAV_LINKS) {
         const el = document.getElementById(item.id);
         if (!el) continue;
@@ -70,27 +65,37 @@ export function LandingTopbar() {
   return (
     <header
       id="mainTopbar"
-      className={`fixed top-0 inset-x-0 z-40 border-b backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-        isVisible
-          ? "translate-y-0 opacity-100 pointer-events-auto"
-          : "-translate-y-full opacity-0 pointer-events-none"
-      }`}
-      style={{
-        background: isDark
-          ? "rgba(12, 16, 23, 0.86)"
-          : "rgba(246, 245, 241, 0.88)",
-        borderColor: "var(--border-soft)",
-      }}
+      className="fixed top-0 inset-x-0 z-40 border-b backdrop-blur-xl transition-colors duration-200"
+      style={
+        isOverHero
+          ? {
+              background: "rgba(11, 19, 34, 0.80)",
+              borderColor: "rgba(255, 255, 255, 0.08)",
+              color: "#ffffff",
+            }
+          : {
+              background: isDark
+                ? "rgba(12, 16, 23, 0.90)"
+                : "rgba(246, 245, 241, 0.92)",
+              borderColor: "var(--border-soft)",
+            }
+      }
     >
       <div className="max-w-[1200px] mx-auto px-3 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2 sm:gap-4">
-        {/* Right (RTL Start): Clean Founder Avatar + Eng Ahmed Amir */}
+        {/* Right (RTL Start): Clean Founder Avatar + Eng. Ahmed Amir */}
         <div className="flex items-center gap-2 min-w-0">
           <button
             id="mobileMenuBtn"
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--bg-hover)] cursor-pointer shrink-0"
-            style={{ color: "var(--text-primary)" }}
+            className={`md:hidden w-9 h-9 rounded-lg flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+              isOverHero
+                ? "hover:bg-white/10"
+                : "hover:bg-[var(--bg-hover)]"
+            }`}
+            style={{
+              color: isOverHero ? "#ffffff" : "var(--text-primary)",
+            }}
             aria-label={mobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
             aria-expanded={mobileMenuOpen}
           >
@@ -102,11 +107,15 @@ export function LandingTopbar() {
           </button>
 
           <a
-            href="#desk-assembly"
+            href="#top"
             onClick={() => setMobileMenuOpen(false)}
             className="flex items-center gap-2 min-w-0 group"
           >
-            <div className="relative w-7 h-7 rounded-full overflow-hidden ring-[1.5px] ring-[#c25e33] shrink-0">
+            <div
+              className={`relative w-7 h-7 rounded-full overflow-hidden ring-[1.5px] shrink-0 ${
+                isOverHero ? "ring-[#e58a62]" : "ring-[#c25e33]"
+              }`}
+            >
               <Image
                 src="/images/founder.jpg"
                 alt={SITE_CONFIG.name}
@@ -115,15 +124,23 @@ export function LandingTopbar() {
                 className="object-cover object-[50%_15%]"
               />
             </div>
-            <BrandName size="md" />
+            <BrandName inverted={isOverHero} size="md" />
             <span
               className="hidden lg:inline-block h-3.5 w-px shrink-0"
-              style={{ background: "var(--border-strong)" }}
+              style={{
+                background: isOverHero
+                  ? "rgba(255, 255, 255, 0.2)"
+                  : "var(--border-strong)",
+              }}
               aria-hidden="true"
             />
             <span
               className="hidden lg:inline-block font-mono-code text-[10.5px] font-bold tracking-wider whitespace-nowrap shrink-0"
-              style={{ color: "var(--text-muted)" }}
+              style={{
+                color: isOverHero
+                  ? "rgba(203, 213, 225, 0.85)"
+                  : "var(--text-muted)",
+              }}
             >
               CS PORTAL
             </span>
@@ -141,13 +158,30 @@ export function LandingTopbar() {
               <a
                 key={item.href}
                 href={item.href}
-                className="relative px-3.5 py-1.5 rounded-lg text-[12.5px] font-bold transition-colors"
-                style={{
-                  color: isActive
-                    ? "var(--text-primary)"
-                    : "var(--text-secondary)",
-                  background: isActive ? "var(--bg-subtle)" : "transparent",
-                }}
+                className={`relative px-3.5 py-1.5 rounded-lg text-[12.5px] font-bold transition-colors ${
+                  isOverHero
+                    ? "hover:bg-white/10"
+                    : "hover:bg-[var(--bg-hover)]"
+                }`}
+                style={
+                  isOverHero
+                    ? {
+                        color: isActive
+                          ? "#ffffff"
+                          : "rgba(226, 232, 240, 0.9)",
+                        background: isActive
+                          ? "rgba(255, 255, 255, 0.14)"
+                          : "transparent",
+                      }
+                    : {
+                        color: isActive
+                          ? "var(--text-primary)"
+                          : "var(--text-secondary)",
+                        background: isActive
+                          ? "var(--bg-subtle)"
+                          : "transparent",
+                      }
+                }
               >
                 {item.label}
               </a>
@@ -158,27 +192,19 @@ export function LandingTopbar() {
         {/* Left (RTL End): Minimal Action Group */}
         <div className="flex items-center gap-1.5 shrink-0">
           <button
-            type="button"
-            onClick={() => openCommandPalette()}
-            title="بحث سريع (Ctrl+K)"
-            aria-label="بحث سريع"
-            className="hidden sm:flex h-9 px-2.5 rounded-lg items-center gap-1.5 text-[11.5px] font-bold transition-colors hover:bg-[var(--bg-subtle)] cursor-pointer shrink-0"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            <Search className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden lg:inline font-mono-code text-[10px] opacity-75">
-              Ctrl+K
-            </span>
-          </button>
-
-          <button
             id="themeToggleBtn"
             type="button"
             onClick={() => toggleTheme()}
             title="تبديل المظهر"
             aria-label={isDark ? "الوضع الفاتح" : "الوضع الداكن"}
-            className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--bg-subtle)] cursor-pointer shrink-0"
-            style={{ color: "var(--text-secondary)" }}
+            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+              isOverHero ? "hover:bg-white/10" : "hover:bg-[var(--bg-subtle)]"
+            }`}
+            style={{
+              color: isOverHero
+                ? "rgba(226, 232, 240, 0.92)"
+                : "var(--text-secondary)",
+            }}
           >
             {isDark ? (
               <Sun className="w-4 h-4 shrink-0" />
@@ -203,25 +229,40 @@ export function LandingTopbar() {
       {mobileMenuOpen && (
         <div
           className="md:hidden border-t px-4 py-3 space-y-1 shadow-lg max-h-[calc(100svh-3.5rem)] overflow-y-auto"
-          style={{
-            background: "var(--bg-surface)",
-            borderColor: "var(--border-soft)",
-          }}
+          style={
+            isOverHero
+              ? {
+                  background: "rgba(11, 19, 34, 0.96)",
+                  borderColor: "rgba(255, 255, 255, 0.12)",
+                }
+              : {
+                  background: "var(--bg-surface)",
+                  borderColor: "var(--border-soft)",
+                }
+          }
         >
           {NAV_LINKS.map((item) => (
             <a
               key={item.href}
               href={item.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2.5 rounded-xl text-[13.5px] font-bold transition-colors hover:bg-[var(--bg-subtle)]"
-              style={{ color: "var(--text-primary)" }}
+              className={`block px-3 py-2.5 rounded-xl text-[13.5px] font-bold transition-colors ${
+                isOverHero
+                  ? "text-white hover:bg-white/10"
+                  : "hover:bg-[var(--bg-subtle)]"
+              }`}
+              style={isOverHero ? undefined : { color: "var(--text-primary)" }}
             >
               {item.label}
             </a>
           ))}
           <div
             className="pt-2 mt-1 border-t space-y-1.5"
-            style={{ borderColor: "var(--border-soft)" }}
+            style={{
+              borderColor: isOverHero
+                ? "rgba(255, 255, 255, 0.12)"
+                : "var(--border-soft)",
+            }}
           >
             <Link
               href="/courses"
@@ -236,28 +277,20 @@ export function LandingTopbar() {
               href="/login"
               onClick={() => setMobileMenuOpen(false)}
               className="block px-3 py-2.5 rounded-xl text-[13px] font-bold"
-              style={{
-                background: "var(--bg-subtle)",
-                color: "var(--brand-primary)",
-              }}
+              style={
+                isOverHero
+                  ? {
+                      background: "rgba(255, 255, 255, 0.08)",
+                      color: "#f0a786",
+                    }
+                  : {
+                      background: "var(--bg-subtle)",
+                      color: "var(--brand-primary)",
+                    }
+              }
             >
               اصنع كارنيه فرقتك (3D) ←
             </Link>
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                openCommandPalette();
-              }}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer"
-              style={{
-                background: "var(--bg-canvas)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              <span>بحث سريع في المقررات والدروس</span>
-              <Search className="w-4 h-4 shrink-0" />
-            </button>
           </div>
         </div>
       )}

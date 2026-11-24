@@ -41,12 +41,18 @@ function CourseIcon({ icon }: { icon: string }) {
 }
 
 const TOOL_BADGES = [
-  "فيديوهات",
+  "فيديو شرح",
   "شرح تفاعلي",
-  "موقع للمادة",
-  "ملخصات",
-  "كويزات",
+  "ملخص وأكواد",
+  "كويزات وأسئلة",
 ] as const;
+
+function getChaptersUnit(total: number): string {
+  if (total === 1) return "فصل";
+  if (total === 2) return "فصلين";
+  if (total >= 3 && total <= 10) return "فصول";
+  return "فصل";
+}
 
 export function CourseCard({
   course,
@@ -158,7 +164,7 @@ export function CourseCard({
         </div>
       </div>
 
-      {/* Bottom Section: 5 Tool Badges + Progress Bar + Price/CTA */}
+      {/* Bottom Section: 4 Pillar Badges + Progress Bar + Price/CTA */}
       <div
         className="space-y-3.5 pt-3 border-t"
         style={{ borderColor: "var(--border-soft)" }}
@@ -184,7 +190,7 @@ export function CourseCard({
             <span style={{ color: "var(--text-muted)" }}>
               {isPreparedShell
                 ? "قريباً · جاري رفع المحاضرات"
-                : `${completedCount} / ${totalLessons} دروس · ${course.duration_minutes} د`}
+                : `${completedCount} / ${totalLessons} ${getChaptersUnit(totalLessons)} · ${course.duration_minutes} د`}
             </span>
             <span
               className="font-mono-code"

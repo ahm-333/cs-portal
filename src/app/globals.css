@@ -223,12 +223,21 @@ html.dark,
   }
 
   .font-brand {
-    font-family: var(--font-syne), var(--font-inter), sans-serif;
+    font-family: var(--font-signature), var(--font-inter), cursive, sans-serif;
     direction: ltr;
     unicode-bidi: isolate;
     display: inline-flex;
     align-items: baseline;
-    letter-spacing: -0.025em;
+    letter-spacing: 0.01em;
+    line-height: 1.15;
+  }
+
+  .font-signature {
+    font-family: var(--font-signature), var(--font-inter), cursive, sans-serif;
+    direction: ltr;
+    unicode-bidi: isolate;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
   }
 }
 

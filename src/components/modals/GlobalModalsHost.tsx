@@ -9,7 +9,8 @@ import {
   type FormEvent,
 } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { CheckCircle2, Copy, Mail, Search, X } from "lucide-react";
+import { SITE_CONFIG } from "@/lib/config";
 import {
   PORTAL_EVENTS,
   emitToast,
@@ -32,6 +33,43 @@ type ActiveModal =
   | "mistakes"
   | "feedback"
   | "unlock";
+
+type FeedbackType = "suggest" | "bug";
+
+interface FeedbackLogEntry {
+  id: string;
+  type: FeedbackType;
+  typeLabel: string;
+  title: string;
+  body: string;
+  createdAt: string;
+}
+
+const FEEDBACK_STORAGE_KEY = "cs_portal_feedback_log";
+
+const FEEDBACK_TYPES: ReadonlyArray<{ value: FeedbackType; label: string }> = [
+  { value: "suggest", label: "اقتراح مادة جديدة" },
+  { value: "bug", label: "تبليغ عن خطأ" },
+];
+
+function formatFeedbackMessage(entry: FeedbackLogEntry): string {
+  return [
+    `[${entry.typeLabel}]`,
+    `العنوان: ${entry.title}`,
+    `التفاصيل:`,
+    entry.body,
+    "— مرسل من بوابة Eng. Ahmed Amir",
+  ].join("\n");
+}
+
+function buildFeedbackMailto(entry: FeedbackLogEntry): string {
+  const rawFeedbackUrl = SITE_CONFIG.feedbackUrl || "mailto:support@cs-portal.dev";
+  const emailMatch = rawFeedbackUrl.match(/^mailto:([^?]+)/i);
+  const recipient = emailMatch?.[1]?.trim() || "support@cs-portal.dev";
+  const subject = `[CS Portal - ${entry.typeLabel}] ${entry.title}`;
+  const body = formatFeedbackMessage(entry);
+  return `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
 
 const YEARS = [1, 2, 3, 4] as const;
 const DEPARTMENTS: ReadonlyArray<PortalDepartment> = ["CS", "AI", "IS", "IT"];
@@ -65,8 +103,11 @@ export function GlobalModalsHost() {
   const [profileDept, setProfileDept] = useState<PortalDepartment>("CS");
 
   // 4. Feedback Modal state
+  const [fbType, setFbType] = useState<FeedbackType>("suggest");
   const [fbTitle, setFbTitle] = useState("");
   const [fbBody, setFbBody] = useState("");
+  const [submittedFeedback, setSubmittedFeedback] =
+    useState<FeedbackLogEntry | null>(null);
 
   // 5. Paid Course Unlock Modal state
   const [unlockDetail, setUnlockDetail] =
@@ -115,8 +156,10 @@ export function GlobalModalsHost() {
   }, []);
 
   const openFeedback = useCallback(() => {
+    setFbType("suggest");
     setFbTitle("");
     setFbBody("");
+    setSubmittedFeedback(null);
     setActiveModal("feedback");
   }, []);
 
@@ -235,10 +278,60 @@ export function GlobalModalsHost() {
 
   function handleFeedbackSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const cleanTitle = fbTitle.trim();
+    const cleanBody = fbBody.trim();
+    if (!cleanTitle || !cleanBody) return;
+
+    const typeLabel =
+      fbType === "suggest" ? "اقتراح مادة جديدة" : "تبليغ عن خطأ";
+    const entry: FeedbackLogEntry = {
+      id: `fb_${Date.now()}`,
+      type: fbType,
+      typeLabel,
+      title: cleanTitle,
+      body: cleanBody,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const raw = window.localStorage.getItem(FEEDBACK_STORAGE_KEY);
+      const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+      const existing = Array.isArray(parsed) ? parsed : [];
+      window.localStorage.setItem(
+        FEEDBACK_STORAGE_KEY,
+        JSON.stringify([entry, ...existing].slice(0, 50))
+      );
+    } catch {
+      // Ignore storage quota or private mode errors
+    }
+
+    setSubmittedFeedback(entry);
     setFbTitle("");
     setFbBody("");
-    closeModal();
-    emitToast("شكراً لمشاركتك! تم استلام ملاحظتك");
+    emitToast("تم حفظ ملاحظتك محلياً — يمكنك إرسالها الآن ✓");
+  }
+
+  async function handleCopyFeedbackMessage() {
+    if (!submittedFeedback) return;
+    const message = formatFeedbackMessage(submittedFeedback);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(message);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = message;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      emitToast("تم نسخ رسالتك — ابعتها على واتساب أو تليجرام ✓");
+    } catch {
+      emitToast("تعذّر النسخ التلقائي — يمكنك نسخ النص يدوياً");
+    }
   }
 
   async function handleUnlockSubmit(e: FormEvent<HTMLFormElement>) {
@@ -267,7 +360,8 @@ export function GlobalModalsHost() {
         // ignore confetti load errors
       }
     } else {
-      const errMsg = `الكود غير صحيح — جرّب الكود التجريبي ${expectedCode}`;
+      const errMsg =
+        "الكود غير صحيح — تأكد من كتابة الكود بشكل صحيح أو تواصل مع م. أحمد أمير.";
       setUnlockError(errMsg);
       emitToast(errMsg);
     }
@@ -768,12 +862,22 @@ export function GlobalModalsHost() {
           />
 
           <div className="flex items-center justify-between gap-3">
-            <h3
-              className="text-lg font-extrabold"
-              style={{ color: "var(--text-primary)" }}
-            >
-              اقترح مادة / بلّغ عن خطأ
-            </h3>
+            <div>
+              <h3
+                className="text-lg font-extrabold"
+                style={{ color: "var(--text-primary)" }}
+              >
+                اقترح مادة / بلّغ عن خطأ
+              </h3>
+              <p
+                className="text-[12px]"
+                style={{ color: "var(--text-muted)" }}
+              >
+                {submittedFeedback
+                  ? "تم حفظ ملاحظتك في سجل المتصفح وجاهزة للإرسال"
+                  : "اختر نوع الملاحظة واكتب تفاصيلها وسنجهّزها للإرسال فوراً"}
+              </p>
+            </div>
             <button
               type="button"
               onClick={closeModal}
@@ -789,49 +893,161 @@ export function GlobalModalsHost() {
             </button>
           </div>
 
-          <form onSubmit={handleFeedbackSubmit} className="space-y-3">
-            <input
-              type="text"
-              required
-              value={fbTitle}
-              onChange={(e) => setFbTitle(e.target.value)}
-              placeholder="اسم المادة أو عنوان الملاحظة"
-              className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border text-[13px] outline-none"
-              style={{
-                background: "var(--bg-canvas)",
-                borderColor: "var(--border-soft)",
-                color: "var(--text-primary)",
-              }}
-            />
-            <textarea
-              rows={3}
-              required
-              value={fbBody}
-              onChange={(e) => setFbBody(e.target.value)}
-              placeholder="اكتب تفاصيل الاقتراح أو الخطأ..."
-              className="w-full px-3.5 py-2.5 rounded-xl border text-[13px] outline-none resize-none"
-              style={{
-                background: "var(--bg-canvas)",
-                borderColor: "var(--border-soft)",
-                color: "var(--text-primary)",
-              }}
-            />
-            <button
-              type="submit"
-              className="w-full min-h-[44px] py-2.5 rounded-xl text-[13.5px] font-extrabold text-white cursor-pointer transition-opacity hover:opacity-95"
-              style={{ background: "var(--hero-bg)" }}
-            >
-              إرسال الملاحظة
-            </button>
-          </form>
+          {submittedFeedback ? (
+            <div className="space-y-3.5">
+              <div
+                className="p-4 rounded-2xl border space-y-2"
+                style={{
+                  background: "var(--success-soft)",
+                  borderColor: "var(--success-fg)",
+                }}
+              >
+                <div
+                  className="flex items-center gap-2 text-[13px] font-extrabold"
+                  style={{ color: "var(--success-fg)" }}
+                >
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>تم حفظ ملاحظتك بنجاح ✓</span>
+                </div>
+                <div
+                  className="text-[11.5px] font-bold"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {submittedFeedback.typeLabel} · {submittedFeedback.title}
+                </div>
+                <p
+                  className="text-[12px] leading-relaxed whitespace-pre-wrap"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {submittedFeedback.body}
+                </p>
+              </div>
+
+              <div className="space-y-2.5">
+                <a
+                  href={buildFeedbackMailto(submittedFeedback)}
+                  className="w-full min-h-[44px] px-4 py-2.5 rounded-xl text-[13px] font-extrabold text-white inline-flex items-center justify-center gap-2 transition-opacity hover:opacity-95"
+                  style={{ background: "var(--hero-bg)" }}
+                >
+                  <Mail className="w-4 h-4 shrink-0" />
+                  <span>إرسال عبر الإيميل</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => void handleCopyFeedbackMessage()}
+                  className="w-full min-h-[44px] px-4 py-2.5 rounded-xl text-[13px] font-extrabold text-white inline-flex items-center justify-center gap-2 cursor-pointer transition-opacity hover:opacity-95"
+                  style={{ background: "#c25e33" }}
+                >
+                  <Copy className="w-4 h-4 shrink-0" />
+                  <span>نسخ الرسالة (لإرسالها على واتساب/تليجرام)</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmittedFeedback(null);
+                    setFbTitle("");
+                    setFbBody("");
+                  }}
+                  className="min-h-[42px] px-3 py-2 rounded-xl border text-[12.5px] font-bold cursor-pointer transition-colors"
+                  style={{
+                    background: "var(--bg-subtle)",
+                    borderColor: "var(--border-soft)",
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  ملاحظة جديدة
+                </button>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="min-h-[42px] px-3 py-2 rounded-xl border text-[12.5px] font-bold cursor-pointer transition-colors"
+                  style={{
+                    background: "var(--bg-canvas)",
+                    borderColor: "var(--border-soft)",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  إغلاق
+                </button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleFeedbackSubmit} className="space-y-3.5">
+              <div className="grid grid-cols-2 gap-2">
+                {FEEDBACK_TYPES.map((item) => {
+                  const isActive = fbType === item.value;
+                  return (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => setFbType(item.value)}
+                      className={`filter-pill min-h-[42px] px-3 py-2 rounded-xl text-[12.5px] cursor-pointer ${
+                        isActive
+                          ? item.value === "bug"
+                            ? "active-warm"
+                            : "active"
+                          : ""
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <input
+                type="text"
+                required
+                value={fbTitle}
+                onChange={(e) => setFbTitle(e.target.value)}
+                placeholder={
+                  fbType === "suggest"
+                    ? "اسم المادة المقترحة أو عنوان الفكرة"
+                    : "عنوان الخطأ أو اسم الدرس"
+                }
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border text-[13px] outline-none"
+                style={{
+                  background: "var(--bg-canvas)",
+                  borderColor: "var(--border-soft)",
+                  color: "var(--text-primary)",
+                }}
+              />
+              <textarea
+                rows={3}
+                required
+                value={fbBody}
+                onChange={(e) => setFbBody(e.target.value)}
+                placeholder={
+                  fbType === "suggest"
+                    ? "اكتب الفرقة والتخصص وتفاصيل المادة التي تحتاجها..."
+                    : "اشرح الخطأ أو الملاحظة باختصار..."
+                }
+                className="w-full px-3.5 py-2.5 rounded-xl border text-[13px] outline-none resize-none"
+                style={{
+                  background: "var(--bg-canvas)",
+                  borderColor: "var(--border-soft)",
+                  color: "var(--text-primary)",
+                }}
+              />
+              <button
+                type="submit"
+                className="w-full min-h-[44px] py-2.5 rounded-xl text-[13.5px] font-extrabold text-white cursor-pointer transition-opacity hover:opacity-95"
+                style={{ background: "var(--hero-bg)" }}
+              >
+                حفظ وتجهيز الرسالة
+              </button>
+            </form>
+          )}
         </div>
       </div>
     );
   }
 
   // 5. Paid Course Unlock Modal
-  const displayCode = (unlockDetail.unlockCode || "AI2026").trim().toUpperCase();
-
   return (
     <div
       role="dialog"
@@ -840,7 +1056,7 @@ export function GlobalModalsHost() {
       onClick={(e) => {
         if (e.target === e.currentTarget) closeModal();
       }}
-      className="fixed inset-0 z-50 modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 z-[80] modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
     >
       <div className="surface-card rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90dvh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
         <div
@@ -887,17 +1103,8 @@ export function GlobalModalsHost() {
           <strong className="font-en" style={{ color: "var(--text-primary)" }}>
             Eng. Ahmed Amir
           </strong>{" "}
-          للحصول على كود التفعيل، أو جرّب الكود التجريبي{" "}
-          <span
-            className="font-mono-code font-bold px-1.5 py-0.5 rounded"
-            style={{
-              background: "var(--success-soft)",
-              color: "var(--success-fg)",
-            }}
-          >
-            {displayCode}
-          </span>{" "}
-          لفتح الدروس المغلقة الآن.
+          عبر القنوات الرسمية للحصول على كود التفعيل الخاص بك لفتح جميع فصول
+          المقرر.
         </p>
 
         <form onSubmit={handleUnlockSubmit} className="space-y-3">
@@ -910,8 +1117,8 @@ export function GlobalModalsHost() {
               setUnlockInput(e.target.value);
               if (unlockError) setUnlockError(null);
             }}
-            placeholder={`Enter code: ${displayCode}`}
-            className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border font-mono-code text-[13px] font-bold outline-none"
+            placeholder="أدخل كود التفعيل هنا"
+            className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border text-center font-mono-code text-[13px] font-bold outline-none"
             style={{
               background: "var(--bg-canvas)",
               borderColor: unlockError

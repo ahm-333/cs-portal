@@ -21,28 +21,12 @@ export function FinalCtaSection() {
   return (
     <section className="reveal max-w-[1220px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12">
       <div
-        className="hero-shell blueprint-grid-dark rounded-[30px] p-6 sm:p-10 lg:p-12 text-white text-center space-y-5 border border-white/15 shadow-xl relative overflow-hidden"
+        className="hero-shell rounded-[30px] p-6 sm:p-9 lg:p-11 text-white text-center space-y-4 border border-white/15 shadow-xl relative overflow-hidden"
         style={{
           backgroundColor: "#14233d",
-          backgroundImage:
-            "linear-gradient(to right, rgba(255, 255, 255, 0.055) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.055) 1px, transparent 1px), linear-gradient(135deg, #182947 0%, #0f1c32 100%)",
-          backgroundSize: "28px 28px, 28px 28px, 100% 100%",
+          backgroundImage: "linear-gradient(135deg, #182947 0%, #0f1c32 100%)",
         }}
       >
-        {/* Corner Architectural Coordinate Marks */}
-        <span
-          className="hidden sm:block font-mono-code text-[10px] font-bold text-white/30 absolute top-4 right-5 select-none pointer-events-none"
-          aria-hidden="true"
-        >
-          CS-PORTAL // READY
-        </span>
-        <span
-          className="hidden sm:block font-mono-code text-[10px] font-bold text-[#66c7a6]/60 absolute top-4 left-5 select-none pointer-events-none"
-          aria-hidden="true"
-        >
-          ZERO-DB · 100% LOCAL
-        </span>
-
         {/* Ambient Warm Radial Highlight */}
         <div
           className="absolute -top-24 left-1/2 -translate-x-1/2 w-[420px] h-[220px] rounded-full blur-3xl opacity-25 pointer-events-none"

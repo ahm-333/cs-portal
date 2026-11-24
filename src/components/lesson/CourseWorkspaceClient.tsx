@@ -1433,18 +1433,9 @@ export default function CourseWorkspaceClient({
                   className="mt-2 max-w-md text-[13.5px] leading-relaxed"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  أدخل كود تفعيل المقرر لفتح جميع الدروس والشرح التفاعلي
-                  والكويزات فوراً، أو جرّب الكود التجريبي{" "}
-                  <span
-                    className="font-mono-code rounded px-1.5 py-0.5 font-bold"
-                    style={{
-                      background: "var(--success-soft)",
-                      color: "var(--success-fg)",
-                    }}
-                  >
-                    {course.unlock_code || "AI2026"}
-                  </span>
-                  .
+                  أدخل كود تفعيل المقرر لفتح جميع الفصول والشرح التفاعلي
+                  والملخصات والكويزات فوراً. يمكنك الحصول على الكود بالتواصل مع
+                  م. أحمد أمير.
                 </p>
 
                 <div className="mt-5 flex flex-wrap items-center justify-center gap-3">

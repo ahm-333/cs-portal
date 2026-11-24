@@ -13,23 +13,23 @@ export function BrandName({
 }: BrandNameProps) {
   const sizeClass =
     size === "sm"
-      ? "text-[11px] sm:text-[12.5px]"
+      ? "text-[16px] sm:text-[18px]"
       : size === "lg"
-        ? "text-[14.5px] sm:text-[17px]"
-        : "text-[12px] sm:text-[14.5px]";
+        ? "text-[22px] sm:text-[26px]"
+        : "text-[19px] sm:text-[21px]";
 
   return (
     <span
       dir="ltr"
-      className={`font-brand font-extrabold uppercase tracking-[0.055em] select-none whitespace-nowrap shrink-0 inline-flex items-baseline gap-1.5 ${sizeClass} ${className}`}
+      className={`font-signature font-bold select-none whitespace-nowrap shrink-0 inline-flex items-baseline gap-1.5 leading-none ${sizeClass} ${className}`}
     >
       <span
-        className="font-mono-code text-[0.84em] font-extrabold tracking-[0.08em] whitespace-nowrap"
+        className="whitespace-nowrap"
         style={{
           color: inverted ? "#f0a786" : "var(--accent-warm)",
         }}
       >
-        ENG.
+        Eng.
       </span>
       <span
         className="whitespace-nowrap"
@@ -37,7 +37,7 @@ export function BrandName({
           color: inverted ? "#ffffff" : "var(--text-primary)",
         }}
       >
-        AHMED AMIR
+        Ahmed Amir
       </span>
     </span>
   );

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cairo, Inter, JetBrains_Mono, Syne } from "next/font/google";
+import { Cairo, Dancing_Script, Inter, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import "katex/dist/katex.min.css";
 import "./globals.css";
@@ -29,10 +29,10 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-const syne = Syne({
+const dancingScript = Dancing_Script({
   subsets: ["latin"],
-  weight: ["700", "800"],
-  variable: "--font-syne",
+  weight: ["600", "700"],
+  variable: "--font-signature",
   display: "swap",
 });
 
@@ -110,7 +110,7 @@ export default function RootLayout({
       dir="rtl"
       data-theme="light"
       suppressHydrationWarning
-      className={`${cairo.variable} ${inter.variable} ${jetbrainsMono.variable} ${syne.variable}`}
+      className={`${cairo.variable} ${inter.variable} ${jetbrainsMono.variable} ${dancingScript.variable}`}
     >
       <head>
         {/* Static anti-flash theme bootstrap script — reads user preference before paint */}
