@@ -210,47 +210,66 @@ export function InteractiveDeskHero() {
             </p>
           </div>
 
-          {/* 3. Primary + Secondary CTAs in Clean Thumb Zone */}
-          <div className="w-full space-y-2">
+          {/* 3. Sleek, Feather-Light Mobile Action Control (Zero Heavy Stacked Bars) */}
+          <div className="w-full">
             {lastVisited ? (
-              <div className="grid grid-cols-1 gap-2">
+              <div className="space-y-2.5">
                 <Link
                   href={`/courses/${lastVisited.courseSlug}/${lastVisited.lessonId}`}
                   title={lastVisited.lessonTitle}
-                  className="cta-shimmer w-full h-12 px-5 rounded-2xl text-[14px] font-extrabold text-white inline-flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-transform"
-                  style={{ background: "#c25e33" }}
+                  className="group w-full flex items-center justify-between gap-3 rounded-2xl border border-white/14 bg-white/[0.07] p-2 pr-3.5 backdrop-blur-md transition-all active:scale-[0.985] hover:bg-white/[0.11]"
                 >
-                  <span>
-                    أكمل:{" "}
-                    <span dir="ltr" className="font-mono-code font-bold">
-                      {lastVisited.courseCode}
-                    </span>
+                  <div className="min-w-0 text-right">
+                    <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-slate-300/90">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#66c7a6] animate-pulse shrink-0" />
+                      <span>أكمل من آخر درس</span>
+                      <span
+                        dir="ltr"
+                        className="font-mono-code rounded bg-white/10 px-1.5 py-0.2 text-[10px] font-extrabold text-[#f5b899]"
+                      >
+                        {lastVisited.courseCode}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 truncate text-[12.5px] font-extrabold text-white">
+                      {lastVisited.lessonTitle}
+                    </div>
+                  </div>
+
+                  <span
+                    className="cta-shimmer inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-4 text-[12.5px] font-extrabold text-white shadow-md"
+                    style={{ background: "#c25e33" }}
+                  >
+                    <span>أكمل</span>
+                    <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
                   </span>
-                  <ArrowLeft className="w-4 h-4 shrink-0" />
                 </Link>
-                <Link
-                  href="/courses"
-                  className="w-full h-11 px-4 rounded-2xl text-[13px] font-bold text-slate-100 bg-white/[0.08] active:bg-white/[0.14] border border-white/14 backdrop-blur-md inline-flex items-center justify-center gap-2 transition-colors"
-                >
-                  <BookOpen className="w-4 h-4 text-[#66c7a6] shrink-0" />
-                  <span>تصفح مكتبة المقررات</span>
-                </Link>
+
+                <div className="flex items-center justify-center">
+                  <Link
+                    href="/courses"
+                    className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-bold text-slate-200/90 hover:text-white transition-colors"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-[#66c7a6] shrink-0" />
+                    <span>تصفح كل المقررات</span>
+                    <ArrowLeft className="w-3 h-3 opacity-70 shrink-0" />
+                  </Link>
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-12 gap-2">
+              <div className="flex flex-col items-center gap-2">
                 <Link
                   href="/courses"
-                  className="col-span-7 cta-shimmer h-12 px-4 rounded-2xl text-[13.5px] font-extrabold text-white inline-flex items-center justify-center gap-1.5 shadow-lg active:scale-[0.98] transition-transform"
+                  className="cta-shimmer h-11 px-7 rounded-full text-[13.5px] font-extrabold text-white inline-flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-transform"
                   style={{ background: "#c25e33" }}
                 >
-                  <span>ابدأ المذاكرة</span>
+                  <span>ابدأ المذاكرة الآن</span>
                   <ArrowLeft className="w-4 h-4 shrink-0" />
                 </Link>
                 <a
                   href="#courses-picker"
-                  className="col-span-5 h-12 px-3 rounded-2xl text-[13px] font-bold text-slate-100 bg-white/[0.08] active:bg-white/[0.14] border border-white/14 backdrop-blur-md inline-flex items-center justify-center gap-1.5 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-bold text-slate-300 hover:text-white transition-colors"
                 >
-                  <span>المقررات</span>
+                  <span>تصفح المقررات المتاحة</span>
                   <ArrowDown className="w-3.5 h-3.5 text-[#66c7a6] shrink-0" />
                 </a>
               </div>
