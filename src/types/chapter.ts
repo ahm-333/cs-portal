@@ -56,14 +56,23 @@ export interface InteractiveChapterData {
 // Structured Bilingual Summary Sheet (Proper LTR English + RTL Arabic)
 // ============================================================================
 
+export interface SummaryBilingualPoint {
+  en: string; // English exam point (LTR) — text before ':' is auto-highlighted
+  ar: string; // Simple Egyptian Arabic explanation directly underneath this exact point (RTL)
+  tag?: string; // Optional short badge e.g. "Exam Trap" | "Formula"
+}
+
 export interface SummaryConceptCard {
   term: string; // English heading (LTR)
+  termAr?: string; // Optional Arabic subtitle next to card heading
   badge?: string; // e.g., "Slide 1.8" or "Exam Focus"
   enSummary: string; // Main English definition/explanation (LTR)
-  enBullets?: string[]; // Detailed English sub-points (LTR)
+  arSummary?: string; // Simple Egyptian Arabic explanation directly under enSummary (RTL)
+  points?: SummaryBilingualPoint[]; // 1-to-1 paired English point + Arabic explanation underneath
+  enBullets?: string[]; // Legacy fallback English bullets
   flowSteps?: string[]; // Optional visual pipeline e.g. ["Hardware", "OS", "Apps", "Users"]
-  arNote: string; // Simple Egyptian Arabic explanation (RTL)
-  tone?: "neutral" | "brand" | "mint" | "warm"; // Calm highlight tone
+  arNote?: string; // Legacy fallback card-level Arabic note
+  tone?: "neutral" | "brand" | "mint" | "warm"; // Color-coded semantic accent
 }
 
 export interface SummaryComparisonTable {

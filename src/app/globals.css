@@ -1555,58 +1555,142 @@ html.dark .founder-portrait-frame,
   font-weight: 800;
 }
 
-/* Calm, low-saturation editorial highlight classes for CG / Theory interactive slides */
-.chapter-viewer .en-term,
+/* Vibrant, high-craft color-coded highlighters for interactive slides (Light & Dark tuned) */
+.chapter-viewer .en-term {
+  display: inline-block;
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 0.87em;
+  font-weight: 700;
+  padding: 0.05rem 0.45rem;
+  margin: 0.04rem 0.16rem;
+  border-radius: 6px;
+  background-color: #e0e7ff;
+  border: 1px solid #c7d2fe;
+  color: #3730a3;
+}
+
 .chapter-viewer .math-pill {
   display: inline-block;
   direction: ltr;
   unicode-bidi: isolate;
-  font-family: var(--font-jetbrains-mono), var(--font-inter), monospace;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-size: 0.85em;
-  font-weight: 600;
-  padding: 0.04rem 0.42rem;
-  margin: 0.04rem 0.14rem;
-  border-radius: 6px;
-  background-color: color-mix(in srgb, var(--brand-soft) 58%, var(--bg-subtle));
-  border: 1px solid color-mix(in srgb, var(--brand-primary) 14%, var(--border-soft));
-  color: var(--text-primary);
+  font-weight: 700;
+  padding: 0.06rem 0.48rem;
+  margin: 0.04rem 0.16rem;
+  border-radius: 7px;
+  background-color: #ede9fe;
+  border: 1px solid #ddd6fe;
+  color: #5b21b6;
 }
 
 .chapter-viewer .cg-emph {
   font-weight: 800;
-  color: var(--brand-soft-text);
+  color: #2563eb;
 }
 
 .chapter-viewer .hl-yellow {
-  padding: 0.04rem 0.34rem;
-  border-radius: 5px;
+  padding: 0.05rem 0.38rem;
+  border-radius: 6px;
   font-weight: 700;
-  background-color: color-mix(in srgb, var(--accent-warm-soft) 72%, transparent);
-  color: var(--text-primary);
+  background-color: #fef08a;
+  color: #713f12;
+  box-shadow: inset 0 -2px 0 rgba(217, 119, 6, 0.35);
 }
 
 .chapter-viewer .hl-cyan {
-  padding: 0.04rem 0.34rem;
-  border-radius: 5px;
+  padding: 0.05rem 0.38rem;
+  border-radius: 6px;
   font-weight: 700;
-  background-color: color-mix(in srgb, var(--brand-soft) 75%, transparent);
-  color: var(--text-primary);
+  background-color: #cffafe;
+  color: #155e75;
+  box-shadow: inset 0 -2px 0 rgba(8, 145, 178, 0.35);
 }
 
 .chapter-viewer .hl-emerald {
-  padding: 0.04rem 0.34rem;
-  border-radius: 5px;
+  padding: 0.05rem 0.38rem;
+  border-radius: 6px;
   font-weight: 700;
-  background-color: color-mix(in srgb, var(--success-soft) 75%, transparent);
-  color: var(--text-primary);
+  background-color: #d1fae5;
+  color: #065f46;
+  box-shadow: inset 0 -2px 0 rgba(5, 150, 105, 0.35);
 }
 
 .chapter-viewer .hl-rose {
-  padding: 0.04rem 0.34rem;
-  border-radius: 5px;
+  padding: 0.05rem 0.38rem;
+  border-radius: 6px;
   font-weight: 700;
-  background-color: color-mix(in srgb, var(--accent-warm-soft) 65%, transparent);
-  color: var(--accent-warm-text);
+  background-color: #ffe4e6;
+  color: #9f1239;
+  box-shadow: inset 0 -2px 0 rgba(225, 29, 72, 0.35);
+}
+
+html.dark .chapter-viewer .en-term,
+[data-theme="dark"] .chapter-viewer .en-term {
+  background-color: rgba(99, 102, 241, 0.22);
+  border-color: rgba(129, 140, 248, 0.38);
+  color: #c7d2fe;
+}
+
+html.dark .chapter-viewer .math-pill,
+[data-theme="dark"] .chapter-viewer .math-pill {
+  background-color: rgba(139, 92, 246, 0.22);
+  border-color: rgba(167, 139, 250, 0.38);
+  color: #ddd6fe;
+}
+
+html.dark .chapter-viewer .cg-emph,
+[data-theme="dark"] .chapter-viewer .cg-emph {
+  color: #60a5fa;
+}
+
+html.dark .chapter-viewer .hl-yellow,
+[data-theme="dark"] .chapter-viewer .hl-yellow {
+  background-color: rgba(245, 158, 11, 0.24);
+  color: #fde68a;
+  box-shadow: inset 0 -2px 0 rgba(251, 191, 36, 0.45);
+}
+
+html.dark .chapter-viewer .hl-cyan,
+[data-theme="dark"] .chapter-viewer .hl-cyan {
+  background-color: rgba(6, 182, 212, 0.22);
+  color: #a5f3fc;
+  box-shadow: inset 0 -2px 0 rgba(34, 211, 238, 0.42);
+}
+
+html.dark .chapter-viewer .hl-emerald,
+[data-theme="dark"] .chapter-viewer .hl-emerald {
+  background-color: rgba(16, 185, 129, 0.22);
+  color: #a7f3d0;
+  box-shadow: inset 0 -2px 0 rgba(52, 211, 153, 0.42);
+}
+
+html.dark .chapter-viewer .hl-rose,
+[data-theme="dark"] .chapter-viewer .hl-rose {
+  background-color: rgba(244, 63, 94, 0.22);
+  color: #fecdd3;
+  box-shadow: inset 0 -2px 0 rgba(251, 113, 133, 0.42);
+}
+
+/* Active Recall Blur Mode (hover or focus to reveal!) */
+.chapter-viewer.recall-blur .hl-yellow,
+.chapter-viewer.recall-blur .hl-cyan,
+.chapter-viewer.recall-blur .hl-emerald,
+.chapter-viewer.recall-blur .hl-rose,
+.chapter-viewer.recall-blur .math-pill {
+  filter: blur(5.5px);
+  transition: filter 0.18s ease;
+  cursor: pointer;
+}
+
+.chapter-viewer.recall-blur .hl-yellow:hover,
+.chapter-viewer.recall-blur .hl-cyan:hover,
+.chapter-viewer.recall-blur .hl-emerald:hover,
+.chapter-viewer.recall-blur .hl-rose:hover,
+.chapter-viewer.recall-blur .math-pill:hover {
+  filter: blur(0);
 }
 
 .chapter-svg-stage svg {

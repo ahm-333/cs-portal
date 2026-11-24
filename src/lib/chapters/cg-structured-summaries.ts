@@ -20,7 +20,7 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
     overviewEn:
       "Covers the four major application areas of computer graphics, hardware architecture (frame buffer, raster, bit depth, CRT & DAC), physical light & imaging (pinhole camera projection), the human visual system (rods vs. cones), and the synthetic-camera API model.",
     overviewAr:
-      "ملخص شامل للشابتر الأول: المجالات الأربعة للرسوميات، مكونات الهاردوير الستة والـ Frame Buffer، طبيعة الضوء وكاميرا الثقب (Pinhole Camera)، العين البشرية، ونموذج الكاميرا الاصطناعية (Synthetic-Camera API).",
+      "كل سطر إنجليزي تحتيه شرحه بالعامية مباشرة: المجالات الأربعة للرسوميات، الهاردوير والـ Frame Buffer، الضوء وكاميرا الثقب، العين البشرية، ونموذج الكاميرا الاصطناعية (API).",
     sections: [
       {
         id: "ch1-areas",
@@ -36,59 +36,91 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
             "4. User Interfaces (GUI)",
           ],
           captionAr:
-            "أي حاجة غير الأربعة دول (زي Memory أو Frame Buffer) تعتبر هاردوير مش مجال تطبيق.",
+            "أي حاجة غير الأربعة دول (زي Memory أو Frame Buffer) تعتبر مكونات هاردوير مش مجال تطبيق.",
         },
         cards: [
           {
-            term: "Computer Graphics Definition",
+            term: "Computer Graphics Definition & Evolution",
+            termAr: "تعريف وتطور الرسوميات بالحاسب",
             badge: "Pages 1–3",
-            enSummary:
-              "Concerned with all aspects of producing pictures or images using a computer. Began humbly ~50 years ago displaying a few lines on a Cathode-Ray Tube (CRT).",
-            enBullets: [
-              "Input is a mathematical/geometric description (models/data) → Output is an image.",
-              "Contrast with Image Processing: Image → enhanced Image.",
-            ],
-            arNote:
-              "علم الجرافيكس مهتم بكل خطوات إنتاج الصور بالكمبيوتر من وصف رياضي، وبدأ زمان بخطوط بسيطة على شاشة CRT.",
             tone: "brand",
+            enSummary:
+              "Computer Graphics: Concerned with all aspects of producing pictures or images using a computer.",
+            arSummary:
+              "علم الجرافيكس مهتم بكل خطوات إنتاج الصور والرسومات باستخدام الكمبيوتر.",
+            points: [
+              {
+                en: "Historical Origin: Began humbly 50 years ago with displaying a few lines on a Cathode-Ray Tube (CRT).",
+                ar: "البداية كانت بسيطة جداً من حوالي 50 سنة برسم شوية خطوط على شاشة CRT قديمة.",
+              },
+              {
+                en: "Computer Graphics vs. Image Processing: Graphics takes a mathematical model/data → outputs an image; Image Processing takes an image → outputs an enhanced image.",
+                ar: "الفرق الجوهري: في الجرافيكس بنبدأ بوصف رياضي ونطلع صورة، أما في معالجة الصور فبنبدأ بصورة ونحسّنها أو نعدّلها.",
+                tag: "Exam Focus",
+              },
+            ],
           },
           {
-            term: "1. Display of Information & Scientific Visualization",
-            badge: "Pages 5–7",
-            enSummary:
-              "Visualizing complex datasets so humans can interpret them quickly — from ancient maps and architecture blueprints to modern medical imaging (CT, MRI, Ultrasound) and scientific plots.",
-            enBullets: [
-              "Medical imaging turns raw 3D scanner measurements into readable visual cross-sections.",
-              "GIS & maps represent geographic data visually.",
-            ],
-            arNote:
-              "تحويل الأرقام والبيانات الضخمة (زي أشعة CT و MRI والخرائط) لصور واضحة العين تفهمها في ثانية.",
-            tone: "neutral",
-          },
-          {
-            term: "2. Design (CAD): Overdetermined vs. Underdetermined",
-            badge: "Pages 8–12",
-            enSummary:
-              "Engineering design is an iterative process using Computer-Aided Design (CAD) in architecture, VLSI circuits, cars, and aircraft.",
-            enBullets: [
-              "Overdetermined problem: Too many constraints → NO solution exists.",
-              "Underdetermined problem: Too few constraints → MANY solutions exist (designer explores interactively).",
-            ],
-            arNote:
-              "مقارنة امتحان ثابتة: لو القيود أكتر من اللازم (Overdetermined) مفيش حل، ولو القيود أقل (Underdetermined) فيه حلول كتير فالمهندس يجربها تفاعلياً بـ CAD.",
+            term: "1. Display of Information & 2. Design (CAD)",
+            termAr: "عرض المعلومات والتصميم الهندسي",
+            badge: "Pages 5–12",
             tone: "warm",
+            enSummary:
+              "Graphics turns raw datasets into visual insight (maps, medical scans) and empowers interactive engineering design (CAD).",
+            arSummary:
+              "أول مجالين: تحويل الأرقام والبيانات لصور واضحة، ومساعدة المهندسين في التصميم التفاعلي.",
+            points: [
+              {
+                en: "Scientific & Medical Visualization: Converts raw 3D scanner measurements (CT, MRI, Ultrasound) and GIS maps into readable images.",
+                ar: "زي أشعة CT و MRI والخرائط الجغرافية — بتحوّل بيانات ضخمة لصورة العين تفهمها في ثانية.",
+              },
+              {
+                en: "Iterative Design & CAD: Computer-Aided Design is used for buildings, VLSI circuits, cars, and aircraft through repeated visual testing.",
+                ar: "التصميم الهندسي عملية تكرارية بنستخدم فيها برامج CAD لتصميم المباني والدوائر الإلكترونية والعربيات والطيارات.",
+              },
+              {
+                en: "Overdetermined Problem: Has TOO MANY constraints → NO solution exists.",
+                ar: "لو القيود والشروط أكتر من اللازم → مفيش أي حل يحققهم كلهم مع بعض.",
+                tag: "Exam Trap",
+              },
+              {
+                en: "Underdetermined Problem: Has TOO FEW constraints → MANY solutions exist (designer explores interactively with CAD).",
+                ar: "لو القيود قليلة → فيه حلول كتير جداً، فالمهندس يجربها ويشوف الأنسب تفاعلياً على الشاشة.",
+                tag: "Exam Trap",
+              },
+            ],
           },
           {
             term: "3. Simulation & Animation · 4. User Interfaces & 5 GUI Icons",
+            termAr: "المحاكاة والواجهات الرسومية وأنواع الأيقونات",
             badge: "Pages 13–25",
-            enSummary:
-              "Real-time flight simulators and VLSI arcade games drove graphics hardware forward; modern GUIs rely on visual paradigms (windows, menus, pointing devices) and 5 icon types.",
-            enBullets: [
-              "5 GUI Icon Types: (1) Resemblance (picture of object), (2) Exemplar (typical example), (3) Symbolic (abstract higher-level concept), (4) Arbitrary (learned convention), (5) Analogy (related metaphor).",
-            ],
-            arNote:
-              "ألعاب الـ Arcade ومحاكيات الطيران طوّرت الجرافيكس، وواجهات المستخدم (GUI) بتعتمد على 5 أنواع أيقونات احفظ أسماءهم كويس.",
             tone: "mint",
+            enSummary:
+              "Real-time flight simulators and VLSI arcade games accelerated graphics hardware, while GUIs standardized visual interaction through windows, menus, and 5 icon types.",
+            arSummary:
+              "محاكيات الطيران والألعاب طوّرت كروت الشاشة بسرعة، وواجهات المستخدم (GUI) بتعتمد على النوافذ والقوائم و 5 أنواع أيقونات.",
+            points: [
+              {
+                en: "Resemblance Icon: A direct picture of the actual physical object (e.g., a folder or printer).",
+                ar: "أيقونة تشابه مباشر — صورة حقيقية للحاجة نفسها زي صورة طابعة أو فولدر.",
+              },
+              {
+                en: "Exemplar Icon: Shows a typical example representing a whole category (e.g., knife & fork for a restaurant).",
+                ar: "أيقونة مثال — بتعرض مثال مشهور يعبّر عن الفئة كلها زي شوكة وسكينة للمطعم.",
+              },
+              {
+                en: "Symbolic Icon: Conveys an abstract or higher-level concept (e.g., cracked glass for fragile).",
+                ar: "أيقونة رمزية — بتوصّل معنى مجرد زي كوباية مكسورة بمعنى «قابل للكسر».",
+              },
+              {
+                en: "Arbitrary Icon: Has no visual connection and must be learned by convention (e.g., radiation symbol or power icon).",
+                ar: "أيقونة اعتباطية/متعارف عليها — شكلها ملهوش علاقة مباشرة بالمعنى لكن الناس اتعودت عليها زي علامة الباور.",
+              },
+              {
+                en: "Analogy Icon: Uses a familiar metaphor from another domain (e.g., a magnifying glass for Search).",
+                ar: "أيقونة تشبيه/استعارة — بتستلف فكرة مألوفة زي العدسة المكبرة للتعبير عن البحث.",
+              },
+            ],
           },
         ],
       },
@@ -96,7 +128,7 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
         id: "ch1-hardware",
         number: "02",
         titleEn: "Graphics System Architecture, Frame Buffer & CRT",
-        titleAr: "معمارية نظام الجرافيكس والـ Frame Buffer وشاشة الـ CRT",
+        titleAr: "معمارية الهاردوير، الـ Frame Buffer، وشاشة الـ CRT",
         flowBanner: {
           labelEn: "6 Major Hardware Elements Pipeline",
           steps: [
@@ -108,176 +140,186 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
             "Output Device (CRT/LCD)",
           ],
           captionAr:
-            "دي العناصر الستة للهاردوير؛ الـ Frame Buffer هو الذاكرة اللي بتخزن الصورة كبكسلات قبل ما تتعرض.",
+            "دي العناصر الستة للهاردوير؛ الـ Frame Buffer هو الذاكرة اللي بتخزّن الصورة كبكسلات قبل عرضها على الشاشة.",
         },
         cards: [
           {
-            term: "Pixels (Pels), Raster, Resolution & Depth",
+            term: "Raster, Pixels (Pels), Resolution & Bit Depth",
+            termAr: "الشبكة النقطية، البكسلات، الدقة وعمق الألوان",
             badge: "Pages 29–32",
-            enSummary:
-              "Almost all modern graphics systems are raster-based: an image is stored as a 2D array of picture elements (pixels / pels) inside the Frame Buffer.",
-            enBullets: [
-              "Resolution: Number of pixels in the frame buffer (e.g., 1920 × 1080) → determines detail/sharpness.",
-              "Depth (Precision): Number of bits stored per pixel (n bits → 2^n possible colors).",
-              "1-bit deep = 2 colors (binary black & white).",
-              "Full-Color (True-Color / RGB) = 24 or more bits per pixel (8 bits R + 8 bits G + 8 bits B = 16.7M colors).",
-              "High Dynamic Range (HDR) = 12+ bits per color channel (36+ bits/pixel).",
-            ],
-            arNote:
-              "الـ Resolution هو عدد البكسلات (دقة التفاصيل)، والـ Depth هو عدد البتات لكل بكسل (عدد الألوان = 2 أس عدد البتات). والـ Full-Color بيكون 24 بت أو أكتر.",
             tone: "brand",
+            enSummary:
+              "Modern graphics systems are raster-based: an image is stored as a 2D array of picture elements (pixels / pels) inside the Frame Buffer.",
+            arSummary:
+              "الشاشات الحديثة كلها Raster: يعني الصورة متخزّنة كمصفوفة ثنائية الأبعاد من البكسلات جوا الـ Frame Buffer.",
+            points: [
+              {
+                en: "Resolution: Number of pixels in the frame buffer (Width × Height) — determines how much visual detail can be seen.",
+                ar: "الـ Resolution هو عدد البكسلات (الطول × العرض)، وكل ما زاد كل ما تفاصيل الصورة بقت أوضح وأنعم.",
+              },
+              {
+                en: "Depth (Precision): Number of bits stored for each pixel; n bits per pixel yields 2^n possible colors.",
+                ar: "الـ Depth هو عدد البتات لكل بكسل، وعدد الألوان الممكنة بيساوي 2 أس عدد البتات (2^n).",
+                tag: "Formula",
+              },
+              {
+                en: "1-Bit Deep Frame Buffer: Allows only 2¹ = 2 colors (binary black and white).",
+                ar: "لو العمق 1 بت بس → لونين اتنين فقط (أبيض وأسود).",
+              },
+              {
+                en: "Full-Color (True-Color / RGB) System: Uses 24 or more bits per pixel (8 bits R + 8 bits G + 8 bits B = 16.7M colors).",
+                ar: "نظام الـ Full-Color بيحتاج 24 بت أو أكتر لكل بكسل (8 أحمر + 8 أخضر + 8 أزرق).",
+                tag: "Exam Focus",
+              },
+              {
+                en: "High Dynamic Range (HDR): Uses 12 or more bits per color component (36+ bits/pixel) for richer contrast.",
+                ar: "أنظمة الـ HDR بتستخدم 12 بت أو أكتر لكل قناة لون عشان تدّي تباين وواقعية أعلى بكتير.",
+              },
+            ],
           },
           {
-            term: "CPU vs. GPU & Rasterization (Scan Conversion)",
-            badge: "Page 33",
-            enSummary:
-              "The CPU runs application logic, while the Graphics Processing Unit (GPU) executes specialized graphical functions in parallel.",
-            enBullets: [
-              "Rasterization (Scan Conversion): Converting geometric primitives (lines, polygons) into discrete pixels inside the frame buffer.",
-            ],
-            arNote:
-              "الـ GPU متخصص في العمليات الرسومية المتوازية، وعملية تحويل الخطوط والأشكال لبكسلات اسمها Rasterization أو Scan Conversion.",
+            term: "CPU vs. GPU, Rasterization, CRT & DAC",
+            termAr: "المعالج وكارت الشاشة والـ CRT والـ DAC",
+            badge: "Pages 33–37",
             tone: "neutral",
-          },
-          {
-            term: "CRT Monitor, DAC & Input Devices",
-            badge: "Pages 34–37",
             enSummary:
-              "A Cathode-Ray Tube (CRT) shoots an electron beam across a phosphor-coated screen, steered by horizontal and vertical deflection plates.",
-            enBullets: [
-              "DAC (Digital-to-Analog Converter): Converts digital pixel values from the frame buffer into analog voltages for the CRT beam.",
-              "Refresh rate must be fast enough (~50–85 Hz) to prevent flicker.",
-              "Input devices: Keyboard, Mouse, Trackball, Joystick, Data Tablet, Light Pen.",
+              "The GPU accelerates parallel graphics operations, rasterizing geometric shapes into pixels that a DAC converts into analog CRT voltages.",
+            arSummary:
+              "الـ GPU متخصص في الشغل الرسومي المتوازي، والـ DAC بيحوّل أرقام البكسلات لفولت يحرّك شعاع شاشة الـ CRT.",
+            points: [
+              {
+                en: "Rasterization (Scan Conversion): Converting geometric primitives (lines, polygons) into discrete pixel values inside the frame buffer.",
+                ar: "الـ Rasterization هي عملية تحويل الأشكال الهندسية والخطوط لبكسلات فعلية جوا الـ Frame Buffer.",
+                tag: "Definition",
+              },
+              {
+                en: "Cathode-Ray Tube (CRT): Directs an electron beam via horizontal and vertical deflection plates onto a phosphor-coated screen.",
+                ar: "شاشة الـ CRT بتضرب شعاع إلكترونات بيتوجّه بألواح انحراف أفقية ورأسية عشان ينوّر طبقة الفوسفور.",
+              },
+              {
+                en: "DAC (Digital-to-Analog Converter): Converts digital pixel values in the frame buffer into analog voltages driving the CRT.",
+                ar: "الـ DAC هو المحوّل اللي بيقلب الأرقام الديجيتال لفولت أنالوج مناسب لتشغيل الـ CRT.",
+              },
+              {
+                en: "Common Input Devices: Keyboard, Mouse, Trackball, Joystick, Data Tablet, and Light Pen.",
+                ar: "أجهزة الإدخال اللي بتاخد أوامر المستخدم وتبعتها لنظام الجرافيكس.",
+              },
             ],
-            arNote:
-              "شاشة الـ CRT بتشتغل بشعاع إلكترونات على طبقة فوسفور، والـ DAC بيحوّل الأرقام الديجيتال من الـ Frame Buffer لفولت أنالوج يحرّك الشعاع.",
-            tone: "mint",
           },
         ],
         formulas: [
           {
-            labelEn: "Number of Possible Colors from Bit Depth (n)",
-            formula: "Colors = 2^n   |   Frame Buffer Size = Width × Height × Depth (bits)",
+            labelEn: "Color Count & Frame Buffer Memory Size",
+            formula: "Possible Colors = 2^n   |   Buffer Size (bits) = Width × Height × n",
             workedExampleEn:
-              "1-bit → 2 colors | 8-bit → 256 colors | 24-bit (Full-Color) → 2^24 ≈ 16.7 million colors",
+              "8-bit depth → 2^8 = 256 colors | 24-bit Full-Color → 2^24 ≈ 16.7 million colors",
             arNote:
-              "قانون مباشر في الامتحان: لو قالك Depth = 8 bits يبقى عدد الألوان 2^8 = 256، ولو 24 bits يبقى 16.7 مليون لون (True Color).",
+              "سؤال تعويض مباشر في الامتحان: عدد الألوان = 2 أس الـ Depth، وحجم الـ Frame Buffer = العرض × الطول × عدد البتات.",
           },
         ],
       },
       {
         id: "ch1-optics",
         number: "03",
-        titleEn: "Objects, Viewers, Light, Pinhole Camera & Human Eye",
-        titleAr: "الأجسام، الضوء، كاميرا الثقب، والعين البشرية",
+        titleEn: "Light, Pinhole Camera, Human Visual System & 3D API",
+        titleAr: "الضوء، كاميرا الثقب، العين البشرية، ونموذج الـ API",
         cards: [
           {
-            term: "Basic Entities: Objects, Viewers & Light",
-            badge: "Pages 38–44",
-            enSummary:
-              "Forming an image requires two basic entities — Objects (independent of viewer) and a Viewer — plus Light sources illuminating the scene.",
-            enBullets: [
-              "Light is electromagnetic radiation in the visible spectrum: 350 nm (violet) to 780 nm (red).",
-              "Physical image: Formed by real optical devices (camera/eye). Synthetic image: Computed mathematically by computer graphics.",
-            ],
-            arNote:
-              "عشان تتكون صورة محتاج جسم (Object) ومشاهد (Viewer) ومصدر ضوء. الطيف المرئي للعين البشرية من 350 نانومتر (بنفسجي) لـ 780 نانومتر (أحمر).",
+            term: "Objects, Viewers, Visible Light & Pinhole Camera",
+            termAr: "الأجسام والضوء وكاميرا الثقب",
+            badge: "Pages 38–51",
             tone: "brand",
-          },
-          {
-            term: "Pinhole Camera & 4 Camera Specifications",
-            badge: "Pages 45–51",
             enSummary:
-              "A light-tight box with a tiny hole at the origin (0,0,0) and film plane at z = −d; every point (x, y, z) projects onto an inverted point (x_p, y_p, −d).",
-            enBullets: [
-              "Infinite depth of field (everything is in focus), but very little light enters.",
-              "4 Camera Specifications: (1) Position (COP), (2) Orientation (up/view direction), (3) Focal length d (field of view), (4) Film plane size/shape.",
+              "An image is formed by two independent entities — Objects and a Viewer — illuminated by electromagnetic Light, modeled mathematically by the Pinhole Camera.",
+            arSummary:
+              "عشان تتكوّن صورة محتاج كيانين مستقلين (جسم ومُشاهد) بالإضافة لمصدر ضوء، وأبسط نموذج ليهم هو كاميرا الثقب.",
+            points: [
+              {
+                en: "Visible Electromagnetic Spectrum: Light visible to humans lies strictly between 350 nm (violet) and 780 nm (red).",
+                ar: "الطيف المرئي للعين البشرية محصور بين 350 نانومتر (بنفسجي) و 780 نانومتر (أحمر) — الرقمين دول حفظ!",
+                tag: "Exam Focus",
+              },
+              {
+                en: "Pinhole Camera Property: Produces an inverted image with INFINITE depth of field (every object is in focus), though very little light enters.",
+                ar: "كاميرا الثقب بتطلّع صورة مقلوبة وكل حاجة فيها واضحة مهما كانت المسافة (Infinite Depth of Field)، بس الإضاءة قليلة.",
+              },
+              {
+                en: "4 Necessary Camera Specifications: (1) Position (COP), (2) Orientation (view/up vectors), (3) Focal length d (field of view), (4) Film plane size/shape.",
+                ar: "الأربع مواصفات اللازمة لتحديد أي كاميرا: مكانها، اتجاهها، البُعد البؤري (زاوية الرؤية)، ومقاس الفيلم.",
+              },
             ],
-            arNote:
-              "كاميرا الثقب بتطلّع صورة مقلوبة (عشان الإشارة السالبة في المعادلة) وكل الأجسام فيها واضحة (Infinite Depth of Field)، وتحتاج 4 مواصفات لتحديدها.",
-            tone: "warm",
           },
           {
             term: "Human Visual System: Rods vs. Cones",
+            termAr: "العين البشرية: العصي مقابل المخاريط",
             badge: "Pages 52–54",
-            enSummary:
-              "Light enters through the Cornea, Iris (controls aperture/light amount), and Lens (focuses onto the Retina).",
-            enBullets: [
-              "Rods (Scotopic vision): Sensitive to low light (night vision), monochrome (no color), located mostly in periphery.",
-              "Cones (Photopic vision): Active in bright light, responsible for COLOR vision (3 types: Red, Green, Blue peaks), concentrated in fovea.",
-            ],
-            arNote:
-              "مقارنة مضمونة في الامتحان: الـ Rods للرؤية الليلية (Scotopic) بدون ألوان، أما الـ Cones ففي النور القوي (Photopic) ومسؤولة عن الألوان (3 أنواع).",
             tone: "mint",
+            enSummary:
+              "Light passes through the Cornea, Iris (controls aperture), and Lens onto the Retina, which contains two types of light receptors.",
+            arSummary:
+              "الضوء بيدخل من القرنية والقزحية والعدسة لحد الشبكية، واللي فيها نوعين من المستقبلات الضوئية:",
+            points: [
+              {
+                en: "Rods (Scotopic Vision): High sensitivity for low-light / night vision; monochromatic (cannot detect color).",
+                ar: "الـ Rods شغالة في الضلمة والإضاءة الخافتة (Scotopic) بس مبتشوفش ألوان (أبيض وأسود/رمادي).",
+                tag: "Exam Focus",
+              },
+              {
+                en: "Cones (Photopic Vision): Active in bright daylight; responsible for COLOR vision with 3 types sensitive to Red, Green, and Blue.",
+                ar: "الـ Cones شغالة في النور القوي (Photopic) وهي المسؤولة عن رؤية الألوان (3 أنواع: أحمر وأخضر وأزرق) — اربط C بـ Color!",
+                tag: "Exam Focus",
+              },
+            ],
           },
           {
-            term: "Programmer's Interface (API) & Synthetic-Camera Model",
+            term: "Application Programming Interface (API) & Synthetic-Camera Model",
+            termAr: "واجهة البرمجة ونموذج الكاميرا الاصطناعية",
             badge: "Pages 55–58",
+            tone: "warm",
             enSummary:
-              "An API (like OpenGL) separates the application program from the hardware, letting programmers specify 3D scenes via the Synthetic-Camera Model.",
-            enBullets: [
-              "4 Core Specifications in a 3D API: (1) Objects (vertices/primitives), (2) Viewer (camera), (3) Light sources, (4) Material properties.",
-              "Key advantage: Objects and Viewer are specified INDEPENDENTLY.",
+              "A graphics API (such as OpenGL) isolates the programmer from hardware details using the 3D Synthetic-Camera Model.",
+            arSummary:
+              "الـ API زي OpenGL بيفصل المبرمج عن تعقيد كارت الشاشة، وبيخليك تبني المشهد بـ 4 مواصفات واضحة:",
+            points: [
+              {
+                en: "4 Core 3D API Specifications: (1) Objects (vertices/primitives), (2) Viewer (camera), (3) Light sources, (4) Material properties.",
+                ar: "الأربع حاجات اللي بتوصفهم في أي 3D API: الأجسام، الكاميرا، مصادر الضوء، وخصائص المواد.",
+              },
+              {
+                en: "Independence Advantage: Objects and Viewer are specified completely independently, so moving the camera never requires redefining objects.",
+                ar: "ميزة قوية جداً: تعريف الأجسام منفصل تماماً عن الكاميرا، يعني تقدر تلف الكاميرا براحتك من غير ما تعيد تعريف الأجسام.",
+              },
             ],
-            arNote:
-              "الـ API (زي OpenGL) بيخلّيك توصف المشهد بـ 4 حاجات منفصلة: الأجسام، الكاميرا، الإضاءة، وخصائص المواد — من غير ما تشغل بالك بنوع كارت الشاشة.",
-            tone: "neutral",
           },
         ],
         formulas: [
           {
-            labelEn: "Pinhole Camera Perspective Projection Equations",
-            formula: "x_p = −x / (z / d) = −(d · x) / z    |    y_p = −y / (z / d) = −(d · y) / z    |    z_p = −d",
+            labelEn: "Pinhole Camera Perspective Projection & Field of View",
+            formula: "x_p = −(d · x) / z   |   y_p = −(d · y) / z   |   θ = 2 · tan⁻¹(h / 2d)",
             workedExampleEn:
-              "Angle of View (Field of View): θ = 2 · tan⁻¹(h / 2d), where h is film height and d is focal length.",
+              "Negative sign means the projected image on the film plane (z = −d) is inverted. Increasing d narrows angle of view θ (zoom in).",
             arNote:
-              "الإشارة السالبة معناها إن الصورة مقلوبة (Inverted) على الفيلم! وكل ما المسافة d تزيد زاوية الرؤية θ بتقل (Zoom In).",
+              "السالب في المعادلة معناه إن الصورة بتطلع مقلوبة على الفيلم، وكل ما تزوّد d زاوية الرؤية θ بتضيق (كأنك بتعمل Zoom In).",
           },
         ],
-        table: {
-          titleEn: "Human Retina Receptors: Rods vs. Cones",
-          titleAr: "مقارنة سريعة بين الـ Rods و الـ Cones في شبكية العين",
-          headers: [
-            { label: "Property", dir: "ltr" },
-            { label: "Rods (العصي)", dir: "ltr" },
-            { label: "Cones (المخاريط)", dir: "ltr" },
-          ],
-          rows: [
-            [
-              { text: "Vision Type", dir: "ltr" },
-              { text: "Scotopic (low light / night)", dir: "ltr", highlight: true },
-              { text: "Photopic (bright light / day)", dir: "ltr", highlight: true },
-            ],
-            [
-              { text: "Color Detection", dir: "ltr" },
-              { text: "No (monochrome / grayscale)", dir: "ltr" },
-              { text: "Yes (3 types: R, G, B)", dir: "ltr", highlight: true },
-            ],
-            [
-              { text: "Sensitivity", dir: "ltr" },
-              { text: "Very high sensitivity to dim light", dir: "ltr" },
-              { text: "High spatial acuity / detail", dir: "ltr" },
-            ],
-          ],
-        },
       },
     ],
     examTraps: [
       {
-        en: "Overdetermined = TOO MANY constraints (no solution) vs. Underdetermined = TOO FEW constraints (many solutions).",
-        ar: "تريكة متكررة: Overdetermined يعني مفيش حل، و Underdetermined يعني فيه حلول كتير — اوعى تعكسهم!",
+        en: "Overdetermined = TOO MANY constraints (NO solution) vs. Underdetermined = TOO FEW constraints (MANY solutions).",
+        ar: "تريكة امتحان ثابتة: Overdetermined مفيش حل، و Underdetermined فيه حلول كتير — إوعى تعكسهم!",
       },
       {
-        en: "Visible electromagnetic spectrum is strictly 350 nm (violet) to 780 nm (red).",
+        en: "Visible spectrum is strictly 350 nm (violet) to 780 nm (red).",
         ar: "احفظ الرقمين بدقة: الطيف المرئي من 350 لـ 780 نانومتر.",
       },
       {
-        en: "Full-color (RGB) systems require 24 or more bits per pixel (NOT 8 bits and NOT 16 bits).",
-        ar: "نظام الـ Full-Color بيحتاج 24 بت أو أكتر لكل بكسل (8 لكل قناة R, G, B).",
+        en: "Full-color (RGB) systems require 24 or more bits per pixel.",
+        ar: "نظام الـ Full-Color بيحتاج 24 بت أو أكتر لكل بكسل (مش 8 ومش 16).",
       },
       {
-        en: "Rods = Scotopic (night, no color) | Cones = Photopic (day, 3 color types).",
-        ar: "اربط حرف C في Cones بكلمة Color عشان متتلخبطش بينهم أبداً.",
+        en: "Rods = Scotopic (night, NO color) | Cones = Photopic (day, 3 color types).",
+        ar: "اربط حرف C في Cones بكلمة Color عشان متتلخبطش بينهم في الامتحان.",
       },
     ],
   },
@@ -294,7 +336,7 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
     overviewEn:
       "Covers the graphics system black-box model, the 7 major groups of API functions, geometric vs. raster primitives, simple vs. non-simple polygons, triangulation, stroke vs. raster text, curved objects, and color models (RGB additive vs. CMY subtractive, 24-bit buffers, and alpha opacity).",
     overviewAr:
-      "ملخص شامل للشابتر الثاني: نموذج الصندوق الأسود، المجموعات السبع للدوال الرسومية، الفرق بين Geometric و Raster Primitives، المضلعات والتثليث، النصوص، ونماذج الألوان RGB و CMY والشفافية Alpha.",
+      "كل نقطة إنجليزي وتحتها شرحها بالعامية فوراً: الصندوق الأسود، المجموعات السبع للدوال، الـ Primitives والمضلعات والتثليث، النصوص، ونماذج الألوان RGB و CMY والشفافية.",
     sections: [
       {
         id: "ch2-blackbox-api",
@@ -306,235 +348,194 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
           steps: [
             "Inputs: Function Calls + Input Measurements + OS Messages",
             "Graphics System (Black Box)",
-            "Output: Graphics to Display Devices",
+            "Output: Graphics to Output Devices",
           ],
           captionAr:
-            "المبرمج مش محتاج يعرف تفاصيل الهاردوير الداخلية؛ بيبعت مدخلات عبر الـ API وياخد رسومات كمخرج.",
+            "المبرمج مش بيشغل باله بالدوائر الداخلية؛ بيبعت 3 مدخلات للصندوق الأسود وياخد رسومات كمخرج.",
         },
         cards: [
           {
-            term: "1. Primitive Functions vs. 2. Attribute Functions",
-            badge: "Slides 6–7",
-            enSummary:
-              "The single most tested distinction in Ch 2: Primitive functions define WHAT to draw; Attribute functions govern HOW it appears.",
-            enBullets: [
-              "Primitive functions: Low-level objects the system can display (points, line segments, polygons, pixels, text, curves).",
-              "Attribute functions: Appearance properties (color, line style/width, polygon fill pattern, font/typeface).",
-            ],
-            arNote:
-              "احفظها كده: Primitive = إيه اللي هترسمه (What)؟ Attribute = هيظهر إزاي (How: لونه، سُمكه، نوع الخط)؟",
+            term: "The 7 Major Groups of Graphics API Functions",
+            termAr: "المجموعات السبع الأساسية لدوال الجرافيكس",
+            badge: "Slides 5–11",
             tone: "brand",
-          },
-          {
-            term: "3. Viewing & 4. Transformation Functions",
-            badge: "Slide 8",
             enSummary:
-              "Viewing functions specify camera views (position, orientation, lens/clipping); Transformation functions move and reshape objects.",
-            enBullets: [
-              "Transformations include: Translation (move), Rotation (turn), and Scaling (resize).",
+              "Every graphics API organizes its commands into 7 core functional categories — memorize the exact role of each group!",
+            arSummary:
+              "أي مكتبة جرافيكس بتقسّم دوالها لـ 7 مجموعات رئيسية، وكل واحدة فيهم موضع سؤال MCQ:",
+            points: [
+              {
+                en: "1. Primitive Functions (THE WHAT): Define low-level geometric/raster objects the system can display (points, line segments, polygons, pixels, text, curves).",
+                ar: "بتحدد «إيه اللي هيترسم» (What): نقط، خطوط، مضلعات، بكسلات، نصوص، منحنيات.",
+                tag: "Exam Favorite",
+              },
+              {
+                en: "2. Attribute Functions (THE HOW): Govern the appearance of primitives (color, line style/width, polygon fill pattern, typeface).",
+                ar: "بتحدد «الشكل هيظهر إزاي» (How): لونه إيه، الخط متقطع ولا متصل، سُمكه كام، نوع الفونت.",
+                tag: "Exam Favorite",
+              },
+              {
+                en: "3. Viewing Functions: Specify various views and camera parameters (position, orientation, lens/clipping volume).",
+                ar: "بتتحكم في الكاميرا وزاوية التصوير والجزء اللي ظاهر من المشهد.",
+              },
+              {
+                en: "4. Transformation Functions: Perform geometric operations on objects — Translation (move), Rotation (turn), and Scaling (resize).",
+                ar: "بتحرّك وتلف وتكبّر أو تصغّر الأجسام في المشهد.",
+              },
+              {
+                en: "5. Input Functions: Allow applications to interact with diverse input devices (keyboard, mouse, data tablet).",
+                ar: "بتقرأ مدخلات وحركة المستخدم من الماوس والكيبورد والتاتش.",
+              },
+              {
+                en: "6. Control Functions: Communicate with the window system, initialize programs, and handle errors.",
+                ar: "بتتعامل مع نظام النوافذ، وتهيّئ البرنامج عند التشغيل، وتعالج الأخطاء.",
+              },
+              {
+                en: "7. Query Functions: Retrieve current system properties (e.g., screen resolution, color depth) to write device-independent code.",
+                ar: "بتسأل الجهاز عن إمكانياته (دقة الشاشة وعمق الألوان) عشان الكود بتاعك يشتغل صح على أي جهاز.",
+              },
             ],
-            arNote:
-              "الـ Viewing بتتحكم في الكاميرا وزاوية النظر، والـ Transformation بتحرك وتلف وتكبّر/تصغّر الأجسام.",
-            tone: "neutral",
-          },
-          {
-            term: "5. Input, 6. Control & 7. Query Functions",
-            badge: "Slides 9–11",
-            enSummary:
-              "The remaining 3 API groups handle user interaction, window/error management, and inspecting system capabilities.",
-            enBullets: [
-              "Input functions: Deal with interactive devices (keyboard, mouse, data tablet).",
-              "Control functions: Communicate with the window system, initialize programs, and handle errors.",
-              "Query functions: Retrieve current system properties (e.g., screen resolution, color depth, frame buffer specs) to write device-independent code.",
-            ],
-            arNote:
-              "الـ Input بتقرأ من الماوس والكيبورد، الـ Control بتهيئ النوافذ وتعالج الأخطاء، والـ Query بتسأل الجهاز عن إمكانياته عشان الكود يشتغل على أي شاشة.",
-            tone: "mint",
           },
         ],
       },
       {
         id: "ch2-primitives-polygons",
         number: "02",
-        titleEn: "Geometric vs. Raster Primitives, Polygons & Triangulation",
-        titleAr: "الـ Primitives والمضلعات والتثليث (Triangulation)",
+        titleEn: "Primitives, Polygons, Triangles & Text",
+        titleAr: "الـ Primitives، المضلعات، المثلثات، والنصوص",
         cards: [
           {
-            term: "Two Classes of Primitives: Geometric vs. Raster",
-            badge: "Slides 12–13",
-            enSummary:
-              "Geometric primitives are specified by vertices in 2D/3D space and pass through the geometric pipeline; Raster (image) primitives are arrays of pixels that bypass geometric transformations.",
-            enBullets: [
-              "Geometric: Points, line segments, polygons, curves (transformed, clipped, then rasterized).",
-              "Raster: Bitmaps / pixel rectangles (copied directly into the frame buffer).",
-            ],
-            arNote:
-              "الـ Geometric بتتوصف بنقاط (Vertices) وتعدي على الـ Pipeline، أما الـ Raster فهي مصفوفة بكسلات جاهزة بتتنقل مباشرة للـ Frame Buffer.",
-            tone: "brand",
-          },
-          {
-            term: "Polylines, Polygons & Simple vs. Non-Simple",
-            badge: "Slides 14–18",
-            enSummary:
-              "A polyline is a connected sequence of line segments; when closed with a well-defined interior, it forms a polygon.",
-            enBullets: [
-              "Simple Polygon: No two edges cross each other → clearly defined inside and outside.",
-              "Non-Simple Polygon: Edges intersect/cross → interior is ambiguous.",
-              "Convex Polygon: Any line segment joining two interior points lies completely inside (all interior angles ≤ 180°).",
-              "Polygon display modes: Edges only (wireframe), Filled solid color, or Pattern/Texture filled.",
-            ],
-            arNote:
-              "المضلع البسيط (Simple) أضلاعه مبتتقاطعش فجوه وبره واضحين؛ والمحدب (Convex) أي خط بين نقطتين جواه يفضل بالكامل جواه.",
+            term: "Geometric vs. Raster Primitives & Polygons",
+            termAr: "الـ Primitives الهندسية مقابل النقطية والمضلعات",
+            badge: "Slides 12–23",
             tone: "warm",
+            enSummary:
+              "Primitives split into vertex-based Geometric primitives and pixel-based Raster primitives; complex polygons are broken down into triangles for reliable rendering.",
+            arSummary:
+              "العناصر الأساسية بتنقسم لهندسية (نقط وإحداثيات) ونقطية (مصفوفة بكسلات)، وأي مضلع معقد بنقسّمه لمثلثات.",
+            points: [
+              {
+                en: "Geometric Primitives: Specified by vertices in 2D/3D (points, lines, polygons, curves) and pass through the full geometric pipeline.",
+                ar: "بتتوصف بنقط وإحداثيات (Vertices) وتعدي على كل مراحل التحويل والقص والرسم.",
+              },
+              {
+                en: "Raster (Image) Primitives: Rectangular arrays of pixels (bitmaps) that bypass geometric transformations and copy straight into the frame buffer.",
+                ar: "مصفوفة بكسلات جاهزة بتتنقل مباشرة للـ Frame Buffer من غير ما تعدي على التحويلات الهندسية.",
+              },
+              {
+                en: "Simple vs. Non-Simple Polygon: In a Simple polygon no two edges cross (clear interior); in a Non-Simple polygon edges intersect (ambiguous interior).",
+                ar: "المضلع البسيط (Simple) أضلاعه مبتتقاطعش فداخله وخارجه واضحين؛ أما غير البسيط أضلاعه بتتقاطع.",
+                tag: "Exam Focus",
+              },
+              {
+                en: "Convex Polygon: Any line segment connecting two interior points stays completely inside the polygon.",
+                ar: "المضلع المحدب (Convex): أي خط توصله بين نقطتين جواه يفضل بالكامل جوا المضلع وميخرجش بره.",
+              },
+              {
+                en: "Why Triangles & Triangulation?: Every triangle is ALWAYS simple, ALWAYS convex, and ALWAYS flat (planar) — so GPUs split polygons and curved spheres into triangle meshes.",
+                ar: "ليه المثلث هو بطل الجرافيكس؟ لأنه دايماً Simple ودايماً Convex ودايماً مستوي (Flat)، فعشان كده بنقسّم أي مضلع أو كرة لمثلثات (Triangulation).",
+                tag: "Exam Favorite",
+              },
+            ],
           },
           {
-            term: "Triangles & Triangulation",
-            badge: "Slides 19–23",
-            enSummary:
-              "Every triangle is ALWAYS simple, ALWAYS convex, and ALWAYS flat (planar) — that is why GPUs break complex polygons and curved spheres down into triangles (Triangulation / Tessellation).",
-            enBullets: [
-              "A triangle has 3 non-collinear vertices defining a unique plane.",
-              "A sphere or curved surface is approximated by a mesh of small triangles (more triangles = smoother curve).",
-            ],
-            arNote:
-              "ليه كروت الشاشة بتعشق المثلثات؟ لأن أي مثلث دايماً Simple ودايماً Convex ودايماً مستوي (Flat) — وعشان كده بنقسّم أي مضلع معقد لمثلثات (Triangulation).",
+            term: "Text Forms (Stroke vs. Raster) & Curved Objects",
+            termAr: "أنواع النصوص (Stroke مقابل Raster) والمنحنيات",
+            badge: "Slides 24–29",
             tone: "mint",
-          },
-        ],
-      },
-      {
-        id: "ch2-text-curves",
-        number: "03",
-        titleEn: "Text (Stroke vs. Raster) & Curved Objects",
-        titleAr: "النصوص (Stroke مقابل Raster) والأجسام المنحنية",
-        table: {
-          titleEn: "Stroke Text vs. Raster Text Comparison",
-          titleAr: "مقارنة بين نوعي النصوص في الرسوميات",
-          headers: [
-            { label: "Feature", dir: "ltr" },
-            { label: "Stroke Text (Vector)", dir: "ltr" },
-            { label: "Raster Text (Bitmap)", dir: "ltr" },
-          ],
-          rows: [
-            [
-              { text: "Representation", dir: "ltr" },
-              { text: "Built from geometric primitives (line segments / curves)", dir: "ltr" },
-              { text: "Defined as rectangular arrays of bits (bitmaps)", dir: "ltr" },
-            ],
-            [
-              { text: "Scaling & Rotation", dir: "ltr" },
-              { text: "Scales & rotates smoothly with zero pixelation ✓", dir: "ltr", highlight: true },
-              { text: "Becomes blocky/jagged when enlarged (requires separate bitmap per size)", dir: "ltr" },
-            ],
-            [
-              { text: "Rendering Speed", dir: "ltr" },
-              { text: "Slower (must rasterize geometric strokes)", dir: "ltr" },
-              { text: "Very fast via Bit-Block Transfer (BitBlt) ✓", dir: "ltr", highlight: true },
-            ],
-          ],
-        },
-        cards: [
-          {
-            term: "Bit-Block Transfer (BitBlt) & Curved Objects",
-            badge: "Slides 27–29",
             enSummary:
-              "Raster text achieves high speed because hardware copies character bitmaps directly into the frame buffer using a single Bit-Block Transfer (BitBlt) operation.",
-            enBullets: [
-              "Two approaches for Curved Objects: (1) Tessellation — approximate the curve/surface with tiny line segments or flat polygons/triangles, (2) Direct mathematical/parametric evaluation (e.g., Bezier/NURBS).",
+              "Text can be built geometrically (Stroke) for crisp scaling or stored as bitmaps (Raster) for blazing speed via Bit-Block Transfer.",
+            arSummary:
+              "النصوص ليها طريقتين: طريقة هندسية ناعمة عند التكبير (Stroke) وطريقة بكسلات سريعة جداً (Raster).",
+            points: [
+              {
+                en: "Stroke Text (Vector): Constructed from geometric line segments and curves → scales and rotates smoothly with zero pixelation, but slower to draw.",
+                ar: "الـ Stroke Text مرسوم بخطوط ومنحنيات هندسية، فلو كبّرته أو لفيته يفضل ناعم جداً وميبكسلش، لكنه أبطأ.",
+              },
+              {
+                en: "Raster Text (Bitmap): Defined as rectangular bit arrays → extremely fast because hardware copies characters in one Bit-Block Transfer (BitBlt) operation, but becomes jagged if enlarged.",
+                ar: "الـ Raster Text متخزّن كـ Bitmap وبيترسم بسرعة صاروخية بعملية Bit-Block Transfer (BitBlt)، بس بيبكسل لو كبّرته.",
+                tag: "Exam Focus",
+              },
+              {
+                en: "Two Approaches for Curved Objects: (1) Tessellation — approximate curves/surfaces with small straight segments or flat triangles; (2) Direct mathematical/parametric evaluation.",
+                ar: "رسم المنحنيات بيتم بطريقتين: يا إما نقرّبه بخطوط/مثلثات صغيرة جداً، يا إما نحسبه بالمعادلات الرياضية مباشرة.",
+              },
             ],
-            arNote:
-              "الـ Raster Text سريع جداً عشان بيستخدم Bit-Block Transfer ينسخ البكسلات مرة واحدة؛ والمنحنيات بنرسمها يا إما بتقريبها بخطوط/مثلثات صغيرة أو بمعادلات رياضية مباشرة.",
-            tone: "neutral",
           },
         ],
       },
       {
         id: "ch2-color",
-        number: "04",
-        titleEn: "Color Perception, RGB vs. CMY, Color Solid & Alpha Opacity",
+        number: "03",
+        titleEn: "Color Perception, RGB vs. CMY, Color Solid & Alpha",
         titleAr: "إدراك الألوان، RGB مقابل CMY، مكعب الألوان، والشفافية",
         cards: [
           {
-            term: "Color Distribution C(λ) & Tristimulus Theory",
-            badge: "Slides 32–35",
-            enSummary:
-              "Physically, light has a wavelength distribution C(λ). Because the human eye has only 3 types of cones (R, G, B), we do not need to match the entire spectrum — just 3 Tristimulus values!",
-            enBullets: [
-              "Three-color theory lets displays reproduce almost all visible colors by mixing just 3 primaries (Red, Green, Blue).",
-            ],
-            arNote:
-              "بدل ما نخزّن طيف كامل لكل لون، لأن العين فيها 3 أنواع مخاريط بس، يكفي نحدد 3 أرقام بس (Tristimulus Values: R, G, B).",
+            term: "Tristimulus Color, Additive (RGB) vs. Subtractive (CMY) & RGBA",
+            termAr: "نظرية الألوان الثلاثية و RGB مقابل CMY والشفافية",
+            badge: "Slides 32–41",
             tone: "brand",
-          },
-          {
-            term: "Additive Color (RGB) vs. Subtractive Color (CMY)",
-            badge: "Slides 36–37",
             enSummary:
-              "Light-emitting displays add light together (RGB); ink-on-paper printers absorb/subtract wavelengths from white light (CMY).",
-            enBullets: [
-              "Additive (RGB — Monitors/CRTs/Projectors): Primaries Red, Green, Blue. Black = (0,0,0), White = (1,1,1).",
-              "Subtractive (CMY — Printers/Pigments): Primaries Cyan, Magenta, Yellow. White paper = (0,0,0), Black = (1,1,1).",
-              "Complement pairs: C = 1 − R, M = 1 − G, Y = 1 − B.",
+              "Because human vision uses 3 cone types, any color can be represented by 3 Tristimulus values — added on light-emitting monitors (RGB) or subtracted on ink printers (CMY).",
+            arSummary:
+              "عشان العين فيها 3 أنواع مخاريط بس، يكفينا 3 أرقام لتمثيل أي لون: بالجمع في الشاشات (RGB) أو بالطرح في الطابعات (CMY).",
+            points: [
+              {
+                en: "Additive Color Model (RGB — Monitors/Displays): Adds light from Red, Green, Blue primaries. Black = (0,0,0), White = (1,1,1).",
+                ar: "نموذج الجمع (RGB) للشاشات: لو طفيت الألوان التلاتة (0,0,0) يطلع أسود، ولو نوّرتهم كلهم (1,1,1) يطلع أبيض.",
+                tag: "Exam Focus",
+              },
+              {
+                en: "Subtractive Color Model (CMY — Printers/Ink): Pigments absorb (subtract) wavelengths from white paper. Primaries: Cyan, Magenta, Yellow. White = (0,0,0), Black = (1,1,1).",
+                ar: "نموذج الطرح (CMY) للطابعات: الورقة الفاضية أبيض (0,0,0)، ولما تخلط أحبار Cyan و Magenta و Yellow يمتصوا الضوء ويطلع أسود (1,1,1).",
+                tag: "Exam Focus",
+              },
+              {
+                en: "3D RGB Color Solid: Unit cube whose corners are Black, White, R, G, B, C, M, Y; the diagonal from (0,0,0) to (1,1,1) represents all shades of gray.",
+                ar: "مكعب الألوان ثلاثي الأبعاد أركانه التمانية هي الألوان الأساسية والأبيض والأسود، والقطر بين الأسود والأبيض هو تدرجات الرمادي.",
+              },
+              {
+                en: "24-Bit Color Buffer (16M Colors): 8 bits per channel → 2^24 = 2^4 × 2^20 = 16M colors (where in CS, 1M = 2^20 = 1,048,576).",
+                ar: "في الكمبيوتر 1M بتساوي 2^20، فـ 24 بت بتساوي 2^24 = 16M لون (حوالي 16.7 مليون لون).",
+                tag: "Formula",
+              },
+              {
+                en: "Opacity / Alpha Channel (RGBA): A = 1.0 means completely OPAQUE (solid); A = 0.0 means completely TRANSPARENT (invisible).",
+                ar: "فخ صح وغلط مشهور: قيمة A = 1.0 معناها مُعتم تماماً (Opaque)، وقيمة A = 0.0 معناها شفاف تماماً (Transparent).",
+                tag: "Exam Trap",
+              },
             ],
-            arNote:
-              "الشاشات بتجمع ضوء (RGB Additive): صفر = أسود، والكل 1 = أبيض. أما الطابعات فبتطرح ضوء (CMY Subtractive): الورقة الفاضية أبيض، وخلط الحبر يدي أسود.",
-            tone: "warm",
-          },
-          {
-            term: "The 3D RGB Color Solid & 24-Bit Color Buffer",
-            badge: "Slides 38–40",
-            enSummary:
-              "All representable RGB colors form a unit 3D cube (Color Solid) with corners at Black (0,0,0), White (1,1,1), R, G, B, C, M, Y; the diagonal from (0,0,0) to (1,1,1) is grayscale.",
-            enBullets: [
-              "24-bit RGB buffer = 8 bits/channel → 2^24 = 16,777,216 colors = 16M colors (where in CS, 1M = 2^20 = 1,048,576).",
-            ],
-            arNote:
-              "في الجرافيكس والكمبيوتر 1M بتساوي 2^20، فـ 2^24 = 16 × 2^20 = 16M لون! وقطر مكعب الألوان من (0,0,0) لـ (1,1,1) هو درجات الرمادي.",
-            tone: "mint",
-          },
-          {
-            term: "Transparency & Opacity (RGBA Alpha Channel)",
-            badge: "Slide 41",
-            enSummary:
-              "Adding a 4th component A (Alpha) creates RGBA (32-bit = 8 bits each), controlling how opaque or transparent a pixel/surface is.",
-            enBullets: [
-              "A = 1.0 → Completely OPAQUE (solid, blocks everything behind it).",
-              "A = 0.0 → Completely TRANSPARENT (invisible, passes everything behind it).",
-              "0 < A < 1 → Translucent / semi-transparent blending.",
-            ],
-            arNote:
-              "احفظها عشان بتيجي صح وغلط: Alpha = 1.0 يعني مُعتم تماماً (Opaque)، و Alpha = 0.0 يعني شفاف تماماً (Transparent).",
-            tone: "neutral",
           },
         ],
         formulas: [
           {
-            labelEn: "RGB ↔ CMY Conversion & 24-Bit Color Count",
-            formula: "C = 1 − R,  M = 1 − G,  Y = 1 − B   |   2^24 = 2^4 × 2^20 = 16M colors",
+            labelEn: "RGB ↔ CMY Complement Relations",
+            formula: "C = 1 − R   |   M = 1 − G   |   Y = 1 − B",
             workedExampleEn:
-              "Red + Green = Yellow | Red + Blue = Magenta | Green + Blue = Cyan | R + G + B = White",
+              "R + G = Yellow | R + B = Magenta | G + B = Cyan | R + G + B = White",
             arNote:
-              "لون مكمل: لو جمعت أحمر + أخضر على الشاشة يطلع أصفر (Yellow)، وأزرق + أخضر يطلع سماوي (Cyan)، وأحمر + أزرق يطلع بنفسجي (Magenta).",
+              "كل لون في CMY هو مكمّل اللون المقابل ليه في RGB (مثلاً Cyan هو أبيض ناقص الأحمر، يعني أخضر + أزرق).",
           },
         ],
       },
     ],
     examTraps: [
       {
-        en: "Primitive functions specify WHAT to display; Attribute functions specify HOW to display it.",
-        ar: "دايماً بتيجي MCQ: الـ Primitive بتحدد WHAT والـ Attribute بتحدد HOW.",
+        en: "Primitive functions = WHAT to display | Attribute functions = HOW to display it.",
+        ar: "سؤال MCQ مضمون: Primitive بتحدد WHAT و Attribute بتحدد HOW.",
       },
       {
-        en: "Stroke text scales cleanly (geometric); Raster text is faster via Bit-Block Transfer (BitBlt) but looks jagged when scaled.",
-        ar: "لو السؤال سأل مين بيستخدم Bit-Block Transfer؟ الإجابة Raster Text فوراً.",
+        en: "Raster Text uses Bit-Block Transfer (BitBlt) for speed; Stroke Text scales cleanly without pixelation.",
+        ar: "لو السؤال ذكر Bit-Block Transfer اختار Raster Text فوراً.",
       },
       {
-        en: "Additive = RGB (monitors, 0=Black, 1=White) vs. Subtractive = CMY (printers, 0=White, 1=Black).",
-        ar: "خلي بالك من الفرق بين Additive (شاشات) و Subtractive (طابعات) وإحداثيات الأبيض والأسود في كل واحد.",
+        en: "Additive = RGB (monitors: 0=Black, 1=White) vs. Subtractive = CMY (printers: 0=White, 1=Black).",
+        ar: "متلخبطش بين Additive (شاشات) و Subtractive (طابعات)!",
       },
       {
-        en: "Alpha (Opacity): A = 1.0 is OPAQUE, A = 0.0 is TRANSPARENT (NOT the reverse!).",
-        ar: "فخ شائع: A = 1.0 معناها مُعتم (Opaque) مش شفاف!",
+        en: "Alpha (Opacity): A = 1.0 is OPAQUE, A = 0.0 is TRANSPARENT.",
+        ar: "A = 1.0 معناها مُعتم (Opaque) مش شفاف!",
       },
     ],
   },
@@ -549,9 +550,9 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
     titleEn: "Output Primitives & Bresenham's Line Algorithm",
     titleAr: "عناصر الإخراج وخوارزمية Bresenham لرسم الخطوط",
     overviewEn:
-      "Covers point plotting, analog vs. digital raster line drawing, rounding & stair-step jaggies, the Cartesian slope-intercept equation, and the complete derivation, 5-step algorithm, and worked example of Bresenham's integer-only line algorithm.",
+      "Covers point plotting, analog vs. digital raster line drawing, coordinate rounding & stair-step jaggies, the Cartesian slope-intercept equation, and the complete derivation, 5-step algorithm, and worked example of Bresenham's integer-only line algorithm.",
     overviewAr:
-      "ملخص شامل للشابتر الثالث: رسم النقطة والخط، الفرق بين الأجهزة التناظرية والرقمية، ظاهرة الـ Jaggies، اشتقاق خوارزمية Bresenham بالأعداد الصحيحة فقط، والخطوات الخمس مع مثال المحاضرة الكامل.",
+      "كل خطوة وقانون في شابتر 3 وتحتها شرحها بالعامية: رسم النقطة والخط، الـ Jaggies، اشتقاق معامل القرار p_k في Bresenham بالأعداد الصحيحة، والخطوات الخمس.",
     sections: [
       {
         id: "ch3-basics",
@@ -560,46 +561,37 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
         titleAr: "رسم النقطة والشاشات الرقمية وظاهرة الـ Jaggies",
         cards: [
           {
-            term: "Point Plotting & Raster Video Pipeline",
-            badge: "Pages 1–7",
-            enSummary:
-              "Point plotting converts a single coordinate position into device operations (e.g., turning on a CRT electron beam). On raster displays, pixel intensities are stored in the Frame Buffer and read scan-line by scan-line by the Video Controller.",
-            enBullets: [
-              "Analog devices (random-scan/plotters): Smooth continuous deflection voltages → straight smooth lines.",
-              "Digital raster devices: Can only plot discrete INTEGER pixel coordinates → lines must be sampled/approximated.",
-              "Screen coordinates: Scan lines numbered bottom-to-top (or top-to-bottom) and columns numbered left-to-right.",
-            ],
-            arNote:
-              "الأجهزة الـ Analog بترسم خط ناعم مستمر، أما الشاشات الرقمية (Raster) مبتقبلش غير أرقام صحيحة (Integer Pixels) فبنضطر نقرب النقاط.",
-            tone: "brand",
-          },
-          {
-            term: "Coordinate Rounding & Stair-Step Effect (The Jaggies)",
-            badge: "Pages 8–10",
-            enSummary:
-              "Rounding calculated floating-point positions (e.g., (10.48, 20.51) → (10, 21)) causes non-horizontal/non-vertical lines to look like staircases — called the Stair-Step Effect or 'The Jaggies' (Aliasing).",
-            enBullets: [
-              "Horizontal (m = 0), vertical (m = ∞), and 45° (|m| = 1) lines appear perfectly smooth.",
-              "Solutions to reduce Jaggies: (1) Higher screen resolution, (2) Antialiasing (adjusting pixel intensities along line boundaries).",
-            ],
-            arNote:
-              "التقريب لأقرب بكسل صحيح بيعمل تعرجات شبه السلم اسمها Jaggies؛ وبتتعالج إما برفع دقة الشاشة أو بتقنية الـ Antialiasing (تعديل شدة إضاءة البكسلات).",
+            term: "Point Plotting, Analog vs. Digital & Coordinate Rounding",
+            termAr: "رسم النقطة والفرق بين الأنالوج والديجيتال والتقريب",
+            badge: "Pages 1–13",
             tone: "warm",
-          },
-          {
-            term: "Cartesian Slope-Intercept Line Equation",
-            badge: "Pages 11–13",
             enSummary:
-              "A straight line between endpoints (x₁, y₁) and (x₂, y₂) satisfies y = m·x + b.",
-            enBullets: [
-              "Slope: m = Δy / Δx = (y₂ − y₁) / (x₂ − x₁).",
-              "Y-intercept: b = y₁ − m·x₁.",
-              "If |m| < 1: sample at unit x intervals (Δx = 1) → Δy = m·Δx.",
-              "If |m| > 1: sample at unit y intervals (Δy = 1) → Δx = Δy / m.",
+              "Raster displays can only illuminate discrete integer pixel positions, forcing continuous line coordinates to be rounded.",
+            arSummary:
+              "الشاشات الرقمية مبتعرفش غير إحداثيات صحيحة (Integer Pixels)، وده السبب إننا بنحتاج خوارزميات ذكية لرسم الخط.",
+            points: [
+              {
+                en: "Point Plotting & Video Controller: Pixel values are written into the Frame Buffer, then read scan-line by scan-line by the Video Controller to illuminate the screen.",
+                ar: "البرنامج بيكتب قيم البكسلات في الـ Frame Buffer، والـ Video Controller بيقراها صف بصف عشان يعرضها على الشاشة.",
+              },
+              {
+                en: "Analog vs. Digital Devices: Analog devices apply smooth continuous deflection voltages (smooth lines); digital raster devices plot discrete integer pixels.",
+                ar: "الأجهزة التناظرية بترسم خط ناعم مستمر بالفولت، أما الشاشات الرقمية بترسم نقط متقطعة على شبكة أعداد صحيحة.",
+              },
+              {
+                en: "Stair-Step Effect ('The Jaggies'): Rounding floating-point coordinates (e.g., (10.48, 20.51) → (10, 21)) makes oblique lines look like staircases.",
+                ar: "تقريب الأرقام العشرية لأقرب بكسل صحيح بيعمل تعرجات شبه السلم اسمها Jaggies (بتختفي بس في الخط الأفقي والرأسي والـ 45 درجة).",
+                tag: "Exam Focus",
+              },
+              {
+                en: "Smoothing Raster Lines: Reduced by increasing screen resolution or applying Antialiasing (adjusting pixel intensities along boundaries).",
+                ar: "علاج الـ Jaggies بحاجتين: يا نرفع الـ Resolution، يا نستخدم Antialiasing (تعديل درجات إضاءة البكسلات على الحواف).",
+              },
+              {
+                en: "Cartesian Equation (y = m·x + b): Slope m = Δy/Δx, intercept b = y₁ − m·x₁ — slow in hardware because it needs floating-point multiplication/division and rounding every step.",
+                ar: "المعادلة الديكارتية المباشرة بطيئة لأنها بتحتاج ضرب وقسمة كسور وتقريب في كل بكسل.",
+              },
             ],
-            arNote:
-              "المعادلة الديكارتية المباشرة بتحتاج ضرب وقسمة كسور (Floating-Point) وتقريب في كل خطوة، وده بطيء جداً في الهاردوير!",
-            tone: "neutral",
           },
         ],
       },
@@ -609,68 +601,68 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
         titleEn: "Bresenham's Line Algorithm: Core Idea & Derivation",
         titleAr: "فكرة واشتقاق خوارزمية Bresenham للأعداد الصحيحة",
         flowBanner: {
-          labelEn: "Why Bresenham Beats Direct / DDA Methods",
+          labelEn: "Why Bresenham Is Fast & Hardware-Friendly",
           steps: [
             "Zero Floating-Point Math",
             "Integer Addition & Subtraction Only",
-            "Bit-Shift Multiplication (×2)",
-            "Fastest Hardware Rasterization",
+            "×2 via Bit-Shift",
+            "Exact Nearest Pixel Choice",
           ],
           captionAr:
-            "الميزة الجوهرية لـ Bresenham: كلها جمع وطرح أعداد صحيحة فقط (والضرب في 2 بيتم بـ Bit Shift)، مفيش أي كسور أو تقريب!",
+            "خوارزمية Bresenham كلها جمع وطرح أعداد صحيحة فقط (والضرب في 2 بيحصل بـ Bit Shift) من غير أي كسور أو تقريب!",
         },
         cards: [
           {
-            term: "Candidate Pixels & Vertical Separations (d₁, d₂)",
-            badge: "Pages 15–21",
-            enSummary:
-              "For positive slope 0 < m < 1, after plotting (x_k, y_k), we step to x_k + 1 and choose between ONLY two candidate pixels: lower (x_k + 1, y_k) or upper (x_k + 1, y_k + 1).",
-            enBullets: [
-              "True y on line at x_k + 1: y = m(x_k + 1) + b.",
-              "Lower distance: d₁ = y − y_k = m(x_k + 1) + b − y_k.",
-              "Upper distance: d₂ = (y_k + 1) − y = y_k + 1 − m(x_k + 1) − b.",
-              "If (d₁ − d₂) < 0 → d₁ < d₂ → lower pixel y_k is closer. Otherwise → upper pixel y_k + 1 is closer.",
-            ],
-            arNote:
-              "عند كل عمود x_k + 1 عندك اختيارين بس: يا تفضل على نفس الـ y_k يا تطلع خطوة y_k + 1؛ بنقارن المسافتين d₁ و d₂ عشان نختار الأقرب للخط الحقيقي.",
+            term: "Step-by-Step Derivation of p_k and p_(k+1) (for 0 < m < 1)",
+            termAr: "خطوات اشتقاق معامل القرار p_k في الامتحان",
+            badge: "Pages 14–26",
             tone: "brand",
-          },
-          {
-            term: "Eliminating Fractions via Decision Parameter p_k",
-            badge: "Pages 22–24",
             enSummary:
-              "Because m = Δy / Δx introduces division, Bresenham multiplies (d₁ − d₂) by Δx (> 0), keeping the exact same sign while turning every term into an integer!",
-            enBullets: [
-              "p_k = Δx(d₁ − d₂) = 2Δy·x_k − 2Δx·y_k + c, where constant c = 2Δy + Δx(2b − 1).",
-              "Taking p_(k+1) − p_k cancels the constant c completely!",
-              "p_(k+1) = p_k + 2Δy − 2Δx(y_(k+1) − y_k), where (y_(k+1) − y_k) is either 0 or 1.",
-              "Initial parameter at (x₀, y₀): p₀ = 2Δy − Δx.",
+              "At each column x_k + 1, we compare distances d₁ (lower pixel y_k) and d₂ (upper pixel y_k + 1) and eliminate fractions by multiplying by Δx.",
+            arSummary:
+              "في كل خطوة بنختار بين بكسلين بس (نفس y_k أو اللي فوقه y_k + 1) حسب إشارة معامل القرار p_k:",
+            points: [
+              {
+                en: "Step 1 — True y & Separations: y = m(x_k + 1) + b; lower separation d₁ = y − y_k; upper separation d₂ = (y_k + 1) − y.",
+                ar: "d₁ هي المسافة للبكسل السفلي، و d₂ هي المسافة للبكسل العلوي؛ لو d₁ − d₂ < 0 يبقى السفلي أقرب.",
+              },
+              {
+                en: "Step 2 — Integer Decision Parameter p_k: Multiply (d₁ − d₂) by Δx (> 0) to remove division: p_k = 2Δy·x_k − 2Δx·y_k + c, where c = 2Δy + Δx(2b − 1).",
+                ar: "ضربنا في Δx الموجب عشان نلغي الكسر m = Δy/Δx من غير ما نغيّر الإشارة، فتحولت المعادلة كلها لأعداد صحيحة.",
+                tag: "Derivation",
+              },
+              {
+                en: "Step 3 — Recursive Update (Eliminating c): Subtracting p_(k+1) − p_k cancels constant c: p_(k+1) = p_k + 2Δy − 2Δx(y_(k+1) − y_k).",
+                ar: "لما طرحنا p_(k+1) − p_k الثابت c طار تماماً! و (y_(k+1) − y_k) يا إما 0 أو 1.",
+                tag: "Derivation",
+              },
+              {
+                en: "Step 4 — Initial Value p₀: Evaluated at starting point (x₀, y₀) → p₀ = 2Δy − Δx.",
+                ar: "أول معامل قرار بنبدأ بيه دايماً: p₀ = 2Δy − Δx.",
+                tag: "Formula",
+              },
+              {
+                en: "Step 5 — Decision Rule (Repeat Δx times): If p_k < 0 → plot (x_k+1, y_k) & add 2Δy. If p_k ≥ 0 → plot (x_k+1, y_k+1) & add (2Δy − 2Δx).",
+                ar: "القاعدة الذهبية للجدول: سالب → ثبّت y واجمع 2Δy؛ صفر أو موجب → زوّد y+1 واجمع (2Δy − 2Δx).",
+                tag: "Exam Focus",
+              },
             ],
-            arNote:
-              "العبقرية هنا: ضربنا في Δx عشان نلغي القسمة، وطرحنا p_(k+1) − p_k عشان الثابت c يطير تماماً وتبقى كل خطوة مجرد جمع رقمين صحيحين!",
-            tone: "mint",
           },
         ],
         formulas: [
           {
-            labelEn: "Bresenham's Line Algorithm Formulas (0 < m < 1)",
+            labelEn: "Bresenham's Line Algorithm Summary Formulas (0 < m < 1)",
             formula:
-              "p₀ = 2Δy − Δx   |   If p_k < 0 → (x_k+1, y_k), p_(k+1) = p_k + 2Δy   |   If p_k ≥ 0 → (x_k+1, y_k+1), p_(k+1) = p_k + 2Δy − 2Δx",
+              "p₀ = 2Δy − Δx  |  p_k < 0 ⇒ (x+1, y), p + 2Δy  |  p_k ≥ 0 ⇒ (x+1, y+1), p + 2Δy − 2Δx",
             workedExampleEn:
-              "Lecture Example: (20, 10) → (30, 18) ⇒ Δx = 10, Δy = 8, 2Δy = 16, 2Δy − 2Δx = −4, p₀ = 16 − 10 = 6 (10 iterations: k = 0..9).",
+              "(20, 10) → (30, 18): Δx = 10, Δy = 8, 2Δy = 16, 2Δy − 2Δx = −4, p₀ = 6 (10 steps: k = 0..9).",
             arNote:
-              "للتدريب العملي وحل أي مسألة بالجدول والرسم، افتح بونص «شرح مسائل شابتر 3 و 4» جوا تاب الشرح التفاعلي!",
+              "لحل كل حالات المسائل (بما فيها الميل الحاد m > 1 والميل السالب) افتح بونص «شرح مسائل شابتر 3 و 4» جوا تاب الشرح التفاعلي.",
           },
         ],
-      },
-      {
-        id: "ch3-algorithm",
-        number: "03",
-        titleEn: "5-Step Algorithm & Lecture Example Summary",
-        titleAr: "خطوات الخوارزمية الخمسة وملخص مثال المحاضرة",
         table: {
           titleEn: "Official Lecture Example: (20, 10) → (30, 18) — First 5 Steps",
-          titleAr: "أول 5 خطوات من مثال المحاضرة الرسمي (Δx=10, Δy=8, p₀=6, 2Δy=16, 2Δy−2Δx=−4)",
+          titleAr: "أول 5 خطوات من مثال المحاضرة الرسمي",
           headers: [
             { label: "k", dir: "ltr" },
             { label: "p_k", dir: "ltr" },
@@ -720,7 +712,7 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
     ],
     examTraps: [
       {
-        en: "Always start from the LEFT endpoint (smaller x). If given (15,10) and (9,6), swap first to start at (9,6).",
+        en: "Always start from the LEFT endpoint (smaller x). If given (15, 10) and (9, 6), swap first to start at (9, 6).",
         ar: "لازم تبدأ دايماً من النقطة اليسرى (الأصغر في x) قبل ما تحسب Δx و Δy.",
       },
       {
@@ -728,12 +720,12 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
         ar: "فخ الصفر: p_k = 0 بيتبع حالة الموجب (p_k ≥ 0) مش السالب!",
       },
       {
-        en: "Bresenham requires ONLY integer addition, subtraction, and multiplication by 2 (bit-shift) — NO floating-point division or rounding.",
-        ar: "سؤال نظري مضمون: خوارزمية Bresenham تستخدم عمليات أعداد صحيحة فقط بدون أي Floating-Point.",
+        en: "Bresenham uses ONLY integer addition, subtraction, and multiplication by 2 (bit-shift) — NO floating-point operations.",
+        ar: "سؤال نظري مضمون: خوارزمية Bresenham بتستخدم أعداد صحيحة فقط بدون أي Floating-Point.",
       },
       {
-        en: "For steep lines (|m| > 1), swap the roles of x and y: step y by +1, p₀ = 2Δx − Δy.",
-        ar: "لو الميل أكبر من 1 (Δy > Δx) بنبدّل دور x و y في القوانين.",
+        en: "For steep lines (|m| > 1), swap x and y roles: step y by +1 and use p₀ = 2Δx − Δy.",
+        ar: "لو الميل أكبر من 1 (Δy > Δx) بنبدّل دور x و y في كل القوانين.",
       },
     ],
   },
@@ -748,126 +740,115 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
     titleEn: "Circle-Generating & Midpoint Algorithm",
     titleAr: "خوارزمية Midpoint لرسم الدوائر",
     overviewEn:
-      "Covers the mathematical definition of a circle, drawbacks of Cartesian (Eq 1) and Polar (Eq 2) methods, 4-way and 8-way octant symmetry, and the complete derivation, 6-step algorithm, comparison with Bresenham's line algorithm, and worked examples (r=10, r=8, r=5) of the Midpoint Circle Algorithm.",
+      "Covers the circle definition, drawbacks of Cartesian (Eq 1) and Polar (Eq 2) methods, 8-way octant symmetry, and the complete derivation, 6-step algorithm, comparison with Bresenham's line algorithm, and worked examples (r=10, r=8, r=5).",
     overviewAr:
-      "ملخص شامل للشابتر الرابع: تعريف الدائرة، عيوب المعادلة الديكارتية والقطبية، التماثل الثماني (8-Way Symmetry)، خوارزمية Midpoint Circle الكاملة بالخطوات الستة، ومقارنة مباشرة بينها وبين خوارزمية Bresenham للخط.",
+      "كل سطر في شابتر 4 وتحته شرحه بالعامية: المعادلة الديكارتية والقطبية، التماثل الثماني، خوارزمية Midpoint Circle بالخطوات الستة، ومقارنتها بـ Bresenham.",
     sections: [
       {
         id: "ch4-equations",
         number: "01",
-        titleEn: "Circle Definition, Cartesian (Eq 1) vs. Polar (Eq 2)",
-        titleAr: "تعريف الدائرة والمعادلة الديكارتية والقطبية",
-        cards: [
-          {
-            term: "Definition of a Circle & Cartesian Equation (1)",
-            badge: "Pages 1–7",
-            enSummary:
-              "A circle is the set of points all at a given distance r (radius) from a center position (x_c, y_c): (x − x_c)² + (y − y_c)² = r².",
-            enBullets: [
-              "Solving for y: y = y_c ± √(r² − (x − x_c)²), stepping x from x_c − r to x_c + r.",
-              "Two Major Drawbacks of Cartesian Method: (1) Heavy computation (squaring + square root at every step), (2) Non-uniform spacing between plotted pixels (bunched at top, big gaps near sides where slope approaches ∞).",
-            ],
-            arNote:
-              "عيوب المعادلة الديكارتية حاجتين بيتسألوا دايماً: (1) حسابات الجذر التربيعي البطيئة، (2) تباعد غير منتظم بين النقاط (زحمة فوق وفراغات واسعة على الجنب).",
-            tone: "warm",
-          },
-          {
-            term: "Parametric Polar Form (Equation 2) & Step Size 1/r",
-            badge: "Pages 8–9",
-            enSummary:
-              "Expressing the circle with angle θ eliminates unequal spacing: x = x_c + r·cos(θ), y = y_c + r·sin(θ).",
-            enBullets: [
-              "To plot connected adjacent pixels, set angular step size Δθ = 1 / r radians (so arc length r·Δθ = 1 pixel).",
-              "Drawback: Still computationally expensive because cos(θ) and sin(θ) are slow floating-point trigonometric functions.",
-            ],
-            arNote:
-              "المعادلة القطبية بتحل مشكلة التباعد غير المنتظم باختيار خطوة زاوية Δθ = 1/r، لكنها لسه بطيئة بسبب حسابات sin و cos.",
-            tone: "brand",
-          },
-        ],
-      },
-      {
-        id: "ch4-symmetry",
-        number: "02",
-        titleEn: "8-Way Octant Symmetry (8× Speedup)",
-        titleAr: "التماثل الثماني (توفير 8 أضعاف الحسابات)",
+        titleEn: "Circle Equations (Cartesian vs. Polar) & 8-Way Symmetry",
+        titleAr: "معادلات الدائرة والتماثل الثماني",
         flowBanner: {
-          labelEn: "Computing Only 1 Octant (45°: x = 0 to x = y)",
+          labelEn: "8-Way Octant Symmetry (8× Speedup)",
           steps: [
-            "Compute 1 point (x, y) in Octant 1",
-            "Mirror across y = x → (y, x)",
-            "Flip signs (±x, ±y) & (±y, ±x)",
-            "All 8 Octants Plotted!",
+            "Compute 1 Octant (45°: x = 0 to x = y)",
+            "Reflect across y = x → (y, x)",
+            "Flip Signs (±x, ±y) & (±y, ±x)",
+            "All 8 Octants Done!",
           ],
           captionAr:
-            "بنحسب ثُمن واحد بس من الدائرة (من x=0 لحد x=y يعني زاوية 45 درجة) ونستنتج الـ 7 أثمان الباقية بالتماثل بدون أي حسابات إضافية!",
+            "بنحسب ثُمن واحد بس من الدائرة (زاوية 45 درجة من x=0 لحد x=y) ونستنتج الـ 7 أثمان الباقية بدون أي حسابات إضافية!",
         },
         cards: [
           {
-            term: "The 8 Symmetric Points (Around Origin & Shifted Center)",
-            badge: "Pages 10–15",
+            term: "Cartesian Equation (1), Polar Form (2) & Octant Symmetry",
+            termAr: "المعادلة الديكارتية والقطبية والتماثل الثماني",
+            badge: "Pages 1–16",
+            tone: "warm",
             enSummary:
-              "Any point (x, y) on a circle centered at (0, 0) immediately determines 7 other points across all 8 octants.",
-            enBullets: [
-              "Origin (0, 0): (±x, ±y) and (±y, ±x) → 8 points total.",
-              "Shifted center (x_c, y_c): (x_c ± x, y_c ± y) and (x_c ± y, y_c ± x).",
-              "Special boundary cases: Points on axes (x = 0 or y = 0) or on the diagonal (x = y) generate ONLY 4 distinct points!",
-              "First-octant slope ranges smoothly from 0 (at (0, r)) to −1 (at x = y).",
+              "Direct Cartesian and Polar circle equations are too slow for raster hardware, which motivates 8-way symmetry and incremental integer arithmetic.",
+            arSummary:
+              "المعادلة الديكارتية والقطبية بطيئتين على الهاردوير، وده اللي خلّانا نستخدم التماثل الثماني وخوارزمية Midpoint.",
+            points: [
+              {
+                en: "Cartesian Equation (1): (x − x_c)² + (y − y_c)² = r² → y = y_c ± √(r² − (x − x_c)²).",
+                ar: "دي المعادلة الديكارتية اللي بنعوّض فيها بـ x ونحسب y بالجذر التربيعي.",
+              },
+              {
+                en: "Two Drawbacks of Cartesian Method: (1) Heavy square-root computations at every step, (2) Non-uniform spacing between pixels (bunched at top, gaps on sides).",
+                ar: "عيوب الطريقة الديكارتية حاجتين بيتسألوا دايماً: الجذر التربيعي التقيل، وتباعد غير منتظم بين البكسلات.",
+                tag: "Exam Focus",
+              },
+              {
+                en: "Polar Parametric Form (Equation 2): x = x_c + r·cos(θ), y = y_c + r·sin(θ) with angular step size Δθ = 1 / r radians — fixes spacing, but cos/sin are still slow!",
+                ar: "المعادلة القطبية بتحل مشكلة التباعد بخطوة زاوية Δθ = 1/r، لكن حسابات sin و cos لسه تقيلة على المعالج.",
+                tag: "Formula",
+              },
+              {
+                en: "8-Way Symmetry Rule: Every general point (x, y) yields 8 points: (±x, ±y) and (±y, ±x); shifted by (+x_c, +y_c). Boundary points (x=0, y=0, or x=y) yield only 4 distinct points!",
+                ar: "أي نقطة عادية بتطلع 8 نقاط؛ لكن لو على المحور (زي (0,10)) أو على القطر (زي (7,7)) بتطلع 4 نقاط مميزة بس!",
+                tag: "Exam Trap",
+              },
+              {
+                en: "First-Octant Slope Range: As we move from top (0, r) to diagonal (x = y), the circle slope varies smoothly from 0 to −1.",
+                ar: "في الثُمن الأول ميل الدائرة بيبدأ من 0 فوق خالص لحد −1 عند القطر x = y.",
+              },
             ],
-            arNote:
-              "أي نقطة عامة تطلع 8 نقاط؛ لكن لو على المحور زي (0,10) أو على القطر زي (7,7) بتطلع 4 نقاط بس عشان التكرار. وميل الثمن الأول بيتراوح من 0 إلى −1.",
-            tone: "mint",
           },
         ],
       },
       {
         id: "ch4-midpoint",
-        number: "03",
-        titleEn: "Midpoint Circle Algorithm & Line vs. Circle Comparison",
-        titleAr: "خوارزمية Midpoint Circle ومقارنتها بـ Bresenham للخط",
+        number: "02",
+        titleEn: "Midpoint Circle Algorithm (6 Steps) & Comparison",
+        titleAr: "خوارزمية Midpoint Circle بالخطوات الستة ومقارنتها بالخط",
         cards: [
           {
-            term: "Circle Function f_circle(x, y) & Midpoint Test",
-            badge: "Pages 17–20",
-            enSummary:
-              "To avoid square roots completely, define f_circle(x, y) = x² + y² − r² and test its sign at the midpoint M = (x_k + 1, y_k − 1/2).",
-            enBullets: [
-              "f_circle(x, y) < 0 → point is INSIDE the circle boundary.",
-              "f_circle(x, y) = 0 → point is ON the circle boundary.",
-              "f_circle(x, y) > 0 → point is OUTSIDE the circle boundary.",
-              "Decision parameter p_k = f_circle(x_k + 1, y_k − 1/2): if p_k < 0 midpoint is inside → choose upper pixel y_k; if p_k ≥ 0 midpoint is on/outside → choose lower pixel y_k − 1.",
-            ],
-            arNote:
-              "بنختبر نقطة المنتصف بين y_k و y_k − 1: لو p_k سالب يبقى المنتصف جوه الدائرة فنفضل على y_k؛ ولو صفر أو موجب يبقى بره/على الدائرة فننزل لـ y_k − 1.",
-            tone: "brand",
-          },
-          {
-            term: "The 6-Step Midpoint Circle Algorithm",
-            badge: "Pages 21–23",
-            enSummary:
-              "Uses incremental integer arithmetic only — updating 2x and 2y by simple +2 and −2 additions each step.",
-            enBullets: [
-              "Step 1: Input r and (x_c, y_c); start at origin point (x₀, y₀) = (0, r).",
-              "Step 2: Initial parameter p₀ = 5/4 − r (rounded to 1 − r for integer radius r).",
-              "Step 3: If p_k < 0 → next (x_k+1, y_k), p_(k+1) = p_k + 2x_(k+1) + 1. Else → next (x_k+1, y_k−1), p_(k+1) = p_k + 2x_(k+1) + 1 − 2y_(k+1).",
-              "Step 4: Plot symmetry points in the other 7 octants.",
-              "Step 5: Shift each pixel (x, y) by (+x_c, +y_c).",
-              "Step 6: Repeat Steps 3–5 until x ≥ y.",
-            ],
-            arNote:
-              "خلي بالك: 2x_(k+1) و 2y_(k+1) بتوع النقطة الجديدة (بعد ما زودت x أو نقصت y)! وبتقف أول ما تلاقي x ≥ y.",
+            term: "Circle Function f_circle(x, y) & The 6-Step Algorithm",
+            termAr: "دالة الدائرة والخطوات الستة للخوارزمية",
+            badge: "Pages 17–27",
             tone: "mint",
+            enSummary:
+              "Midpoint Circle eliminates square roots by testing f_circle(x, y) = x² + y² − r² at the midpoint (x_k + 1, y_k − 1/2) using integer increments.",
+            arSummary:
+              "عشان نلغي الجذر التربيعي بنختبر إشارة دالة الدائرة عند نقطة المنتصف بين y_k و y_k − 1:",
+            points: [
+              {
+                en: "Sign of f_circle(x, y) = x² + y² − r²: Negative (< 0) = INSIDE circle; Zero (= 0) = ON boundary; Positive (> 0) = OUTSIDE circle.",
+                ar: "لو الناتج سالب يبقى النقطة جوه الدائرة، لو صفر يبقى على المحيط بالظبط، لو موجب يبقى بره الدائرة.",
+                tag: "Exam Focus",
+              },
+              {
+                en: "Step 1 — Origin Setup: Input radius r and center (x_c, y_c); ALWAYS start computing around origin at (x₀, y₀) = (0, r).",
+                ar: "ابدأ دايماً من أعلى نقطة عند نقطة الأصل (0, r) — إوعى تدخّل المركز (x_c, y_c) في الحسابات!",
+              },
+              {
+                en: "Step 2 — Initial Parameter p₀: p₀ = 5/4 − r (rounded to integer p₀ = 1 − r whenever r is an integer).",
+                ar: "أول قيمة لـ p₀ بتساوي 1 − r لو نصف القطر رقم صحيح (أو 5/4 − r لو كسر أو مطلوب بالنص).",
+                tag: "Formula",
+              },
+              {
+                en: "Step 3 — Decision Test: If p_k < 0 → next (x_k+1, y_k) and p_(k+1) = p_k + 2x_(k+1) + 1. If p_k ≥ 0 → next (x_k+1, y_k−1) and p_(k+1) = p_k + 2x_(k+1) + 1 − 2y_(k+1).",
+                ar: "لو p_k سالب ثبّت y واجمع 2x_(k+1)+1؛ لو صفر أو موجب نزّل y−1 واطرح كمان 2y_(k+1) — خلي بالك بتستخدم x,y الجداد!",
+                tag: "Exam Favorite",
+              },
+              {
+                en: "Steps 4, 5 & 6 — Symmetry, Shift & Stop: Mirror into all 8 octants, shift every pixel by (+x_c, +y_c), and STOP as soon as x ≥ y.",
+                ar: "طلّع الـ 7 نقاط المتماثلة، اجمع المركز (+x_c, +y_c) في الآخر، وقف اللوب أول ما تلاقي x ≥ y.",
+              },
+            ],
           },
         ],
         formulas: [
           {
-            labelEn: "Midpoint Circle Decision Parameter Update Rules",
+            labelEn: "Midpoint Circle Complete Update Formulas",
             formula:
-              "p₀ = 1 − r (or 5/4 − r)  |  p_k < 0 ⇒ p_(k+1) = p_k + 2x_(k+1) + 1  |  p_k ≥ 0 ⇒ p_(k+1) = p_k + 2x_(k+1) + 1 − 2y_(k+1)",
+              "p₀ = 1 − r (or 5/4 − r)  |  p_k < 0 ⇒ p + 2x_(k+1) + 1  |  p_k ≥ 0 ⇒ p + 2x_(k+1) + 1 − 2y_(k+1)",
             workedExampleEn:
-              "Lecture & Midterm Example r = 10 at (0,0): Start (0,10), p₀ = −9 → (1,10), (2,10), (3,10), (4,9), (5,9), (6,8), (7,7) — stops at x = y = 7!",
+              "r = 10 at (0,0): Start (0,10), p₀ = −9 → (1,10), (2,10), (3,10), (4,9), (5,9), (6,8), (7,7) — stops at x = y = 7.",
             arNote:
-              "تقدر تراجع الجدول الكامل لـ r=10 و r=8 و r=5 و r=6 مع مركز مزاح في بونص «شرح مسائل شابتر 3 و 4» داخل تاب الشرح التفاعلي.",
+              "راجع الجدول الكامل لـ r=10 و r=8 و r=5 والمركز المزاح (20,30) في بونص «شرح مسائل شابتر 3 و 4» جوا تاب الشرح التفاعلي.",
           },
         ],
         table: {
@@ -882,7 +863,7 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
             [
               { text: "Starting Point", dir: "ltr" },
               { text: "Left endpoint (x₀, y₀)", dir: "ltr" },
-              { text: "Top of circle (0, r) around origin", dir: "ltr", highlight: true },
+              { text: "Top point (0, r) at origin", dir: "ltr", highlight: true },
             ],
             [
               { text: "Initial p₀", dir: "ltr" },
@@ -895,14 +876,14 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
               { text: "y DECREASES: y_k − 1", dir: "ltr", highlight: true },
             ],
             [
-              { text: "Update Increment", dir: "ltr" },
+              { text: "Increment Terms", dir: "ltr" },
               { text: "Constant (2Δy or 2Δy − 2Δx)", dir: "ltr" },
-              { text: "Dynamic (depends on 2x_(k+1) and 2y_(k+1))", dir: "ltr" },
+              { text: "Dynamic (2x_(k+1) and 2y_(k+1))", dir: "ltr" },
             ],
             [
               { text: "Stopping Condition", dir: "ltr" },
-              { text: "Repeat Δx times (reach x_end)", dir: "ltr" },
-              { text: "Stop when x ≥ y (end of Octant 1)", dir: "ltr", highlight: true },
+              { text: "Repeat Δx times", dir: "ltr" },
+              { text: "Stop when x ≥ y", dir: "ltr", highlight: true },
             ],
           ],
         },
@@ -911,19 +892,19 @@ export const CG_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
     examTraps: [
       {
         en: "Always compute Midpoint Circle around origin (0, 0) FIRST, then add (+x_c, +y_c) at the end — NEVER plug (x_c, y_c) into p_k!",
-        ar: "أخطر غلطة في الميدتيرم: إياك تعوّض بالمركز (x_c, y_c) جوا معادلة p_k؛ احسب عند (0,0) وبعدين اجمع المركز.",
+        ar: "أخطر غلطة في الميدتيرم: احسب الجدول عند (0,0) الأول، وفي الآخر خالص اجمع المركز (+x_c, +y_c).",
       },
       {
-        en: "In p_(k+1) = p_k + 2x_(k+1) + 1 (− 2y_(k+1)), use the NEW coordinates x_(k+1) and y_(k+1), NOT the old x_k, y_k.",
-        ar: "دايماً عوّض بالإحداثيات الجديدة x_(k+1) و y_(k+1) بعد ما تحدد النقطة الجديدة.",
+        en: "Always use the NEW coordinates 2x_(k+1) and 2y_(k+1) when updating p_(k+1).",
+        ar: "دايماً عوّض بإحداثيات النقطة الجديدة (بعد ما زوّدت x أو نقصت y) مش القديمة!",
       },
       {
-        en: "When p_k ≥ 0 in Circle algorithm, y DECREASES (y_k − 1), opposite to Line algorithm where y increases (y_k + 1).",
-        ar: "في الدائرة y بتنقص (−1) لما p_k ≥ 0 لأننا بادئين من أعلى الدائرة (0, r) ونازلين للقطر y = x.",
+        en: "When p_k ≥ 0 in Circle algorithm, y DECREASES (y_k − 1), opposite to Bresenham Line where y increases.",
+        ar: "في الدائرة y بتنقص (−1) لما p_k ≥ 0 لأننا نازلين من فوق (0, r) لحد القطر x = y.",
       },
       {
-        en: "Angular step size in Polar form is Δθ = 1 / r (radians), and first-octant slope goes from 0 to −1.",
-        ar: "سؤالين MCQ مضمونين: الخطوة الزاوية 1/r، وميل الثمن الأول من 0 إلى −1.",
+        en: "Polar step size Δθ = 1 / r (radians), and first-octant slope ranges from 0 to −1.",
+        ar: "سؤالين MCQ مضمونين: الخطوة الزاوية 1/r، وميل الثُمن الأول من 0 إلى −1.",
       },
     ],
   },
