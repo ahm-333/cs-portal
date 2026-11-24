@@ -4,6 +4,7 @@ import type {
   LessonInteractive,
   Question,
 } from "@/types/database";
+import { CG_QUESTIONS } from "./chapters/cg-questions";
 import { OS_QUESTIONS } from "./chapters/os-questions";
 import { OS_SUMMARIES } from "./chapters/os-summaries";
 
@@ -28,6 +29,10 @@ const LESSON_IDS = {
   OS_CH1: "22222222-2222-4222-8222-222222222301",
   OS_CH2: "22222222-2222-4222-8222-222222222302",
   OS_CH3: "22222222-2222-4222-8222-222222222303",
+  CG_CH1: "22222222-2222-4222-8222-222222222601",
+  CG_CH2: "22222222-2222-4222-8222-222222222602",
+  CG_CH3: "22222222-2222-4222-8222-222222222603",
+  CG_CH4: "22222222-2222-4222-8222-222222222604",
 } as const;
 
 const INTERACTIVE_IDS = {
@@ -2172,7 +2177,7 @@ export const MOCK_COURSES: Course[] = [
     title: "الرسوميات بالحاسب",
     title_en: "Computer Graphics",
     description:
-      "أساسيات الرسوميات ثنائية وثلاثية الأبعاد: خوارزميات رسم الخطوط والدوائر (DDA & Bresenham)، التحويلات الهندسية بالمصفوفات، القص (Clipping)، والإسقاط.",
+      "الشرح التفاعلي الكامل لمقرر Computer Graphics (Chapters 1–4): الأساسيات ونماذج الألوان RGB/CMY، خوارزمية Bresenham لرسم الخطوط، وخوارزمية Midpoint للدوائر مع بنك 85 سؤال شيت وميدتيرم وحاسبة مسائل.",
     thumbnail_url: null,
     year_level: 3,
     term: 1,
@@ -2181,21 +2186,22 @@ export const MOCK_COURSES: Course[] = [
     is_published: true,
     accent: "#7c3aed",
     icon: "box",
-    duration_minutes: 0,
+    duration_minutes: 95,
     site_url: "cs-portal.app/courses/computer-graphics",
     exam_tip:
-      "جاري تجهيز مسائل التحويلات الهندسية وخوارزميات DDA و Bresenham لهذا المقرر.",
+      "💡 فكرة امتحان مهمة: خوارزمية Bresenham للخط تبدأ بـ p₀ = 2Δy − Δx وتزيد y عند p_k ≥ 0، بينما Midpoint للدائرة تبدأ من (0, r) بـ p₀ = 1 − r وتنقص y عند p_k ≥ 0.",
     cheat_sheet: {
-      headers: ["الخوارزمية / التحويل", "الاستخدام", "ملاحظة سريعة"],
+      headers: ["الشابتر / الخوارزمية", "القانون الأساسي", "ملاحظة امتحان سريعة"],
       rows: [
-        ["DDA / Bresenham", "رسم الخطوط (Rasterization)", "Bresenham يستخدم عمليات أعداد صحيحة فقط"],
-        ["2D Transformations", "Translate · Scale · Rotate", "باستخدام Homogeneous Coordinates (3×3)"],
-        ["Cohen-Sutherland", "قص الخطوط (Line Clipping)", "تحديد الـ Region Code بـ 4-bit"],
+        ["Ch 1 · Frame Buffer & Eye", "Colors = 2^n · Visible 350–780 nm", "Full-Color = 24+ bits · Cones = Photopic (Color)"],
+        ["Ch 2 · API & Color Models", "RGB (Additive) vs CMY (Subtractive)", "Primitive = What · Attribute = How · A=1.0 Opaque"],
+        ["Ch 3 · Bresenham Line", "p₀ = 2Δy − Δx (Integer Only)", "عند p_k ≥ 0 نزوّد y+1 ونجمع 2Δy − 2Δx"],
+        ["Ch 4 · Midpoint Circle", "p₀ = 1 − r (8-Way Symmetry)", "احسب عند (0,0) الأول وقف عند x ≥ y ثم اجمع (+x_c, +y_c)"],
       ],
     },
     lab_type: "binary-search",
-    lab_title: "معمل التحويلات والرسوميات (قريباً)",
-    lab_hint: "سيتم إضافة المعامل التفاعلية مع رفع محاضرات المقرر.",
+    lab_title: "شرح مسائل شابتر 3 و 4 وحاسبة Bresenham & Midpoint",
+    lab_hint: "افتح تبويب «الشرح التفاعلي» واضغط على «شرح مسائل شابتر 3 و 4 (بونص)» لتجربة الحاسبة والـ 16 حالة محلولة.",
     created_at: "2025-09-06T10:00:00Z",
   },
 ];
@@ -2880,6 +2886,192 @@ void insertionSort(vector<int>& arr) {
     ],
     created_at: "2025-09-03T10:30:00Z",
   },
+
+  // ---------- Course 4: Computer Graphics (CS-321 — Chapters 1 to 4 + Bonus Problems + 85 Official Questions) ----------
+  {
+    id: LESSON_IDS.CG_CH1,
+    course_id: COURSE_IDS.COMPUTER_GRAPHICS,
+    section_title: "Chapter 1 · Introduction to Computer Graphics",
+    title: "Chapter 1: Introduction to Computer Graphics (مقدمة في الرسوميات)",
+    title_en: "Chapter 1: Introduction to Computer Graphics",
+    order_index: 1,
+    is_free_preview: true,
+    duration_minutes: 25,
+    video_provider: "youtube",
+    video_id: "26QPDBe-NB8",
+    chapters: [
+      {
+        time: "00:00",
+        name: "المجالات الأربعة للرسوميات و CAD و GUI Icons",
+        pct: "30%",
+        visual: "Display · Design (CAD) · Simulation · User Interfaces",
+      },
+      {
+        time: "09:00",
+        name: "الهاردوير، Frame Buffer، Bit Depth وشاشة CRT",
+        pct: "65%",
+        visual: "Colors = 2^n  |  Full-Color ≥ 24-bit RGB  |  DAC → CRT",
+      },
+      {
+        time: "17:00",
+        name: "الضوء، Pinhole Camera، العين البشرية والـ API",
+        pct: "95%",
+        visual: "350–780 nm  |  Rods (Scotopic) vs Cones (Photopic)",
+      },
+    ],
+    key_code: null,
+    exam_tip:
+      "💡 فكرة امتحان: Overdetermined يعني قيود زيادة (لا يوجد حل) و Underdetermined يعني حلول كتير؛ الطيف المرئي 350–780 nm؛ والـ Cones مسؤولة عن الألوان (Photopic).",
+    summary_md:
+      "ملخص شامل لـ Chapter 1: المجالات الأربعة للرسوميات، معمارية الهاردوير والـ Frame Buffer، كاميرا الثقب والعين البشرية، والـ Synthetic-Camera API.",
+    resources: [
+      {
+        title: "OpenGL Official Documentation",
+        url: "https://www.opengl.org/",
+        type: "article",
+        description: "المرجع الرسمي لمفاهيم Synthetic-Camera API والرسوميات ثلاثية الأبعاد.",
+      },
+    ],
+    created_at: "2025-09-06T10:10:00Z",
+  },
+  {
+    id: LESSON_IDS.CG_CH2,
+    course_id: COURSE_IDS.COMPUTER_GRAPHICS,
+    section_title: "Chapter 2 · Basic Concepts",
+    title: "Chapter 2: Basic Concepts (المفاهيم الأساسية والألوان)",
+    title_en: "Chapter 2: Basic Concepts of Computer Graphics",
+    order_index: 2,
+    is_free_preview: true,
+    duration_minutes: 25,
+    video_provider: "youtube",
+    video_id: "26QPDBe-NB8",
+    chapters: [
+      {
+        time: "00:00",
+        name: "نموذج الصندوق الأسود ومجموعات الدوال السبع",
+        pct: "30%",
+        visual: "Primitive (What)  vs  Attribute (How)  |  7 API Groups",
+      },
+      {
+        time: "09:00",
+        name: "الـ Primitives والمضلعات والتثليث والنصوص",
+        pct: "65%",
+        visual: "Simple/Convex Polygons · Triangulation · Stroke vs Raster Text",
+      },
+      {
+        time: "17:30",
+        name: "إدراك الألوان RGB (Additive) و CMY (Subtractive) و Alpha",
+        pct: "95%",
+        visual: "2^24 = 16M Colors (1M = 2^20)  |  A=1.0 Opaque · A=0.0 Transparent",
+      },
+    ],
+    key_code: null,
+    exam_tip:
+      "💡 فكرة امتحان: Primitive = What و Attribute = How؛ Raster Text أسرع بسبب Bit-Block Transfer؛ و Alpha = 1.0 معناه Opaque (مُعتم) وليس شفاف.",
+    summary_md:
+      "ملخص شامل لـ Chapter 2: نموذج الصندوق الأسود، المجموعات السبع لدوال الـ API، المضلعات والنصوص، ونماذج الألوان RGB و CMY والشفافية.",
+    resources: [
+      {
+        title: "GeeksforGeeks — Computer Graphics Basics",
+        url: "https://www.geeksforgeeks.org/computer-graphics-2/",
+        type: "article",
+        description: "مراجعة سريعة لمفاهيم الـ Primitives ونماذج الألوان RGB و CMY.",
+      },
+    ],
+    created_at: "2025-09-06T10:20:00Z",
+  },
+  {
+    id: LESSON_IDS.CG_CH3,
+    course_id: COURSE_IDS.COMPUTER_GRAPHICS,
+    section_title: "Chapter 3 · Output Primitives & Bresenham",
+    title: "Chapter 3: Output Primitives & Bresenham's Line Algorithm",
+    title_en: "Chapter 3: Output Primitives & Bresenham's Line Algorithm",
+    order_index: 3,
+    is_free_preview: true,
+    duration_minutes: 25,
+    video_provider: "youtube",
+    video_id: "26QPDBe-NB8",
+    chapters: [
+      {
+        time: "00:00",
+        name: "رسم النقطة والخط والتقريب وظاهرة Jaggies",
+        pct: "30%",
+        visual: "y = m·x + b  |  Coordinate Rounding → Stair-Step (Jaggies)",
+      },
+      {
+        time: "09:00",
+        name: "اشتقاق معامل القرار p_k في خوارزمية Bresenham",
+        pct: "65%",
+        visual: "p₀ = 2Δy − Δx  |  p_k < 0 → +2Δy  |  p_k ≥ 0 → +2Δy − 2Δx",
+      },
+      {
+        time: "17:00",
+        name: "تطبيق مثال المحاضرة (20,10)→(30,18) والحالات الخاصة",
+        pct: "95%",
+        visual: "Δx=10, Δy=8, p₀=6  ⇒  10 Integer Iterations (k = 0..9)",
+      },
+    ],
+    key_code: null,
+    exam_tip:
+      "💡 فكرة امتحان: ابدأ دايماً من النقطة اليسرى (الأصغر في x)؛ وعند p_k = 0 نعاملها كحالة p_k ≥ 0 (نزوّد y ونجمع 2Δy − 2Δx).",
+    summary_md:
+      "ملخص شامل لـ Chapter 3: رسم النقطة والخط، ظاهرة Jaggies، اشتقاق خوارزمية Bresenham بالأعداد الصحيحة، والجدول الكامل لمثال المحاضرة.",
+    resources: [
+      {
+        title: "GeeksforGeeks — Bresenham's Line Generation Algorithm",
+        url: "https://www.geeksforgeeks.org/bresenhams-line-generation-algorithm/",
+        type: "article",
+        description: "شرح إضافي وأمثلة محلولة لخوارزمية Bresenham لرسم الخطوط.",
+      },
+    ],
+    created_at: "2025-09-06T10:30:00Z",
+  },
+  {
+    id: LESSON_IDS.CG_CH4,
+    course_id: COURSE_IDS.COMPUTER_GRAPHICS,
+    section_title: "Chapter 4 · Midpoint Circle Algorithm",
+    title: "Chapter 4: Circle-Generating & Midpoint Algorithm",
+    title_en: "Chapter 4: Circle-Generating & Midpoint Algorithm",
+    order_index: 4,
+    is_free_preview: true,
+    duration_minutes: 20,
+    video_provider: "youtube",
+    video_id: "26QPDBe-NB8",
+    chapters: [
+      {
+        time: "00:00",
+        name: "المعادلة الديكارتية (1) والقطبية (2) والتماثل الثماني",
+        pct: "30%",
+        visual: "Δθ = 1/r  |  8-Way Octant Symmetry (8× Speedup)",
+      },
+      {
+        time: "07:30",
+        name: "خوارزمية Midpoint Circle والخطوات الستة",
+        pct: "65%",
+        visual: "(0, r), p₀ = 1 − r  |  p_(k+1) = p_k + 2x_(k+1) + 1 (− 2y_(k+1))",
+      },
+      {
+        time: "14:00",
+        name: "مثال r = 10 والمركز المزاح ومقارنة الخط بالدائرة",
+        pct: "95%",
+        visual: "r=10 ⇒ (0,10)→(7,7)  |  Stop when x ≥ y  |  Shift (+x_c, +y_c)",
+      },
+    ],
+    key_code: null,
+    exam_tip:
+      "💡 فكرة امتحان: احسب الدائرة عند (0, 0) الأول واجمع المركز (+x_c, +y_c) في الآخر؛ وعوّض بـ 2x_(k+1) و 2y_(k+1) بتوع النقطة الجديدة!",
+    summary_md:
+      "ملخص شامل لـ Chapter 4: المعادلة الديكارتية والقطبية، التماثل الثماني 8-Way Symmetry، وخوارزمية Midpoint Circle بالخطوات الستة ومقارنتها بـ Bresenham.",
+    resources: [
+      {
+        title: "GeeksforGeeks — Mid-Point Circle Drawing Algorithm",
+        url: "https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/",
+        type: "article",
+        description: "شرح إضافي وأمثلة على خوارزمية Midpoint لرسم الدوائر والتماثل الثماني.",
+      },
+    ],
+    created_at: "2025-09-06T10:40:00Z",
+  },
 ];
 
 // ============================================================================
@@ -3125,6 +3317,9 @@ print(stack.pop(), stack[-1])`,
     order_index: 2,
   },
 
-  // --- Operating Systems (CS-311): Chapters 1, 2, 3 (18 Verified Exam Questions) ---
+  // --- Operating Systems (CS-311): Chapters 1, 2, 3 (45 Verified Exam Questions) ---
   ...OS_QUESTIONS,
+
+  // --- Computer Graphics (CS-321): Chapters 1–4 (85 Official Sheet & Midterm Questions) ---
+  ...CG_QUESTIONS,
 ];

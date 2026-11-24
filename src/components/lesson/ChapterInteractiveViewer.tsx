@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  BookOpen,
+  Calculator,
   Check,
   CheckCircle2,
   ChevronLeft,
@@ -18,6 +20,7 @@ import {
   ZoomIn,
 } from "lucide-react";
 import type { ChapterSlide, InteractiveChapterData } from "@/types/chapter";
+import CgProblemsBonusViewer from "./CgProblemsBonusViewer";
 
 interface ChapterInteractiveViewerProps {
   chapter: InteractiveChapterData;
@@ -58,6 +61,7 @@ export default function ChapterInteractiveViewer({
   onGoToQuiz,
 }: ChapterInteractiveViewerProps) {
   // Default to focused single-slide reading mode so each slide breathes cleanly
+  const [activeSection, setActiveSection] = useState<"slides" | "bonus">("slides");
   const [displayMode, setDisplayMode] = useState<SlideDisplayMode>("single");
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [masteredIds, setMasteredIds] = useState<string[]>(() =>
@@ -65,6 +69,8 @@ export default function ChapterInteractiveViewer({
   );
   const [zoomedSlide, setZoomedSlide] = useState<ChapterSlide | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const hasBonusProblems = chapter.bonusComponentId === "cg-ch3-ch4-problems";
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const slideTopRef = useRef<HTMLDivElement | null>(null);
@@ -83,7 +89,7 @@ export default function ChapterInteractiveViewer({
         return;
       }
 
-      if (displayMode !== "single" || zoomedSlide) return;
+      if (activeSection !== "slides" || displayMode !== "single" || zoomedSlide) return;
       const target = e.target as HTMLElement | null;
       if (
         target &&
@@ -103,7 +109,7 @@ export default function ChapterInteractiveViewer({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [zoomedSlide, isFullscreen, displayMode, totalSlides]);
+  }, [zoomedSlide, isFullscreen, displayMode, totalSlides, activeSection]);
 
   useEffect(() => {
     if (!zoomedSlide && !isFullscreen) return;
@@ -285,50 +291,97 @@ export default function ChapterInteractiveViewer({
           </div>
         </div>
 
-        {/* Clean Toolbar Row: Display Mode + Quiz Jump */}
+        {/* Clean Toolbar Row: Optional Bonus Switcher + Display Mode + Quiz Jump */}
         <div
           className="mt-3.5 flex flex-wrap items-center justify-between gap-2.5 border-t pt-3.5"
           style={{ borderColor: "var(--border-soft)" }}
         >
-          <div
-            className="inline-flex items-center gap-0.5 rounded-xl border p-0.5"
-            style={{
-              background: "var(--bg-surface)",
-              borderColor: "var(--border-soft)",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setDisplayMode("single")}
-              className="inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-3 py-1 text-[12px] font-bold transition-colors cursor-pointer"
-              style={
-                displayMode === "single"
-                  ? {
-                      background: "var(--bg-subtle)",
-                      color: "var(--text-primary)",
-                    }
-                  : { color: "var(--text-muted)" }
-              }
-            >
-              <SquareStack className="h-3.5 w-3.5" />
-              <span>سلايد بسلايد</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setDisplayMode("all")}
-              className="inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-3 py-1 text-[12px] font-bold transition-colors cursor-pointer"
-              style={
-                displayMode === "all"
-                  ? {
-                      background: "var(--bg-subtle)",
-                      color: "var(--text-primary)",
-                    }
-                  : { color: "var(--text-muted)" }
-              }
-            >
-              <LayoutList className="h-3.5 w-3.5" />
-              <span>عرض الكل ({totalSlides})</span>
-            </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {hasBonusProblems ? (
+              <div
+                className="inline-flex items-center gap-0.5 rounded-xl border p-0.5"
+                style={{
+                  background: "var(--bg-surface)",
+                  borderColor: "var(--border-soft)",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setActiveSection("slides")}
+                  className="inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-3 py-1 text-[12px] font-bold transition-colors cursor-pointer"
+                  style={
+                    activeSection === "slides"
+                      ? {
+                          background: "var(--hero-bg)",
+                          color: "#ffffff",
+                        }
+                      : { color: "var(--text-secondary)" }
+                  }
+                >
+                  <BookOpen className="h-3.5 w-3.5" />
+                  <span>شرح السلايدات</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSection("bonus")}
+                  className="inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-3 py-1 text-[12px] font-bold transition-colors cursor-pointer"
+                  style={
+                    activeSection === "bonus"
+                      ? {
+                          background: "var(--accent-warm)",
+                          color: "#ffffff",
+                        }
+                      : { color: "var(--accent-warm-text)" }
+                  }
+                >
+                  <Calculator className="h-3.5 w-3.5" />
+                  <span>شرح مسائل شابتر 3 و 4 (بونص)</span>
+                </button>
+              </div>
+            ) : null}
+
+            {activeSection === "slides" ? (
+              <div
+                className="inline-flex items-center gap-0.5 rounded-xl border p-0.5"
+                style={{
+                  background: "var(--bg-surface)",
+                  borderColor: "var(--border-soft)",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setDisplayMode("single")}
+                  className="inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-3 py-1 text-[12px] font-bold transition-colors cursor-pointer"
+                  style={
+                    displayMode === "single"
+                      ? {
+                          background: "var(--bg-subtle)",
+                          color: "var(--text-primary)",
+                        }
+                      : { color: "var(--text-muted)" }
+                  }
+                >
+                  <SquareStack className="h-3.5 w-3.5" />
+                  <span>سلايد بسلايد</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDisplayMode("all")}
+                  className="inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-3 py-1 text-[12px] font-bold transition-colors cursor-pointer"
+                  style={
+                    displayMode === "all"
+                      ? {
+                          background: "var(--bg-subtle)",
+                          color: "var(--text-primary)",
+                        }
+                      : { color: "var(--text-muted)" }
+                  }
+                >
+                  <LayoutList className="h-3.5 w-3.5" />
+                  <span>عرض الكل ({totalSlides})</span>
+                </button>
+              </div>
+            ) : null}
           </div>
 
           {onGoToQuiz ? (
@@ -351,7 +404,13 @@ export default function ChapterInteractiveViewer({
         </div>
       </div>
 
+      {/* ==================== BONUS PROBLEMS VIEW (WHEN SELECTED) ==================== */}
+      {hasBonusProblems && activeSection === "bonus" ? (
+        <CgProblemsBonusViewer defaultTab={chapter.bonusDefaultTab} />
+      ) : null}
+
       {/* ==================== REFINED SLIDE VIEWER ==================== */}
+      {activeSection === "slides" ? (
       <div ref={slideTopRef} className="space-y-4">
           {/* Calm Quick-Jump Navigator Strip */}
           <div
@@ -539,19 +598,59 @@ export default function ChapterInteractiveViewer({
                         ) : null}
                       </div>
 
-                      {/* Soft Matte Dark Slate SVG Diagram Stage */}
+                      {/* Adaptive SVG Diagram Stage (Light Textbook or Dark Slate) */}
                       {slide.svg ? (
-                        <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#111a2b] p-3.5 text-white">
+                        <div
+                          className={
+                            slide.svgTheme === "light"
+                              ? "overflow-hidden rounded-xl border p-3.5"
+                              : "overflow-hidden rounded-xl border border-white/[0.08] bg-[#111a2b] p-3.5 text-white"
+                          }
+                          style={
+                            slide.svgTheme === "light"
+                              ? {
+                                  background: "var(--bg-canvas)",
+                                  borderColor: "var(--border-soft)",
+                                }
+                              : undefined
+                          }
+                        >
                           <div className="mb-2.5 flex items-center justify-between gap-2 px-0.5">
-                            <span className="font-mono-code text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">
+                            <span
+                              className={
+                                slide.svgTheme === "light"
+                                  ? "font-mono-code text-[10.5px] font-semibold uppercase tracking-wider text-[var(--text-muted)]"
+                                  : "font-mono-code text-[10.5px] font-semibold uppercase tracking-wider text-slate-400"
+                              }
+                            >
                               Diagram · {slide.slideRef}
                             </span>
                             <button
                               type="button"
                               onClick={() => setZoomedSlide(slide)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[11px] font-semibold text-slate-200 transition-colors hover:bg-white/[0.14] cursor-pointer"
+                              className={
+                                slide.svgTheme === "light"
+                                  ? "inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold text-[var(--text-primary)] transition-colors hover:opacity-85 cursor-pointer"
+                                  : "inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[11px] font-semibold text-slate-200 transition-colors hover:bg-white/[0.14] cursor-pointer"
+                              }
+                              style={
+                                slide.svgTheme === "light"
+                                  ? {
+                                      background: "var(--bg-surface)",
+                                      borderColor: "var(--border-soft)",
+                                    }
+                                  : undefined
+                              }
                             >
-                              <ZoomIn className="h-3.5 w-3.5 text-[#66c7a6]" />
+                              <ZoomIn
+                                className="h-3.5 w-3.5"
+                                style={{
+                                  color:
+                                    slide.svgTheme === "light"
+                                      ? "var(--brand-primary)"
+                                      : "#66c7a6",
+                                }}
+                              />
                               <span>تكبير</span>
                             </button>
                           </div>
@@ -567,15 +666,76 @@ export default function ChapterInteractiveViewer({
                               }
                             }}
                             title="اضغط لتكبير الرسمة"
-                            className="chapter-svg-stage cursor-zoom-in overflow-x-auto rounded-lg bg-[#0d1422] p-2"
+                            className={
+                              slide.svgTheme === "light"
+                                ? "chapter-svg-stage cursor-zoom-in overflow-x-auto rounded-lg border border-slate-200/80 bg-[#faf9f6] p-2.5"
+                                : "chapter-svg-stage cursor-zoom-in overflow-x-auto rounded-lg bg-[#0d1422] p-2"
+                            }
                             dangerouslySetInnerHTML={{ __html: slide.svg }}
                           />
 
                           {slide.svgCaption ? (
-                            <p className="mt-2.5 px-1 text-center text-[11.5px] leading-relaxed text-slate-300/90">
+                            <p
+                              className={
+                                slide.svgTheme === "light"
+                                  ? "mt-2.5 px-1 text-center text-[11.5px] leading-relaxed text-[var(--text-secondary)]"
+                                  : "mt-2.5 px-1 text-center text-[11.5px] leading-relaxed text-slate-300/90"
+                              }
+                            >
                               {slide.svgCaption}
                             </p>
                           ) : null}
+                        </div>
+                      ) : null}
+
+                      {/* Static Lecture Figure Image (e.g. Ch2 Diagrams) */}
+                      {!slide.svg && slide.img ? (
+                        <div
+                          className="overflow-hidden rounded-xl border p-3.5"
+                          style={{
+                            background: "var(--bg-canvas)",
+                            borderColor: "var(--border-soft)",
+                          }}
+                        >
+                          <div className="mb-2.5 flex items-center justify-between gap-2 px-0.5">
+                            <span className="font-mono-code text-[10.5px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                              Figure · {slide.slideRef}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setZoomedSlide(slide)}
+                              className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold text-[var(--text-primary)] transition-colors hover:opacity-85 cursor-pointer"
+                              style={{
+                                background: "var(--bg-surface)",
+                                borderColor: "var(--border-soft)",
+                              }}
+                            >
+                              <ZoomIn className="h-3.5 w-3.5 text-[var(--brand-primary)]" />
+                              <span>تكبير</span>
+                            </button>
+                          </div>
+
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setZoomedSlide(slide)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                setZoomedSlide(slide);
+                              }
+                            }}
+                            title="اضغط لتكبير الشكل التوضيحي"
+                            className="cursor-zoom-in overflow-hidden rounded-lg border border-slate-200/80 bg-[#faf9f6] p-2"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={slide.img}
+                              alt={slide.title}
+                              loading="lazy"
+                              className="mx-auto max-h-[340px] w-auto max-w-full rounded object-contain"
+                            />
+                          </div>
                         </div>
                       ) : null}
                     </div>
@@ -790,9 +950,10 @@ export default function ChapterInteractiveViewer({
             </div>
           ) : null}
         </div>
+      ) : null}
 
-      {/* ==================== DIAGRAM ZOOM MODAL ==================== */}
-      {zoomedSlide && zoomedSlide.svg ? (
+      {/* ==================== DIAGRAM / IMAGE ZOOM MODAL ==================== */}
+      {zoomedSlide && (zoomedSlide.svg || zoomedSlide.img) ? (
         <div
           role="dialog"
           aria-modal="true"
@@ -802,14 +963,36 @@ export default function ChapterInteractiveViewer({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#111a2b] text-white shadow-2xl"
+            className={
+              zoomedSlide.img || zoomedSlide.svgTheme === "light"
+                ? "flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border bg-[#faf9f6] text-slate-900 shadow-2xl"
+                : "flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#111a2b] text-white shadow-2xl"
+            }
           >
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5">
+            <div
+              className={
+                zoomedSlide.img || zoomedSlide.svgTheme === "light"
+                  ? "flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 sm:px-5"
+                  : "flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5"
+              }
+            >
               <div className="min-w-0">
-                <span className="font-mono-code text-[11px] font-semibold text-slate-400">
+                <span
+                  className={
+                    zoomedSlide.img || zoomedSlide.svgTheme === "light"
+                      ? "font-mono-code text-[11px] font-semibold text-slate-500"
+                      : "font-mono-code text-[11px] font-semibold text-slate-400"
+                  }
+                >
                   {zoomedSlide.slideRef}
                 </span>
-                <h5 className="truncate text-[14px] font-extrabold text-white">
+                <h5
+                  className={
+                    zoomedSlide.img || zoomedSlide.svgTheme === "light"
+                      ? "truncate text-[14px] font-extrabold text-slate-900"
+                      : "truncate text-[14px] font-extrabold text-white"
+                  }
+                >
                   {zoomedSlide.title}
                 </h5>
               </div>
@@ -817,19 +1000,38 @@ export default function ChapterInteractiveViewer({
                 type="button"
                 onClick={() => setZoomedSlide(null)}
                 aria-label="إغلاق نافذة التكبير"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white transition-colors hover:bg-white/20 cursor-pointer"
+                className={
+                  zoomedSlide.img || zoomedSlide.svgTheme === "light"
+                    ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition-colors hover:bg-slate-100 cursor-pointer"
+                    : "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white transition-colors hover:bg-white/20 cursor-pointer"
+                }
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <div className="chapter-svg-zoom flex-1 overflow-auto p-4 sm:p-6">
-              <div
-                className="mx-auto w-full"
-                dangerouslySetInnerHTML={{ __html: zoomedSlide.svg }}
-              />
+              {zoomedSlide.svg ? (
+                <div
+                  className="mx-auto w-full"
+                  dangerouslySetInnerHTML={{ __html: zoomedSlide.svg }}
+                />
+              ) : zoomedSlide.img ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={zoomedSlide.img}
+                  alt={zoomedSlide.title}
+                  className="mx-auto max-h-[75vh] w-auto max-w-full rounded-lg object-contain"
+                />
+              ) : null}
               {zoomedSlide.svgCaption ? (
-                <p className="mt-4 text-center text-[13px] leading-relaxed text-slate-300">
+                <p
+                  className={
+                    zoomedSlide.svgTheme === "light"
+                      ? "mt-4 text-center text-[13px] leading-relaxed text-slate-600"
+                      : "mt-4 text-center text-[13px] leading-relaxed text-slate-300"
+                  }
+                >
                   {zoomedSlide.svgCaption}
                 </p>
               ) : null}

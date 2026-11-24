@@ -2,13 +2,16 @@ import type {
   InteractiveChapterData,
   StructuredChapterSummary,
 } from "@/types/chapter";
+import { CG_CHAPTERS } from "./cg-chapters";
+import { CG_STRUCTURED_SUMMARIES } from "./cg-structured-summaries";
 import { OS_CHAPTERS } from "./os-chapters";
 import { OS_STRUCTURED_SUMMARIES } from "./os-structured-summaries";
 
 // Unified registry of all interactive chapters across subjects.
-// Add new subject chapter arrays here (e.g., ...DS_CHAPTERS, ...DB_CHAPTERS, ...CG_CHAPTERS).
+// Add new subject chapter arrays here (e.g., ...DS_CHAPTERS, ...DB_CHAPTERS).
 const ALL_INTERACTIVE_CHAPTERS: InteractiveChapterData[] = [
   ...OS_CHAPTERS,
+  ...CG_CHAPTERS,
 ];
 
 const CHAPTER_MAP = new Map<string, InteractiveChapterData>(
@@ -17,6 +20,7 @@ const CHAPTER_MAP = new Map<string, InteractiveChapterData>(
 
 const ALL_STRUCTURED_SUMMARIES: StructuredChapterSummary[] = [
   ...OS_STRUCTURED_SUMMARIES,
+  ...CG_STRUCTURED_SUMMARIES,
 ];
 
 const SUMMARY_MAP = new Map<string, StructuredChapterSummary>(

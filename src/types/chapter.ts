@@ -5,6 +5,8 @@ export interface ChapterSlide {
   title: string;
   enPoints?: string[];
   svg?: string | null;
+  svgTheme?: "dark" | "light";
+  img?: string | null;
   svgCaption?: string | null;
   tableHtml?: string | null;
   why: string;
@@ -43,6 +45,8 @@ export interface InteractiveChapterData {
   titleEn: string;
   titleAr: string;
   subtitle: string;
+  bonusComponentId?: "cg-ch3-ch4-problems";
+  bonusDefaultTab?: "cheatsheet" | "ch3" | "ch4" | "solver";
   slides: ChapterSlide[];
   lab: ChapterLab;
   summary: ChapterSummaryRow[];
