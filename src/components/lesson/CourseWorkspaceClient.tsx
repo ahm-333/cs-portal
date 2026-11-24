@@ -22,7 +22,6 @@ import {
   Download,
   ExternalLink,
   FileCode2,
-  Globe,
   KeyRound,
   ListVideo,
   Lock,
@@ -31,7 +30,6 @@ import {
   Moon,
   NotebookPen,
   PlayCircle,
-  Search,
   Sun,
   Table2,
   Upload,
@@ -46,7 +44,6 @@ import { toggleTheme, useTheme } from "@/components/layout/themeStore";
 import { splitBilingualTitle } from "@/lib/courseTheme";
 import {
   emitToast,
-  openCommandPalette,
   openMistakeBankModal,
   openUnlockModal,
 } from "@/lib/stores/events";
@@ -69,7 +66,7 @@ import MarkdownViewer from "./MarkdownViewer";
 import QuizEngine from "./QuizEngine";
 import VideoPlayer from "./VideoPlayer";
 
-type WorkspaceTab = "video" | "lab" | "site" | "summary" | "quiz";
+type WorkspaceTab = "video" | "lab" | "summary" | "quiz";
 
 interface CourseWorkspaceClientProps {
   data: LessonPageData;
@@ -380,11 +377,10 @@ const TOOL_TABS: ReadonlyArray<{
   label: string;
   Icon: typeof PlayCircle;
 }> = [
-  { id: "video", label: "فيديوهات الشرح", Icon: PlayCircle },
+  { id: "video", label: "فيديو الشرح", Icon: PlayCircle },
   { id: "lab", label: "الشرح التفاعلي", Icon: Cpu },
-  { id: "site", label: "موقع المادة", Icon: Globe },
-  { id: "summary", label: "الملخصات والأكواد", Icon: FileCode2 },
-  { id: "quiz", label: "الكويزات", Icon: CheckSquare },
+  { id: "summary", label: "الملخص والأكواد", Icon: FileCode2 },
+  { id: "quiz", label: "الكويزات والأسئلة", Icon: CheckSquare },
 ];
 
 export default function CourseWorkspaceClient({
@@ -420,6 +416,12 @@ export default function CourseWorkspaceClient({
   }, [sortedLessons, currentLessonId]);
 
   const activeLessonMeta = sortedLessons[currentLessonIndex] ?? null;
+  const prevLesson =
+    currentLessonIndex > 0 ? sortedLessons[currentLessonIndex - 1] : null;
+  const nextLesson =
+    currentLessonIndex < sortedLessons.length - 1
+      ? sortedLessons[currentLessonIndex + 1]
+      : null;
 
   const isUnlockedLocally = useMemo(() => {
     if (!course.is_paid) return true;
@@ -551,7 +553,6 @@ export default function CourseWorkspaceClient({
       .filter((item): item is NonNullable<typeof item> => item !== null);
   }, [lesson?.resources]);
 
-  const safeSiteUrl = isSafeHttpUrl(course.site_url);
   const currentNote = portal.notes[currentLessonId] ?? "";
 
   const handleSelectTab = useCallback((tab: WorkspaceTab) => {
@@ -922,276 +923,68 @@ export default function CourseWorkspaceClient({
         </div>
       </header>
 
-      {/* ==================== WORKSPACE BODY ==================== */}
-      <main className="mx-auto w-full max-w-[1260px] flex-1 space-y-6 px-4 py-6 pb-24 sm:px-6 lg:px-8 lg:pb-8">
-        {/* Per-Course Status Bar (Progress + Course Mistake Bank + Local Backup) */}
-        <section
-          className="surface-card rounded-2xl grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-[var(--border-soft)] overflow-hidden"
-          style={{ borderColor: "var(--border-soft)" }}
-        >
-          {/* Cell 1: Course Progress */}
-          <div className="px-4 py-3.5 flex items-center justify-between gap-3">
-            <div className="space-y-1 flex-1 min-w-0">
-              <div className="flex items-center justify-between text-[11.5px] font-bold">
-                <span style={{ color: "var(--text-secondary)" }}>
-                  إنجازك في {course.code}
-                </span>
-                <span
-                  className="font-mono-code font-black"
-                  style={{ color: "var(--success-fg)" }}
-                >
-                  {progressPct}%
-                </span>
-              </div>
-              <div
-                className="h-1.5 w-full rounded-full overflow-hidden"
-                style={{ background: "var(--bg-subtle)" }}
-              >
-                <div
-                  className="h-full rounded-full transition-all duration-300"
-                  style={{
-                    width: `${progressPct}%`,
-                    background: "var(--success-fg)",
-                  }}
-                />
-              </div>
-            </div>
-            <span
-              className="font-mono-code text-[11px] font-bold shrink-0 px-2 py-0.5 rounded-md"
-              style={{
-                background: "var(--bg-subtle)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              {doneCount}/{sortedLessons.length}
-            </span>
-          </div>
-
-          {/* Cell 2: Course Mistake Bank */}
-          <button
-            type="button"
-            onClick={openMistakeBankModal}
-            className="px-4 py-3.5 flex items-center justify-between gap-3 text-right transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
-          >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <BookmarkCheck
-                className="w-4 h-4 shrink-0"
-                style={{
-                  color:
-                    courseMistakesCount > 0
-                      ? "var(--accent-warm)"
-                      : "var(--brand-primary)",
-                }}
-              />
-              <div className="min-w-0">
-                <div
-                  className="text-[12px] font-extrabold truncate"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  بنك أخطاء المقرر
-                </div>
-                <div
-                  className="text-[11px] font-semibold truncate"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  {courseMistakesCount === 0
-                    ? "لا توجد أخطاء مسجلة بعد"
-                    : `${courseMistakesCount} سؤال جاهز للمراجعة`}
-                </div>
-              </div>
-            </div>
-            <ArrowLeft
-              className="w-3.5 h-3.5 shrink-0"
-              style={{ color: "var(--text-muted)" }}
-            />
-          </button>
-
-          {/* Cell 3: Local Backup */}
-          <div className="px-4 py-3.5 flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <div
-                className="text-[12px] font-extrabold truncate"
-                style={{ color: "var(--text-primary)" }}
-              >
-                حفظ محلي تلقائي
-              </div>
-              <div
-                className="text-[11px] font-semibold truncate"
-                style={{ color: "var(--text-muted)" }}
-              >
-                انقل تقدمك بملف JSON
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1.5 shrink-0 text-[11.5px] font-extrabold">
-              <button
-                type="button"
-                onClick={handleExportCourseBackup}
-                className="inline-flex min-h-[36px] items-center gap-1 rounded-lg px-2 py-1 hover:bg-[var(--bg-subtle)] cursor-pointer"
-                style={{ color: "var(--brand-primary)" }}
-              >
-                <Download className="w-3.5 h-3.5 shrink-0" />
-                <span>تصدير</span>
-              </button>
-              <span style={{ color: "var(--border-strong)" }}>·</span>
-              <button
-                type="button"
-                onClick={() => backupInputRef.current?.click()}
-                className="inline-flex min-h-[36px] items-center gap-1 rounded-lg px-2 py-1 hover:bg-[var(--bg-subtle)] cursor-pointer"
-                style={{ color: "var(--accent-warm)" }}
-              >
-                <Upload className="w-3.5 h-3.5 shrink-0" />
-                <span>استعادة</span>
-              </button>
-              <input
-                ref={backupInputRef}
-                type="file"
-                accept=".json,application/json"
-                onChange={handleImportCourseBackup}
-                className="hidden"
-                aria-label="استعادة نسخة احتياطية JSON"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Course Hero Strip + 5-Feature Switcher Dock */}
-        <section className="surface-card space-y-5 rounded-[26px] p-4 sm:p-6">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className="text-[11.5px] font-bold"
-                  style={{ color: "var(--accent-warm)" }}
-                >
-                  الفرقة {course.year_level} · الترم {course.term} ·{" "}
-                  {course.duration_minutes} دقيقة
-                </span>
-                <span
-                  className="rounded-full px-2.5 py-0.5 text-[11px] font-extrabold"
-                  style={{
-                    background:
-                      !course.is_paid || isUnlockedLocally
-                        ? "var(--success-soft)"
-                        : "var(--accent-warm-soft)",
-                    color:
-                      !course.is_paid || isUnlockedLocally
-                        ? "var(--success-fg)"
-                        : "var(--accent-warm-text)",
-                  }}
-                >
-                  {!course.is_paid
-                    ? "مجاني بالكامل"
-                    : isUnlockedLocally
-                      ? "مفعّل بالكامل ✓"
-                      : `${course.price} ج.م · الدرس 1 مجاني`}
-                </span>
-              </div>
-
-              <h1
-                className="text-lg font-black sm:text-2xl"
-                style={{ color: "var(--text-primary)" }}
-              >
-                الدرس {lessonNumPadded} · {parsedLessonTitle.primary}
-              </h1>
-            </div>
-
-            {!isLockedView ? (
-              <button
-                type="button"
-                onClick={handleToggleDone}
-                aria-pressed={isCurrentLessonDone}
-                className="inline-flex min-h-[42px] shrink-0 items-center gap-2 self-start rounded-xl border px-4 py-2.5 text-[12.5px] font-extrabold transition-all hover:opacity-90 md:self-auto"
-                style={{
-                  background: isCurrentLessonDone
-                    ? "var(--success-soft)"
-                    : "var(--bg-canvas)",
-                  borderColor: isCurrentLessonDone
-                    ? "var(--success-fg)"
-                    : "var(--border-strong)",
-                  color: isCurrentLessonDone
-                    ? "var(--success-fg)"
-                    : "var(--text-primary)",
-                }}
-              >
-                <Check className="h-4 w-4" />
-                <span>
-                  {isCurrentLessonDone
-                    ? "مكتمل ✓ (اضغط للإلغاء)"
-                    : "تحديد الدرس كمكتمل"}
-                </span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleTriggerUnlock}
-                className="inline-flex min-h-[42px] shrink-0 items-center gap-2 self-start rounded-xl px-4 py-2.5 text-[12.5px] font-extrabold text-white transition-transform hover:scale-[1.02] md:self-auto"
-                style={{ background: "#c25e33" }}
-              >
-                <KeyRound className="h-4 w-4" />
-                <span>تفعيل المقرر بكود</span>
-              </button>
-            )}
-          </div>
-
-          {/* 5 Real Course Features Dock — Clean Wrapped Grid on Mobile, All 5 Always Visible */}
-          <div
-            role="tablist"
-            aria-label="أدوات دراسة الدرس"
-            className="flex flex-wrap items-center gap-1.5 rounded-2xl border p-1.5"
-            style={{
-              background: "var(--bg-canvas)",
-              borderColor: "var(--border-soft)",
-            }}
-          >
-            {TOOL_TABS.map(({ id, label, Icon }) => {
-              const isActive = !examNight && activeTab === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => handleSelectTab(id)}
-                  className={`tool-dock-pill min-h-[40px] flex-1 sm:flex-initial justify-center whitespace-nowrap ${
-                    isActive ? "active" : ""
-                  }`}
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span>{label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+      {/* ==================== WORKSPACE BODY (Coursera / Notion Sticky Layout) ==================== */}
+      <main className="mx-auto w-full max-w-[1260px] flex-1 px-4 py-4 pb-24 sm:px-6 lg:px-8 lg:py-5 lg:pb-8">
+        <input
+          ref={backupInputRef}
+          type="file"
+          accept=".json,application/json"
+          onChange={handleImportCourseBackup}
+          className="hidden"
+          aria-label="استعادة نسخة احتياطية JSON"
+        />
 
         {/* 2-Column Workspace Grid */}
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-          {/* Right Sidebar: Course Lessons List (Desktop >= 1024px only; Mobile/Tablet uses Bottom Thumb Dock Drawer) */}
+        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
+          {/* Right Sticky Sidebar: Progress + Lessons + Mistake Bank + Backup (Desktop >= 1024px) */}
           {!focusMode ? (
-            <aside className="surface-card hidden space-y-3.5 rounded-[24px] p-4 sm:p-5 lg:col-span-4 lg:block">
+            <aside className="surface-card hidden overflow-hidden rounded-[24px] lg:sticky lg:top-[76px] lg:col-span-4 lg:flex lg:max-h-[calc(100svh-96px)] lg:flex-col">
+              {/* Top: Compact Course Progress Header */}
               <div
-                className="flex items-center justify-between border-b pb-2"
+                className="space-y-2.5 border-b p-4"
                 style={{ borderColor: "var(--border-soft)" }}
               >
-                <span
-                  className="text-[13px] font-extrabold"
-                  style={{ color: "var(--text-primary)" }}
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className="text-[13px] font-black"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    فصول المقرر
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="font-mono-code text-[11px] font-black"
+                      style={{ color: "var(--success-fg)" }}
+                    >
+                      {progressPct}%
+                    </span>
+                    <span
+                      className="font-mono-code rounded-md px-2 py-0.5 text-[10.5px] font-bold"
+                      style={{
+                        background: "var(--bg-subtle)",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      {doneCount}/{sortedLessons.length}
+                    </span>
+                  </div>
+                </div>
+                <div
+                  className="h-1.5 w-full overflow-hidden rounded-full"
+                  style={{ background: "var(--bg-subtle)" }}
                 >
-                  دروس المقرر
-                </span>
-                <span
-                  className="font-mono-code rounded-md px-2 py-0.5 text-[11px] font-bold"
-                  style={{
-                    background: "var(--bg-subtle)",
-                    color: "var(--text-secondary)",
-                  }}
-                >
-                  {doneCount} / {sortedLessons.length}
-                </span>
+                  <div
+                    className="h-full rounded-full transition-all duration-300"
+                    style={{
+                      width: `${progressPct}%`,
+                      background: "var(--success-fg)",
+                    }}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
+              {/* Scrollable Lessons List */}
+              <div className="flex-1 space-y-2 overflow-y-auto p-3.5">
                 {sortedLessons.map((item, idx) => {
                   const done = completedSet.has(item.id);
                   const locked =
@@ -1292,21 +1085,97 @@ export default function CourseWorkspaceClient({
                 })}
               </div>
 
-              {/* Subtle Instructor Mini-Signature */}
+              {/* Sidebar Bottom Utility Footer: Mistake Bank + Local JSON Backup + Founder */}
               <div
-                className="flex items-center justify-between gap-2.5 border-t pt-3.5"
-                style={{ borderColor: "var(--border-soft)" }}
+                className="space-y-2.5 border-t p-3.5"
+                style={{
+                  borderColor: "var(--border-soft)",
+                  background: "var(--bg-canvas)",
+                }}
               >
-                <div className="flex min-w-0 items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={openMistakeBankModal}
+                  className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2 text-right transition-colors hover:bg-[var(--bg-hover)]"
+                  style={{
+                    background: "var(--bg-surface)",
+                    borderColor: "var(--border-soft)",
+                  }}
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <BookmarkCheck
+                      className="h-4 w-4 shrink-0"
+                      style={{
+                        color:
+                          courseMistakesCount > 0
+                            ? "var(--accent-warm)"
+                            : "var(--brand-primary)",
+                      }}
+                    />
+                    <span
+                      className="truncate text-[12px] font-extrabold"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      بنك أخطاء المقرر
+                    </span>
+                  </span>
+                  <span
+                    className="font-mono-code shrink-0 rounded-md px-2 py-0.5 text-[10.5px] font-bold"
+                    style={{
+                      background:
+                        courseMistakesCount > 0
+                          ? "var(--accent-warm-soft)"
+                          : "var(--bg-subtle)",
+                      color:
+                        courseMistakesCount > 0
+                          ? "var(--accent-warm-text)"
+                          : "var(--text-muted)",
+                    }}
+                  >
+                    {courseMistakesCount}
+                  </span>
+                </button>
+
+                <div className="flex items-center justify-between gap-2 px-1 text-[11px] font-bold">
+                  <span style={{ color: "var(--text-muted)" }}>
+                    نسخة احتياطية JSON
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={handleExportCourseBackup}
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 hover:bg-[var(--bg-subtle)]"
+                      style={{ color: "var(--brand-primary)" }}
+                    >
+                      <Download className="h-3 w-3 shrink-0" />
+                      <span>تصدير</span>
+                    </button>
+                    <span style={{ color: "var(--border-strong)" }}>·</span>
+                    <button
+                      type="button"
+                      onClick={() => backupInputRef.current?.click()}
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 hover:bg-[var(--bg-subtle)]"
+                      style={{ color: "var(--accent-warm)" }}
+                    >
+                      <Upload className="h-3 w-3 shrink-0" />
+                      <span>استعادة</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  className="flex items-center gap-2.5 border-t pt-2.5"
+                  style={{ borderColor: "var(--border-soft)" }}
+                >
                   <Image
                     src="/images/founder.jpg"
                     alt="Eng. Ahmed Amir"
-                    width={32}
-                    height={32}
-                    className="h-8 w-8 shrink-0 rounded-full border object-cover object-[50%_15%]"
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 shrink-0 rounded-full border object-cover object-[50%_15%]"
                     style={{ borderColor: "var(--border-strong)" }}
                   />
-                  <div className="min-w-0 text-right">
+                  <div className="min-w-0 text-right leading-tight">
                     <div className="truncate">
                       <BrandName size="sm" />
                     </div>
@@ -1314,7 +1183,7 @@ export default function CourseWorkspaceClient({
                       className="truncate text-[10px] font-semibold"
                       style={{ color: "var(--text-muted)" }}
                     >
-                      Faculty of Computers & AI
+                      Faculty of Computers &amp; AI
                     </div>
                   </div>
                 </div>
@@ -1322,12 +1191,120 @@ export default function CourseWorkspaceClient({
             </aside>
           ) : null}
 
-          {/* Left Main Feature Stage */}
+          {/* Left Main Feature Stage (Single-Screen Header + 4 Pillars + Active Content) */}
           <section
-            className={`surface-card min-h-[420px] overflow-hidden rounded-[24px] p-4 sm:p-7 ${
+            className={`surface-card min-h-[420px] space-y-4 overflow-hidden rounded-[24px] p-4 sm:p-5 ${
               focusMode ? "lg:col-span-12" : "lg:col-span-8"
             }`}
           >
+            {/* Compact Single-Row Lesson Header */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="font-mono-code rounded-md px-2 py-0.5 text-[10.5px] font-extrabold"
+                    style={{
+                      background: "var(--brand-soft)",
+                      color: "var(--brand-soft-text)",
+                    }}
+                  >
+                    الفصل {lessonNumPadded}
+                  </span>
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[10.5px] font-extrabold"
+                    style={{
+                      background:
+                        !course.is_paid || isUnlockedLocally
+                          ? "var(--success-soft)"
+                          : "var(--accent-warm-soft)",
+                      color:
+                        !course.is_paid || isUnlockedLocally
+                          ? "var(--success-fg)"
+                          : "var(--accent-warm-text)",
+                    }}
+                  >
+                    {!course.is_paid
+                      ? "مجاني"
+                      : isUnlockedLocally
+                        ? "مفعّل ✓"
+                        : `${course.price} ج.م · الفصل 1 مجاني`}
+                  </span>
+                </div>
+
+                <h1
+                  className="truncate text-base font-black sm:text-xl"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {parsedLessonTitle.primary}
+                </h1>
+              </div>
+
+              {!isLockedView ? (
+                <button
+                  type="button"
+                  onClick={handleToggleDone}
+                  aria-pressed={isCurrentLessonDone}
+                  className="inline-flex min-h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-[12px] font-extrabold transition-all hover:opacity-90"
+                  style={{
+                    background: isCurrentLessonDone
+                      ? "var(--success-soft)"
+                      : "var(--bg-canvas)",
+                    borderColor: isCurrentLessonDone
+                      ? "var(--success-fg)"
+                      : "var(--border-strong)",
+                    color: isCurrentLessonDone
+                      ? "var(--success-fg)"
+                      : "var(--text-primary)",
+                  }}
+                >
+                  <Check className="h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    {isCurrentLessonDone ? "مكتمل ✓" : "تحديد كمكتمل"}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleTriggerUnlock}
+                  className="inline-flex min-h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[12px] font-extrabold text-white transition-transform hover:scale-[1.02]"
+                  style={{ background: "#c25e33" }}
+                >
+                  <KeyRound className="h-3.5 w-3.5 shrink-0" />
+                  <span>تفعيل المقرر</span>
+                </button>
+              )}
+            </div>
+
+            {/* Unified 4-Pillar Tab Bar */}
+            <div
+              role="tablist"
+              aria-label="أركان دراسة الفصل الأربعة"
+              className="grid grid-cols-2 gap-1.5 rounded-2xl border p-1 sm:grid-cols-4"
+              style={{
+                background: "var(--bg-canvas)",
+                borderColor: "var(--border-soft)",
+              }}
+            >
+              {TOOL_TABS.map(({ id, label, Icon }) => {
+                const isActive = !examNight && activeTab === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => handleSelectTab(id)}
+                    className={`tool-dock-pill min-h-[38px] justify-center whitespace-nowrap ${
+                      isActive ? "active" : ""
+                    }`}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
             {/* ==================== EXAM-NIGHT CRAM MODE PANE ==================== */}
             {examNight ? (
               <div className="space-y-5">
@@ -1493,233 +1470,7 @@ export default function CourseWorkspaceClient({
                   ) : null}
                 </div>
 
-                {/* TAB 3: Dedicated Course Website Map */}
-                <div className={activeTab === "site" ? "space-y-5" : "hidden"}>
-                  <div
-                    className="flex flex-wrap items-center justify-between gap-3 border-b pb-3"
-                    style={{ borderColor: "var(--border-soft)" }}
-                  >
-                    <div>
-                      <span
-                        className="text-[11px] font-extrabold"
-                        style={{ color: "var(--brand-primary)" }}
-                      >
-                        موقع المادة المستقل
-                      </span>
-                      <h2
-                        className="mt-0.5 text-lg font-black"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        خريطة موقع مقرر {course.title}
-                      </h2>
-                    </div>
-
-                    {safeSiteUrl ? (
-                      <a
-                        href={safeSiteUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-mono-code inline-flex max-w-full items-center gap-1.5 rounded-xl px-3 py-1 text-[11px] font-bold hover:opacity-85"
-                        style={{
-                          background: "var(--brand-soft)",
-                          color: "var(--brand-soft-text)",
-                        }}
-                      >
-                        <span className="truncate">{course.site_url}</span>
-                        <ExternalLink className="h-3 w-3 shrink-0" />
-                      </a>
-                    ) : (
-                      <span
-                        className="font-mono-code max-w-full truncate rounded-xl px-3 py-1 text-[11px] font-bold"
-                        style={{
-                          background: "var(--brand-soft)",
-                          color: "var(--brand-soft-text)",
-                        }}
-                      >
-                        {course.site_url}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Modules Grid — Clickable unlocked modules & unlock modal for locked modules */}
-                  <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-                    {sortedLessons.map((item, idx) => {
-                      const done = completedSet.has(item.id);
-                      const locked =
-                        course.is_paid &&
-                        !item.is_free_preview &&
-                        !isUnlockedLocally;
-                      const isCurrent = item.id === currentLessonId;
-                      const titleParts = splitBilingualTitle(item.title);
-                      const durationLabel = item.duration_minutes
-                        ? `${item.duration_minutes} د`
-                        : "15 د";
-
-                      const moduleCard = (
-                        <div
-                          className="group flex h-full flex-col justify-between space-y-2.5 rounded-2xl border p-4 text-right transition-all hover:-translate-y-0.5"
-                          style={{
-                            background: isCurrent
-                              ? "var(--accent-warm-soft)"
-                              : "var(--bg-canvas)",
-                            borderColor: isCurrent
-                              ? "var(--accent-warm)"
-                              : "var(--border-soft)",
-                          }}
-                        >
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between gap-2">
-                              <span
-                                className="font-mono-code rounded px-2 py-0.5 text-[11px] font-bold"
-                                style={{
-                                  background: "var(--bg-subtle)",
-                                  color: "var(--text-primary)",
-                                }}
-                              >
-                                Module {String(idx + 1).padStart(2, "0")}
-                              </span>
-                              <span
-                                className="inline-flex items-center gap-1 text-[11px] font-bold"
-                                style={{
-                                  color: done
-                                    ? "var(--success-fg)"
-                                    : locked
-                                      ? "var(--accent-warm)"
-                                      : "var(--text-muted)",
-                                }}
-                              >
-                                {locked ? (
-                                  <>
-                                    <Lock className="h-3 w-3" />
-                                    <span>تفعيل بكود</span>
-                                  </>
-                                ) : done ? (
-                                  <span>مكتمل ✓</span>
-                                ) : (
-                                  <span>{durationLabel}</span>
-                                )}
-                              </span>
-                            </div>
-
-                            <div
-                              className="text-[14px] font-extrabold group-hover:underline"
-                              style={{ color: "var(--text-primary)" }}
-                            >
-                              {titleParts.primary}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between gap-2 pt-1">
-                            <div
-                              className="flex flex-wrap gap-1.5 text-[10.5px] font-bold"
-                              style={{ color: "var(--text-secondary)" }}
-                            >
-                              {["فيديو", "ملخص", "تفاعلي", "كويز"].map((tag) => (
-                                <span
-                                  key={tag}
-                                  className="rounded px-2 py-0.5"
-                                  style={{ background: "var(--bg-subtle)" }}
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                            <span
-                              className="shrink-0 text-[11px] font-extrabold"
-                              style={{
-                                color: locked
-                                  ? "var(--accent-warm)"
-                                  : "var(--brand-primary)",
-                              }}
-                            >
-                              {isCurrent
-                                ? "الدرس الحالي"
-                                : locked
-                                  ? "فتح الكود ←"
-                                  : "فتح الدرس ←"}
-                            </span>
-                          </div>
-                        </div>
-                      );
-
-                      if (locked) {
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={handleTriggerUnlock}
-                            className="w-full cursor-pointer text-right"
-                          >
-                            {moduleCard}
-                          </button>
-                        );
-                      }
-
-                      return (
-                        <Link
-                          key={item.id}
-                          href={`/courses/${course.slug}/${item.id}`}
-                          className="block"
-                        >
-                          {moduleCard}
-                        </Link>
-                      );
-                    })}
-                  </div>
-
-                  {/* External Resources (strictly http/https validated) */}
-                  {safeResources.length > 0 ? (
-                    <div
-                      className="space-y-2.5 border-t pt-4"
-                      style={{ borderColor: "var(--border-soft)" }}
-                    >
-                      <div
-                        className="text-[12.5px] font-extrabold"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        مصادر وروابط إضافية للدرس
-                      </div>
-                      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                        {safeResources.map((res, idx) => (
-                          <a
-                            key={`${res.url}-${idx}`}
-                            href={res.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group flex items-start justify-between gap-2.5 rounded-2xl border p-3.5 transition-all hover:-translate-y-0.5"
-                            style={{
-                              background: "var(--bg-canvas)",
-                              borderColor: "var(--border-soft)",
-                            }}
-                          >
-                            <div className="min-w-0 space-y-1">
-                              <div
-                                className="truncate text-[13px] font-extrabold group-hover:underline"
-                                style={{ color: "var(--brand-primary)" }}
-                              >
-                                {res.title}
-                              </div>
-                              {res.description ? (
-                                <p
-                                  className="text-[11.5px] leading-relaxed"
-                                  style={{ color: "var(--text-secondary)" }}
-                                >
-                                  {res.description}
-                                </p>
-                              ) : null}
-                            </div>
-                            <ExternalLink
-                              className="mt-0.5 h-4 w-4 shrink-0"
-                              style={{ color: "var(--text-muted)" }}
-                            />
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-
-                {/* TAB 4: Structured Summaries, LTR Code & Cheat Sheet */}
+                {/* TAB 3: Structured Summaries, LTR Code, Cheat Sheet & Resources */}
                 <div
                   className={activeTab === "summary" ? "space-y-5" : "hidden"}
                 >
@@ -1812,9 +1563,60 @@ export default function CourseWorkspaceClient({
                     </div>
                     <CheatSheetTable course={course} />
                   </div>
+
+                  {/* External Resources moved cleanly into Summary */}
+                  {safeResources.length > 0 ? (
+                    <div
+                      className="space-y-2.5 border-t pt-4"
+                      style={{ borderColor: "var(--border-soft)" }}
+                    >
+                      <div
+                        className="text-[12.5px] font-extrabold"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        مصادر وروابط إضافية للفصل
+                      </div>
+                      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                        {safeResources.map((res, idx) => (
+                          <a
+                            key={`${res.url}-${idx}`}
+                            href={res.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group flex items-start justify-between gap-2.5 rounded-2xl border p-3.5 transition-all hover:-translate-y-0.5"
+                            style={{
+                              background: "var(--bg-canvas)",
+                              borderColor: "var(--border-soft)",
+                            }}
+                          >
+                            <div className="min-w-0 space-y-1">
+                              <div
+                                className="truncate text-[13px] font-extrabold group-hover:underline"
+                                style={{ color: "var(--brand-primary)" }}
+                              >
+                                {res.title}
+                              </div>
+                              {res.description ? (
+                                <p
+                                  className="text-[11.5px] leading-relaxed"
+                                  style={{ color: "var(--text-secondary)" }}
+                                >
+                                  {res.description}
+                                </p>
+                              ) : null}
+                            </div>
+                            <ExternalLink
+                              className="mt-0.5 h-4 w-4 shrink-0"
+                              style={{ color: "var(--text-muted)" }}
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
 
-                {/* TAB 5: Course-Specific Instant Quiz */}
+                {/* TAB 4: Course-Specific Instant Quiz */}
                 <div className={activeTab === "quiz" ? "space-y-5" : "hidden"}>
                   <QuizEngine
                     key={currentLessonId}
@@ -1828,6 +1630,62 @@ export default function CourseWorkspaceClient({
                 </div>
               </>
             )}
+
+            {/* ==================== PREVIOUS / NEXT CHAPTER FOOTER ==================== */}
+            {!isLockedView && !examNight && (prevLesson || nextLesson) ? (
+              <div
+                className="flex flex-wrap items-center justify-between gap-2.5 border-t pt-4"
+                style={{ borderColor: "var(--border-soft)" }}
+              >
+                {prevLesson ? (
+                  <Link
+                    href={`/courses/${course.slug}/${prevLesson.id}`}
+                    className="inline-flex min-h-[40px] max-w-[48%] items-center gap-2 rounded-xl border px-3.5 py-2 text-[12px] font-bold transition-colors hover:border-[var(--brand-primary)]"
+                    style={{
+                      background: "var(--bg-canvas)",
+                      borderColor: "var(--border-soft)",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    <ArrowRight className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">
+                      السابق: {splitBilingualTitle(prevLesson.title).primary}
+                    </span>
+                  </Link>
+                ) : (
+                  <span />
+                )}
+
+                {nextLesson ? (
+                  course.is_paid &&
+                  !nextLesson.is_free_preview &&
+                  !isUnlockedLocally ? (
+                    <button
+                      type="button"
+                      onClick={handleTriggerUnlock}
+                      className="inline-flex min-h-[40px] max-w-[48%] cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-[12px] font-extrabold text-white transition-transform hover:-translate-y-0.5"
+                      style={{ background: "#c25e33" }}
+                    >
+                      <Lock className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">
+                        التالي: {splitBilingualTitle(nextLesson.title).primary}
+                      </span>
+                    </button>
+                  ) : (
+                    <Link
+                      href={`/courses/${course.slug}/${nextLesson.id}`}
+                      className="inline-flex min-h-[40px] max-w-[48%] items-center gap-2 rounded-xl px-4 py-2 text-[12px] font-extrabold text-white transition-transform hover:-translate-y-0.5"
+                      style={{ background: "var(--hero-bg)" }}
+                    >
+                      <span className="truncate">
+                        التالي: {splitBilingualTitle(nextLesson.title).primary}
+                      </span>
+                      <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+                    </Link>
+                  )
+                ) : null}
+              </div>
+            ) : null}
 
             {/* ==================== QUICK LESSON NOTES DRAWER ==================== */}
             {notesOpen ? (
@@ -2003,22 +1861,44 @@ export default function CourseWorkspaceClient({
             <span className="max-w-full truncate">نوتس</span>
           </button>
 
-          {/* 4. بحث */}
+          {/* 4. إكمال الفصل */}
           <button
             type="button"
-            onClick={() => openCommandPalette()}
+            onClick={isLockedView ? handleTriggerUnlock : handleToggleDone}
+            aria-pressed={!isLockedView && isCurrentLessonDone}
             className="flex min-h-[46px] min-w-0 overflow-hidden flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[10.5px] font-extrabold transition-all cursor-pointer"
-            style={{
-              background: "var(--bg-canvas)",
-              borderColor: "var(--border-soft)",
-              color: "var(--text-primary)",
-            }}
+            style={
+              isLockedView
+                ? {
+                    background: "var(--accent-warm-soft)",
+                    borderColor: "var(--accent-warm)",
+                    color: "var(--accent-warm-text)",
+                  }
+                : isCurrentLessonDone
+                  ? {
+                      background: "var(--success-soft)",
+                      borderColor: "var(--success-fg)",
+                      color: "var(--success-fg)",
+                    }
+                  : {
+                      background: "var(--bg-canvas)",
+                      borderColor: "var(--border-soft)",
+                      color: "var(--text-primary)",
+                    }
+            }
           >
-            <Search
-              className="h-4 w-4 shrink-0"
-              style={{ color: "var(--text-secondary)" }}
-            />
-            <span className="max-w-full truncate">بحث</span>
+            {isLockedView ? (
+              <KeyRound className="h-4 w-4 shrink-0" />
+            ) : (
+              <Check className="h-4 w-4 shrink-0" />
+            )}
+            <span className="max-w-full truncate">
+              {isLockedView
+                ? "تفعيل"
+                : isCurrentLessonDone
+                  ? "مكتمل ✓"
+                  : "إكمال"}
+            </span>
           </button>
         </div>
       </nav>
@@ -2187,21 +2067,84 @@ export default function CourseWorkspaceClient({
               })}
             </div>
 
-            {/* Subtle Instructor Mini-Signature in Mobile Drawer */}
+            {/* Mobile Drawer Bottom Utility Footer: Mistake Bank + Backup + Founder */}
             <div
-              className="flex items-center justify-between gap-2.5 border-t pt-3.5"
+              className="space-y-2.5 border-t pt-3"
               style={{ borderColor: "var(--border-soft)" }}
             >
-              <div className="flex min-w-0 items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileLessonsOpen(false);
+                  openMistakeBankModal();
+                }}
+                className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2 text-right"
+                style={{
+                  background: "var(--bg-canvas)",
+                  borderColor: "var(--border-soft)",
+                }}
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <BookmarkCheck
+                    className="h-4 w-4 shrink-0"
+                    style={{ color: "var(--accent-warm)" }}
+                  />
+                  <span
+                    className="truncate text-[12px] font-extrabold"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    بنك أخطاء المقرر
+                  </span>
+                </span>
+                <span
+                  className="font-mono-code rounded-md px-2 py-0.5 text-[10.5px] font-bold"
+                  style={{
+                    background: "var(--bg-subtle)",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  {courseMistakesCount}
+                </span>
+              </button>
+
+              <div className="flex items-center justify-between gap-2 px-1 text-[11px] font-bold">
+                <span style={{ color: "var(--text-muted)" }}>نسخة JSON</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleExportCourseBackup}
+                    className="inline-flex cursor-pointer items-center gap-1"
+                    style={{ color: "var(--brand-primary)" }}
+                  >
+                    <Download className="h-3 w-3 shrink-0" />
+                    <span>تصدير</span>
+                  </button>
+                  <span style={{ color: "var(--border-strong)" }}>·</span>
+                  <button
+                    type="button"
+                    onClick={() => backupInputRef.current?.click()}
+                    className="inline-flex cursor-pointer items-center gap-1"
+                    style={{ color: "var(--accent-warm)" }}
+                  >
+                    <Upload className="h-3 w-3 shrink-0" />
+                    <span>استعادة</span>
+                  </button>
+                </div>
+              </div>
+
+              <div
+                className="flex items-center gap-2.5 border-t pt-2.5"
+                style={{ borderColor: "var(--border-soft)" }}
+              >
                 <Image
                   src="/images/founder.jpg"
                   alt="Eng. Ahmed Amir"
-                  width={32}
-                  height={32}
-                  className="h-8 w-8 shrink-0 rounded-full border object-cover object-[50%_15%]"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 shrink-0 rounded-full border object-cover object-[50%_15%]"
                   style={{ borderColor: "var(--border-strong)" }}
                 />
-                <div className="min-w-0 text-right">
+                <div className="min-w-0 text-right leading-tight">
                   <div className="truncate">
                     <BrandName size="sm" />
                   </div>
@@ -2209,7 +2152,7 @@ export default function CourseWorkspaceClient({
                     className="truncate text-[10px] font-semibold"
                     style={{ color: "var(--text-muted)" }}
                   >
-                    Faculty of Computers & AI
+                    Faculty of Computers &amp; AI
                   </div>
                 </div>
               </div>
