@@ -78,7 +78,7 @@ export interface LessonSummaryItem {
   is_free_preview: boolean;
   duration_minutes?: number | null;
   chapters?: VideoChapter[];
-  key_code?: string;
+  key_code?: string | null;
   exam_tip?: string;
 }
 

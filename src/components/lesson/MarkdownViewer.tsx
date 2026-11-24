@@ -205,10 +205,10 @@ const markdownComponents: Components = {
   },
   h2({ children }) {
     return (
-      <h2 className="mb-3 mt-7 flex items-center gap-2.5 border-b border-[var(--border-soft)] pb-2 text-[1.22em] font-extrabold leading-snug text-[var(--text-primary)] first:mt-0">
+      <h2 className="mb-3 mt-7 flex items-center gap-2.5 border-b border-[var(--border-soft)] pb-2 text-[1.18em] font-extrabold leading-snug text-[var(--text-primary)] first:mt-0">
         <span
           aria-hidden="true"
-          className="h-5 w-1 shrink-0 rounded-full bg-[var(--accent-warm)]"
+          className="h-4 w-1 shrink-0 rounded-full bg-[var(--brand-primary)] opacity-75"
         />
         <span>{children}</span>
       </h2>
@@ -260,11 +260,25 @@ const markdownComponents: Components = {
     );
   },
   em({ children }) {
-    return <em className="italic text-[var(--brand-primary)]">{children}</em>;
+    return (
+      <em className="not-italic font-medium text-[var(--text-muted)]">
+        {children}
+      </em>
+    );
   },
   blockquote({ children }) {
     return (
-      <blockquote className="my-4 rounded-2xl border border-[var(--accent-warm)]/30 bg-[var(--accent-warm-soft)] px-4 py-3 text-[var(--accent-warm-text)] [&>p]:my-1 [&>p]:text-[var(--accent-warm-text)]">
+      <blockquote
+        className="my-4 rounded-xl border border-s-[3px] px-4 py-3 text-[0.93em] leading-relaxed text-[var(--text-primary)] [&>p]:my-1 [&>p]:text-[var(--text-primary)]"
+        style={{
+          background:
+            "color-mix(in srgb, var(--brand-soft) 45%, var(--bg-surface))",
+          borderColor:
+            "color-mix(in srgb, var(--brand-primary) 18%, var(--border-soft))",
+          borderInlineStartColor:
+            "color-mix(in srgb, var(--brand-primary) 60%, transparent)",
+        }}
+      >
         {children}
       </blockquote>
     );
@@ -355,9 +369,16 @@ const markdownComponents: Components = {
     return (
       <code
         dir="ltr"
-        className={`inline-block max-w-full break-words rounded-md border border-[var(--border-soft)] bg-[var(--bg-subtle)] px-1.5 py-0.5 align-baseline font-mono-code text-[0.85em] font-semibold text-[var(--brand-soft-text)] ${
+        className={`inline-block max-w-full break-words rounded-md border px-1.5 py-0.5 align-baseline font-mono-code text-[0.84em] font-semibold ${
           className ?? ""
         }`}
+        style={{
+          background:
+            "color-mix(in srgb, var(--brand-soft) 55%, var(--bg-subtle))",
+          borderColor:
+            "color-mix(in srgb, var(--brand-primary) 14%, var(--border-soft))",
+          color: "var(--brand-soft-text)",
+        }}
       >
         {children}
       </code>

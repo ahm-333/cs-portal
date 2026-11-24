@@ -21,6 +21,7 @@ import {
   Download,
   ExternalLink,
   FileCode2,
+  FileText,
   KeyRound,
   ListVideo,
   Lock,
@@ -512,12 +513,18 @@ export default function CourseWorkspaceClient({
   }, [lesson, activeLessonMeta, course]);
 
   const activeKeyCode = useMemo(() => {
-    return (
-      lesson?.key_code ||
-      activeLessonMeta?.key_code ||
-      getFallbackKeyCode(course)
-    );
+    // Respect explicit null (e.g., theory/non-coding courses like Operating Systems)
+    if (lesson?.key_code === null || activeLessonMeta?.key_code === null) {
+      return null;
+    }
+    const direct = lesson?.key_code ?? activeLessonMeta?.key_code;
+    if (direct !== undefined) {
+      return direct.trim() ? direct : null;
+    }
+    return getFallbackKeyCode(course);
   }, [lesson, activeLessonMeta, course]);
+
+  const hasLessonCode = Boolean(activeKeyCode && activeKeyCode.trim().length > 0);
 
   const activeExamTip =
     lesson?.exam_tip || activeLessonMeta?.exam_tip || course.exam_tip;
@@ -587,6 +594,7 @@ export default function CourseWorkspaceClient({
   }, [currentLessonId, sortedLessons, completedSet]);
 
   const handleCopyKeyCode = useCallback(async () => {
+    if (!activeKeyCode) return;
     try {
       await navigator.clipboard.writeText(activeKeyCode);
     } catch {
@@ -1280,6 +1288,10 @@ export default function CourseWorkspaceClient({
             >
               {TOOL_TABS.map(({ id, label, Icon }) => {
                 const isActive = !examNight && activeTab === id;
+                const resolvedLabel =
+                  id === "summary" && !hasLessonCode ? "الملخص" : label;
+                const ResolvedIcon =
+                  id === "summary" && !hasLessonCode ? FileText : Icon;
                 return (
                   <button
                     key={id}
@@ -1291,8 +1303,8 @@ export default function CourseWorkspaceClient({
                       isActive ? "active" : ""
                     }`}
                   >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span>{label}</span>
+                    <ResolvedIcon className="h-4 w-4 shrink-0" />
+                    <span>{resolvedLabel}</span>
                   </button>
                 );
               })}
@@ -1338,39 +1350,43 @@ export default function CourseWorkspaceClient({
                   {activeExamTip}
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div
-                      className="text-[12.5px] font-extrabold"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      أهم كود للمراجعة السريعة:
+                {hasLessonCode && activeKeyCode ? (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div
+                        className="text-[12.5px] font-extrabold"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        أهم كود للمراجعة السريعة:
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCopyKeyCode}
+                        className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border px-3 py-1 text-[11.5px] font-bold transition-colors hover:opacity-85"
+                        style={{
+                          background: "var(--bg-canvas)",
+                          borderColor: "var(--border-soft)",
+                          color: "var(--text-primary)",
+                        }}
+                      >
+                        {copiedCode ? (
+                          <Check className="h-3.5 w-3.5 text-[var(--success-fg)]" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                        <span>{copiedCode ? "تم النسخ ✓" : "نسخ الكود"}</span>
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleCopyKeyCode}
-                      className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border px-3 py-1 text-[11.5px] font-bold transition-colors hover:opacity-85"
-                      style={{
-                        background: "var(--bg-canvas)",
-                        borderColor: "var(--border-soft)",
-                        color: "var(--text-primary)",
-                      }}
+                    <pre
+                      dir="ltr"
+                      className="code-ltr max-w-full overflow-x-auto text-[12px] leading-relaxed"
                     >
-                      {copiedCode ? (
-                        <Check className="h-3.5 w-3.5 text-[var(--success-fg)]" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                      <span>{copiedCode ? "تم النسخ ✓" : "نسخ الكود"}</span>
-                    </button>
+                      {activeKeyCode}
+                    </pre>
                   </div>
-                  <pre
-                    dir="ltr"
-                    className="code-ltr max-w-full overflow-x-auto text-[12px] leading-relaxed"
-                  >
-                    {activeKeyCode}
-                  </pre>
-                </div>
+                ) : lesson?.summary_md ? (
+                  <MarkdownViewer content={lesson.summary_md} embedded />
+                ) : null}
               </div>
             ) : isLockedView ? (
               /* ==================== EDITORIAL LOCK CARD ==================== */
@@ -1467,7 +1483,7 @@ export default function CourseWorkspaceClient({
                   ) : null}
                 </div>
 
-                {/* TAB 3: Structured Summaries, LTR Code, Cheat Sheet & Resources */}
+                {/* TAB 3: Structured Summaries (+ Optional LTR Code & Cheat Sheet) */}
                 <div
                   className={activeTab === "summary" ? "space-y-5" : "hidden"}
                 >
@@ -1475,9 +1491,15 @@ export default function CourseWorkspaceClient({
                     <div>
                       <span
                         className="text-[11px] font-extrabold"
-                        style={{ color: "var(--accent-warm)" }}
+                        style={{
+                          color: hasLessonCode
+                            ? "var(--accent-warm)"
+                            : "var(--brand-primary)",
+                        }}
                       >
-                        ملخص هندسي + كود LTR
+                        {hasLessonCode
+                          ? "ملخص هندسي + كود LTR"
+                          : "ملخص شامل للمراجعة (English + توضيح مبسّط)"}
                       </span>
                       <h2
                         className="mt-0.5 text-lg font-black"
@@ -1487,26 +1509,28 @@ export default function CourseWorkspaceClient({
                       </h2>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={handleCopyKeyCode}
-                      className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-[12px] font-bold transition-colors hover:opacity-85"
-                      style={{
-                        background: "var(--bg-canvas)",
-                        borderColor: "var(--border-soft)",
-                        color: "var(--text-primary)",
-                      }}
-                    >
-                      {copiedCode ? (
-                        <Check
-                          className="h-3.5 w-3.5"
-                          style={{ color: "var(--success-fg)" }}
-                        />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                      <span>{copiedCode ? "تم النسخ ✓" : "نسخ الكود"}</span>
-                    </button>
+                    {hasLessonCode ? (
+                      <button
+                        type="button"
+                        onClick={handleCopyKeyCode}
+                        className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-[12px] font-bold transition-colors hover:opacity-85"
+                        style={{
+                          background: "var(--bg-canvas)",
+                          borderColor: "var(--border-soft)",
+                          color: "var(--text-primary)",
+                        }}
+                      >
+                        {copiedCode ? (
+                          <Check
+                            className="h-3.5 w-3.5"
+                            style={{ color: "var(--success-fg)" }}
+                          />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                        <span>{copiedCode ? "تم النسخ ✓" : "نسخ الكود"}</span>
+                      </button>
+                    ) : null}
                   </div>
 
                   {/* Full Markdown + KaTeX Summary when available */}
@@ -1514,8 +1538,8 @@ export default function CourseWorkspaceClient({
                     <MarkdownViewer content={lesson.summary_md} embedded />
                   ) : null}
 
-                  {/* Key Code LTR Block */}
-                  {activeKeyCode ? (
+                  {/* Key Code LTR Block — rendered ONLY when this lesson actually has code */}
+                  {hasLessonCode && activeKeyCode ? (
                     <div className="space-y-1.5">
                       <div
                         className="text-[12px] font-extrabold"
@@ -1532,34 +1556,37 @@ export default function CourseWorkspaceClient({
                     </div>
                   ) : null}
 
-                  {/* Exam Tip Callout */}
+                  {/* Exam Tip Callout (calm warm whisper) */}
                   {activeExamTip ? (
                     <div
-                      className="rounded-2xl border p-4 text-[13px] font-semibold leading-relaxed"
+                      className="rounded-xl border p-4 text-[13px] font-semibold leading-relaxed"
                       style={{
-                        background: "var(--accent-warm-soft)",
+                        background:
+                          "color-mix(in srgb, var(--accent-warm-soft) 55%, var(--bg-canvas))",
                         borderColor:
-                          "color-mix(in srgb, var(--accent-warm) 35%, transparent)",
-                        color: "var(--accent-warm-text)",
+                          "color-mix(in srgb, var(--accent-warm) 22%, transparent)",
+                        color: "var(--text-primary)",
                       }}
                     >
                       {activeExamTip}
                     </div>
                   ) : null}
 
-                  {/* Quick Cheat Sheet Reference Table */}
-                  <div className="space-y-2 pt-2">
-                    <div
-                      className="flex items-center gap-1.5 text-[12px] font-extrabold"
-                      style={{ color: "var(--brand-primary)" }}
-                    >
-                      <Table2 className="h-4 w-4 shrink-0" />
-                      <span>
-                        ورقة القوانين والمقارنات السريعة (Cheat Sheet)
-                      </span>
+                  {/* Course-level Quick Cheat Sheet Table (shown for coding courses or lessons without rich chapter tables) */}
+                  {hasLessonCode || !lesson?.summary_md ? (
+                    <div className="space-y-2 pt-2">
+                      <div
+                        className="flex items-center gap-1.5 text-[12px] font-extrabold"
+                        style={{ color: "var(--brand-primary)" }}
+                      >
+                        <Table2 className="h-4 w-4 shrink-0" />
+                        <span>
+                          ورقة القوانين والمقارنات السريعة (Cheat Sheet)
+                        </span>
+                      </div>
+                      <CheatSheetTable course={course} />
                     </div>
-                    <CheatSheetTable course={course} />
-                  </div>
+                  ) : null}
 
                   {/* External Resources moved cleanly into Summary */}
                   {safeResources.length > 0 ? (

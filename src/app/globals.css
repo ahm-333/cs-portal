@@ -327,12 +327,12 @@ html.dark,
   unicode-bidi: isolate;
   font-family: var(--font-inter), sans-serif;
   font-weight: 600;
-  font-size: 0.88em;
-  padding: 0.05rem 0.42rem;
-  margin: 0.12rem 0.28rem;
+  font-size: 0.87em;
+  padding: 0.04rem 0.44rem;
+  margin: 0.08rem 0.2rem;
   border-radius: 6px;
-  background-color: var(--bg-subtle);
-  border-bottom: 2px solid var(--border-strong);
+  background-color: color-mix(in srgb, var(--brand-soft) 55%, var(--bg-subtle));
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 14%, var(--border-soft));
   color: var(--text-primary);
 }
 
@@ -1541,13 +1541,13 @@ html.dark .founder-portrait-frame,
   direction: ltr;
   unicode-bidi: isolate;
   font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
-  font-size: 0.84em;
+  font-size: 0.83em;
   font-weight: 600;
-  padding: 0.08rem 0.42rem;
+  padding: 0.06rem 0.4rem;
   border-radius: 6px;
-  background-color: var(--brand-soft);
+  background-color: color-mix(in srgb, var(--brand-soft) 65%, transparent);
   color: var(--brand-soft-text);
-  border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 15%, transparent);
 }
 
 .chapter-deep-list strong {

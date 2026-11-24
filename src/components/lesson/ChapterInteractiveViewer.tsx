@@ -8,8 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Cpu,
-  Flame,
-  Layers,
   LayoutList,
   Lightbulb,
   Maximize2,
@@ -17,6 +15,7 @@ import {
   NotebookPen,
   Sparkles,
   SquareStack,
+  Target,
   X,
   ZoomIn,
 } from "lucide-react";
@@ -28,7 +27,7 @@ interface ChapterInteractiveViewerProps {
 }
 
 type ViewerSubTab = "slides" | "lab";
-type SlideDisplayMode = "all" | "single";
+type SlideDisplayMode = "single" | "all";
 
 const MASTERY_STORAGE_KEY = "cs_portal_chapter_mastery_v1";
 
@@ -62,7 +61,8 @@ export default function ChapterInteractiveViewer({
   onGoToQuiz,
 }: ChapterInteractiveViewerProps) {
   const [subTab, setSubTab] = useState<ViewerSubTab>("slides");
-  const [displayMode, setDisplayMode] = useState<SlideDisplayMode>("all");
+  // Default to focused single-slide reading mode so each slide breathes cleanly
+  const [displayMode, setDisplayMode] = useState<SlideDisplayMode>("single");
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [activeLabStep, setActiveLabStep] = useState(0);
   const [masteredIds, setMasteredIds] = useState<string[]>(() =>
@@ -72,30 +72,54 @@ export default function ChapterInteractiveViewer({
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const slideTopRef = useRef<HTMLDivElement | null>(null);
 
-  // Escape handler for Zoom modal & fallback fullscreen
+  const totalSlides = chapter.slides.length;
+
+  // Keyboard shortcuts: Escape closes modals; Left/Right navigate in single-slide mode (RTL aware)
   useEffect(() => {
-    if (!zoomedSlide && !isFullscreen) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (zoomedSlide) {
           setZoomedSlide(null);
-        } else {
+        } else if (isFullscreen) {
           setIsFullscreen(false);
         }
+        return;
+      }
+
+      if (subTab !== "slides" || displayMode !== "single" || zoomedSlide) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      // In RTL, ArrowLeft advances to next slide, ArrowRight goes to previous slide
+      if (e.key === "ArrowLeft") {
+        setActiveSlideIndex((prev) => Math.min(totalSlides - 1, prev + 1));
+      } else if (e.key === "ArrowRight") {
+        setActiveSlideIndex((prev) => Math.max(0, prev - 1));
       }
     };
+
     window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [zoomedSlide, isFullscreen, subTab, displayMode, totalSlides]);
+
+  useEffect(() => {
+    if (!zoomedSlide && !isFullscreen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prevOverflow;
-      window.removeEventListener("keydown", onKeyDown);
     };
   }, [zoomedSlide, isFullscreen]);
 
   const masteredSet = useMemo(() => new Set(masteredIds), [masteredIds]);
-  const totalSlides = chapter.slides.length;
   const masteredCount = chapter.slides.filter((s) =>
     masteredSet.has(s.id)
   ).length;
@@ -133,6 +157,18 @@ export default function ChapterInteractiveViewer({
     [chapter.chapterNum, chapter.slides, displayMode]
   );
 
+  const handleStepSlide = useCallback(
+    (nextIdx: number) => {
+      const clamped = Math.max(0, Math.min(totalSlides - 1, nextIdx));
+      setActiveSlideIndex(clamped);
+      slideTopRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    },
+    [totalSlides]
+  );
+
   const visibleSlides = useMemo(() => {
     if (displayMode === "single") {
       const safe = chapter.slides[activeSlideIndex] ?? chapter.slides[0];
@@ -149,11 +185,11 @@ export default function ChapterInteractiveViewer({
       ref={containerRef}
       className={
         isFullscreen
-          ? "fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-[var(--bg-canvas)] p-4 sm:p-6"
-          : "space-y-5"
+          ? "chapter-viewer fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-[var(--bg-canvas)] p-4 sm:p-6"
+          : "chapter-viewer space-y-4"
       }
     >
-      {/* ==================== CHAPTER EDITORIAL BANNER ==================== */}
+      {/* ==================== CALM EDITORIAL HEADER BAR ==================== */}
       <div
         className="rounded-2xl border p-4 sm:p-5"
         style={{
@@ -165,80 +201,64 @@ export default function ChapterInteractiveViewer({
           <div className="min-w-0 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <span
-                className="font-mono-code inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold"
+                className="font-mono-code inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold"
                 style={{
-                  background: "var(--accent-warm-soft)",
-                  color: "var(--accent-warm-text)",
+                  background:
+                    "color-mix(in srgb, var(--brand-soft) 75%, transparent)",
+                  color: "var(--brand-soft-text)",
                 }}
               >
-                <Layers className="h-3 w-3" />
                 Chapter {chapter.chapterNum} · {chapter.courseCode}
               </span>
               <span
-                className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold"
-                style={{
-                  background: "var(--success-soft)",
-                  color: "var(--success-fg)",
-                }}
+                className="text-[11.5px] font-semibold"
+                style={{ color: "var(--text-muted)" }}
               >
-                <BookOpen className="h-3 w-3" />
-                {totalSlides} سلايد تفاعلية
+                {totalSlides} سلايد + معمل تفاعلي
               </span>
             </div>
 
-            <h3 className="text-[17px] font-black leading-snug text-[var(--text-primary)] sm:text-[19px]">
+            <h3 className="text-[16.5px] font-black leading-snug text-[var(--text-primary)] sm:text-[18.5px]">
               <span className="font-en">{chapter.titleEn}</span>
               <span
-                className="mx-1.5 text-[13px] font-bold opacity-50"
+                className="mx-1.5 font-normal opacity-40"
                 style={{ color: "var(--text-muted)" }}
               >
-                —
+                ·
               </span>
-              <span className="text-[15px] font-extrabold text-[var(--text-secondary)] sm:text-[16px]">
+              <span className="text-[14.5px] font-bold text-[var(--text-secondary)] sm:text-[15.5px]">
                 {chapter.titleAr}
               </span>
             </h3>
-
-            <p
-              className="text-[12.5px] leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              {chapter.subtitle}
-            </p>
           </div>
 
-          {/* Right Controls: Mastery Pill + Fullscreen */}
+          {/* Quiet Mastery Progress + Fullscreen */}
           <div className="flex flex-wrap items-center gap-2">
             <div
-              className="flex items-center gap-2.5 rounded-xl border px-3 py-2"
+              className="flex items-center gap-2.5 rounded-xl border px-3 py-1.5"
               style={{
                 background: "var(--bg-surface)",
                 borderColor: "var(--border-soft)",
               }}
             >
-              <div className="text-right">
-                <div
-                  className="text-[10.5px] font-bold"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  إنجاز السلايدات
-                </div>
-                <div className="font-mono-code text-[12.5px] font-black text-[var(--text-primary)]">
-                  {masteredCount} / {totalSlides}
-                </div>
-              </div>
+              <span
+                className="text-[11px] font-bold"
+                style={{ color: "var(--text-muted)" }}
+              >
+                تمت مذاكرته
+              </span>
+              <span className="font-mono-code text-[12px] font-extrabold text-[var(--text-primary)]">
+                {masteredCount}/{totalSlides}
+              </span>
               <div
-                className="h-2 w-16 overflow-hidden rounded-full sm:w-20"
+                className="h-1.5 w-14 overflow-hidden rounded-full sm:w-16"
                 style={{ background: "var(--bg-subtle)" }}
               >
                 <div
                   className="h-full rounded-full transition-all duration-300"
                   style={{
                     width: `${masteryPct}%`,
-                    background:
-                      masteryPct === 100
-                        ? "var(--success-fg)"
-                        : "var(--accent-warm)",
+                    background: "var(--success-fg)",
                   }}
                 />
               </div>
@@ -248,34 +268,37 @@ export default function ChapterInteractiveViewer({
               type="button"
               onClick={() => setIsFullscreen((prev) => !prev)}
               aria-label={isFullscreen ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
-              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border px-3 py-2 text-[12px] font-bold transition-colors hover:opacity-90 cursor-pointer"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:opacity-85 cursor-pointer sm:w-auto sm:gap-1.5 sm:px-3"
               style={{
-                background: "var(--brand-soft)",
-                borderColor: "transparent",
-                color: "var(--brand-soft-text)",
+                background: "var(--bg-surface)",
+                borderColor: "var(--border-soft)",
+                color: "var(--text-secondary)",
               }}
             >
               {isFullscreen ? (
                 <>
                   <Minimize2 className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">إغلاق ملء الشاشة</span>
+                  <span className="hidden text-[11.5px] font-bold sm:inline">
+                    إغلاق
+                  </span>
                 </>
               ) : (
                 <>
                   <Maximize2 className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">ملء الشاشة</span>
+                  <span className="hidden text-[11.5px] font-bold sm:inline">
+                    ملء الشاشة
+                  </span>
                 </>
               )}
             </button>
           </div>
         </div>
 
-        {/* ==================== SUB-TABS & VIEW MODE BAR ==================== */}
+        {/* Clean Toolbar Row: Sub-tabs + Display Mode + Quiz Jump */}
         <div
-          className="mt-4 flex flex-wrap items-center justify-between gap-2.5 border-t pt-3.5"
+          className="mt-3.5 flex flex-wrap items-center justify-between gap-2.5 border-t pt-3.5"
           style={{ borderColor: "var(--border-soft)" }}
         >
-          {/* Sub-Tabs: Slides vs Interactive Lab (NO Quiz here!) */}
           <div
             role="tablist"
             aria-label="أقسام الشرح التفاعلي"
@@ -290,12 +313,12 @@ export default function ChapterInteractiveViewer({
               role="tab"
               aria-selected={subTab === "slides"}
               onClick={() => setSubTab("slides")}
-              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-[12px] font-extrabold transition-all cursor-pointer"
+              className="inline-flex min-h-[34px] items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-[12px] font-extrabold transition-all cursor-pointer"
               style={
                 subTab === "slides"
                   ? {
-                      background: "var(--brand-primary)",
-                      color: "#ffffff",
+                      background: "var(--brand-soft)",
+                      color: "var(--brand-soft-text)",
                     }
                   : {
                       background: "transparent",
@@ -304,8 +327,8 @@ export default function ChapterInteractiveViewer({
               }
             >
               <BookOpen className="h-3.5 w-3.5" />
-              <span>الشرح سلايد بسلايد</span>
-              <span className="font-mono-code text-[10.5px] opacity-80">
+              <span>شرح السلايدات</span>
+              <span className="font-mono-code text-[10.5px] opacity-75">
                 ({totalSlides})
               </span>
             </button>
@@ -315,12 +338,12 @@ export default function ChapterInteractiveViewer({
               role="tab"
               aria-selected={subTab === "lab"}
               onClick={() => setSubTab("lab")}
-              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-[12px] font-extrabold transition-all cursor-pointer"
+              className="inline-flex min-h-[34px] items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-[12px] font-extrabold transition-all cursor-pointer"
               style={
                 subTab === "lab"
                   ? {
-                      background: "var(--accent-warm)",
-                      color: "#ffffff",
+                      background: "var(--brand-soft)",
+                      color: "var(--brand-soft-text)",
                     }
                   : {
                       background: "transparent",
@@ -334,10 +357,9 @@ export default function ChapterInteractiveViewer({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Display Mode Switcher (Slides only) */}
             {subTab === "slides" ? (
               <div
-                className="inline-flex items-center gap-1 rounded-xl border p-0.5"
+                className="inline-flex items-center gap-0.5 rounded-xl border p-0.5"
                 style={{
                   background: "var(--bg-surface)",
                   borderColor: "var(--border-soft)",
@@ -345,24 +367,8 @@ export default function ChapterInteractiveViewer({
               >
                 <button
                   type="button"
-                  onClick={() => setDisplayMode("all")}
-                  className="inline-flex min-h-[32px] items-center gap-1 rounded-lg px-2.5 py-1 text-[11.5px] font-bold transition-colors cursor-pointer"
-                  style={
-                    displayMode === "all"
-                      ? {
-                          background: "var(--bg-subtle)",
-                          color: "var(--text-primary)",
-                        }
-                      : { color: "var(--text-muted)" }
-                  }
-                >
-                  <LayoutList className="h-3.5 w-3.5" />
-                  <span>عرض الكل</span>
-                </button>
-                <button
-                  type="button"
                   onClick={() => setDisplayMode("single")}
-                  className="inline-flex min-h-[32px] items-center gap-1 rounded-lg px-2.5 py-1 text-[11.5px] font-bold transition-colors cursor-pointer"
+                  className="inline-flex min-h-[30px] items-center gap-1 rounded-lg px-2.5 py-1 text-[11.5px] font-bold transition-colors cursor-pointer"
                   style={
                     displayMode === "single"
                       ? {
@@ -375,19 +381,35 @@ export default function ChapterInteractiveViewer({
                   <SquareStack className="h-3.5 w-3.5" />
                   <span>سلايد بسلايد</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setDisplayMode("all")}
+                  className="inline-flex min-h-[30px] items-center gap-1 rounded-lg px-2.5 py-1 text-[11.5px] font-bold transition-colors cursor-pointer"
+                  style={
+                    displayMode === "all"
+                      ? {
+                          background: "var(--bg-subtle)",
+                          color: "var(--text-primary)",
+                        }
+                      : { color: "var(--text-muted)" }
+                  }
+                >
+                  <LayoutList className="h-3.5 w-3.5" />
+                  <span>عرض الكل</span>
+                </button>
               </div>
             ) : null}
 
-            {/* Bridge button to the dedicated Quiz tab */}
             {onGoToQuiz ? (
               <button
                 type="button"
                 onClick={onGoToQuiz}
-                className="inline-flex min-h-[34px] items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11.5px] font-extrabold transition-colors hover:opacity-90 cursor-pointer"
+                className="inline-flex min-h-[32px] items-center gap-1.5 rounded-xl border px-3 py-1 text-[11.5px] font-bold transition-colors hover:opacity-85 cursor-pointer"
                 style={{
-                  background: "var(--success-soft)",
+                  background:
+                    "color-mix(in srgb, var(--success-soft) 70%, transparent)",
                   borderColor:
-                    "color-mix(in srgb, var(--success-fg) 30%, transparent)",
+                    "color-mix(in srgb, var(--success-fg) 22%, transparent)",
                   color: "var(--success-fg)",
                 }}
               >
@@ -399,12 +421,12 @@ export default function ChapterInteractiveViewer({
         </div>
       </div>
 
-      {/* ==================== TAB 1: SLIDE-BY-SLIDE EXPLANATION ==================== */}
+      {/* ==================== TAB 1: REFINED SLIDE VIEWER ==================== */}
       {subTab === "slides" ? (
-        <div className="space-y-4">
-          {/* Quick-Jump Slide Strip */}
+        <div ref={slideTopRef} className="space-y-4">
+          {/* Calm Quick-Jump Navigator Strip */}
           <div
-            className="rounded-2xl border p-3"
+            className="rounded-2xl border px-3 py-2.5"
             style={{
               background: "var(--bg-surface)",
               borderColor: "var(--border-soft)",
@@ -412,17 +434,17 @@ export default function ChapterInteractiveViewer({
           >
             <div className="mb-2 flex items-center justify-between gap-2 px-1">
               <span
-                className="text-[11px] font-extrabold"
+                className="text-[11px] font-bold"
                 style={{ color: "var(--text-muted)" }}
               >
-                تنقل سريع بين السلايدات ({totalSlides}):
+                فهرس السلايدات السريع
               </span>
               {displayMode === "single" ? (
                 <span
                   className="font-mono-code text-[11px] font-bold"
-                  style={{ color: "var(--accent-warm-text)" }}
+                  style={{ color: "var(--text-secondary)" }}
                 >
-                  Slide {activeSlideIndex + 1} / {totalSlides}
+                  {activeSlideIndex + 1} / {totalSlides}
                 </span>
               ) : null}
             </div>
@@ -437,19 +459,20 @@ export default function ChapterInteractiveViewer({
                     key={slide.id}
                     type="button"
                     onClick={() => handleJumpToSlide(idx)}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-[11.5px] font-bold transition-all cursor-pointer"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[11.5px] font-bold transition-all cursor-pointer"
                     style={
                       isActive
                         ? {
-                            background: "var(--accent-warm)",
-                            borderColor: "var(--accent-warm)",
+                            background: "var(--hero-bg)",
+                            borderColor: "var(--hero-bg)",
                             color: "#ffffff",
                           }
                         : isDone
                           ? {
-                              background: "var(--success-soft)",
+                              background:
+                                "color-mix(in srgb, var(--success-soft) 65%, transparent)",
                               borderColor:
-                                "color-mix(in srgb, var(--success-fg) 40%, transparent)",
+                                "color-mix(in srgb, var(--success-fg) 26%, transparent)",
                               color: "var(--success-fg)",
                             }
                           : {
@@ -467,42 +490,40 @@ export default function ChapterInteractiveViewer({
             </div>
           </div>
 
-          {/* Slide Cards */}
-          <div className="space-y-5">
+          {/* Slide Card(s) */}
+          <div className="space-y-6">
             {visibleSlides.map(({ slide, index }) => {
               const isMastered = masteredSet.has(slide.id);
               return (
                 <article
                   key={slide.id}
                   id={`chapter-slide-${chapter.chapterNum}-${slide.id}`}
-                  className="scroll-mt-24 overflow-hidden rounded-2xl border transition-colors"
+                  className="scroll-mt-24 overflow-hidden rounded-2xl border"
                   style={{
                     background: "var(--bg-surface)",
-                    borderColor: isMastered
-                      ? "color-mix(in srgb, var(--success-fg) 45%, var(--border-soft))"
-                      : "var(--border-soft)",
+                    borderColor: "var(--border-soft)",
                     boxShadow: "var(--shadow-card)",
                   }}
                 >
-                  {/* Slide Header */}
+                  {/* Understated Editorial Slide Header */}
                   <div
-                    className="flex flex-wrap items-center justify-between gap-2.5 border-b px-4 py-3 sm:px-5"
+                    className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3.5 sm:px-6"
                     style={{
                       background: "var(--bg-canvas)",
                       borderColor: "var(--border-soft)",
                     }}
                   >
-                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2.5">
                       <span
-                        className="font-mono-code shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-extrabold"
+                        className="font-mono-code shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold"
                         style={{
-                          background: "var(--accent-warm-soft)",
-                          color: "var(--accent-warm-text)",
+                          background: "var(--bg-subtle)",
+                          color: "var(--text-secondary)",
                         }}
                       >
                         {slide.slideRef}
                       </span>
-                      <h4 className="text-[14.5px] font-black leading-snug text-[var(--text-primary)] sm:text-[15.5px]">
+                      <h4 className="text-[15px] font-black leading-snug text-[var(--text-primary)] sm:text-[16px]">
                         {slide.title}
                       </h4>
                     </div>
@@ -511,12 +532,14 @@ export default function ChapterInteractiveViewer({
                       type="button"
                       onClick={() => toggleMastered(slide.id)}
                       aria-pressed={isMastered}
-                      className="inline-flex min-h-[34px] shrink-0 items-center gap-1.5 rounded-xl border px-3 py-1 text-[11.5px] font-extrabold transition-all cursor-pointer"
+                      className="inline-flex min-h-[34px] shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1 text-[11.5px] font-bold transition-all cursor-pointer"
                       style={
                         isMastered
                           ? {
-                              background: "var(--success-soft)",
-                              borderColor: "var(--success-fg)",
+                              background:
+                                "color-mix(in srgb, var(--success-soft) 75%, transparent)",
+                              borderColor:
+                                "color-mix(in srgb, var(--success-fg) 35%, transparent)",
                               color: "var(--success-fg)",
                             }
                           : {
@@ -528,38 +551,40 @@ export default function ChapterInteractiveViewer({
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       <span>
-                        {isMastered ? "تمت المذاكرة ✓" : "تحديد كمفهوم"}
+                        {isMastered ? "فهمت السلايد ✓" : "تحديد كمفهوم"}
                       </span>
                     </button>
                   </div>
 
-                  {/* Split View Body */}
-                  <div className="grid grid-cols-1 gap-4 p-4 sm:p-5 xl:grid-cols-12 xl:gap-5">
-                    {/* RIGHT PANE (RTL Start): Original Slide + Table + SVG Diagram */}
-                    <div className="space-y-3.5 xl:col-span-5">
+                  {/* Calm Split-View Content */}
+                  <div className="grid grid-cols-1 gap-6 p-4 sm:p-6 xl:grid-cols-12 xl:gap-7">
+                    {/* RIGHT PANE: Original Slide Reference + Diagram */}
+                    <div className="space-y-4 xl:col-span-5">
                       <div
                         dir="ltr"
                         className="chapter-orig-slide rounded-xl border p-4 text-left"
                         style={{
-                          background: "var(--bg-canvas)",
+                          background:
+                            "color-mix(in srgb, var(--bg-canvas) 75%, var(--bg-surface))",
                           borderColor: "var(--border-soft)",
-                          borderLeftWidth: "3.5px",
-                          borderLeftColor: "var(--brand-primary)",
+                          borderLeftWidth: "3px",
+                          borderLeftColor:
+                            "color-mix(in srgb, var(--brand-primary) 55%, transparent)",
                         }}
                       >
                         <div
-                          className="font-mono-code mb-2.5 flex items-center justify-between text-[10.5px] font-bold uppercase tracking-wider"
-                          style={{ color: "var(--brand-primary)" }}
+                          className="font-mono-code mb-2.5 flex items-center justify-between text-[10.5px] font-semibold uppercase tracking-wider"
+                          style={{ color: "var(--text-muted)" }}
                         >
                           <span>Original Slide</span>
                           <span>
-                            #{index + 1} · {slide.slideRef}
+                            {index + 1}/{totalSlides} · {slide.slideRef}
                           </span>
                         </div>
 
                         {slide.enPoints && slide.enPoints.length > 0 ? (
                           <ul
-                            className="space-y-1.5 pl-4 text-[13px] leading-relaxed list-disc"
+                            className="space-y-2 pl-4 text-[13px] leading-[1.7] list-disc"
                             style={{ color: "var(--text-primary)" }}
                           >
                             {slide.enPoints.map((pt, i) => (
@@ -573,7 +598,7 @@ export default function ChapterInteractiveViewer({
 
                         {slide.tableHtml ? (
                           <div
-                            className="mt-3 overflow-x-auto rounded-lg border"
+                            className="mt-3.5 overflow-x-auto rounded-lg border"
                             style={{
                               borderColor: "var(--border-soft)",
                               background: "var(--bg-surface)",
@@ -585,20 +610,20 @@ export default function ChapterInteractiveViewer({
                         ) : null}
                       </div>
 
-                      {/* Dark Editorial Navy SVG Diagram Stage */}
+                      {/* Soft Matte Dark Slate SVG Diagram Stage */}
                       {slide.svg ? (
-                        <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0e1726] p-3 text-white">
-                          <div className="mb-2 flex items-center justify-between gap-2 px-1">
-                            <span className="font-mono-code text-[10.5px] font-bold uppercase tracking-wider text-[#66c7a6]">
+                        <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#111a2b] p-3.5 text-white">
+                          <div className="mb-2.5 flex items-center justify-between gap-2 px-0.5">
+                            <span className="font-mono-code text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">
                               Diagram · {slide.slideRef}
                             </span>
                             <button
                               type="button"
                               onClick={() => setZoomedSlide(slide)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-white/15 bg-white/10 px-2.5 py-1 text-[11px] font-bold text-slate-100 transition-colors hover:bg-white/20 cursor-pointer"
+                              className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[11px] font-semibold text-slate-200 transition-colors hover:bg-white/[0.14] cursor-pointer"
                             >
-                              <ZoomIn className="h-3.5 w-3.5 text-[#e58a62]" />
-                              <span>تكبير الرسمة</span>
+                              <ZoomIn className="h-3.5 w-3.5 text-[#66c7a6]" />
+                              <span>تكبير</span>
                             </button>
                           </div>
 
@@ -613,12 +638,12 @@ export default function ChapterInteractiveViewer({
                               }
                             }}
                             title="اضغط لتكبير الرسمة"
-                            className="chapter-svg-stage cursor-zoom-in overflow-x-auto rounded-lg bg-[#0c1017]/60 p-2"
+                            className="chapter-svg-stage cursor-zoom-in overflow-x-auto rounded-lg bg-[#0d1422] p-2"
                             dangerouslySetInnerHTML={{ __html: slide.svg }}
                           />
 
                           {slide.svgCaption ? (
-                            <p className="mt-2 px-1 text-center text-[11.5px] leading-relaxed text-slate-300">
+                            <p className="mt-2.5 px-1 text-center text-[11.5px] leading-relaxed text-slate-300/90">
                               {slide.svgCaption}
                             </p>
                           ) : null}
@@ -626,55 +651,61 @@ export default function ChapterInteractiveViewer({
                       ) : null}
                     </div>
 
-                    {/* LEFT PANE (RTL End): Deep Arabic Engineering Explanation */}
-                    <div className="flex flex-col justify-between space-y-3.5 xl:col-span-7">
-                      <div className="space-y-3.5">
-                        {/* Why Box */}
+                    {/* LEFT PANE: Clean Airy Arabic + English Explanation */}
+                    <div className="flex flex-col justify-between space-y-5 xl:col-span-7">
+                      <div className="space-y-5">
+                        {/* Calm "Core Idea" Whisper Highlight */}
                         <div
-                          className="rounded-xl border p-3.5"
+                          className="rounded-xl px-4 py-3.5"
                           style={{
-                            background: "var(--bg-canvas)",
-                            borderColor: "var(--border-soft)",
-                            borderRightWidth: "3.5px",
-                            borderRightColor: "var(--brand-primary)",
+                            background:
+                              "color-mix(in srgb, var(--brand-soft) 45%, var(--bg-canvas))",
+                            borderRight:
+                              "3px solid color-mix(in srgb, var(--brand-primary) 55%, transparent)",
                           }}
                         >
                           <div
-                            className="mb-1 flex items-center gap-1.5 text-[12px] font-extrabold"
-                            style={{ color: "var(--brand-primary)" }}
+                            className="mb-1 flex items-center gap-1.5 text-[11.5px] font-extrabold"
+                            style={{ color: "var(--brand-soft-text)" }}
                           >
-                            <Lightbulb className="h-3.5 w-3.5 shrink-0" />
-                            <span>الفكرة الهندسية</span>
+                            <Lightbulb className="h-3.5 w-3.5 shrink-0 opacity-85" />
+                            <span>الفكرة الأساسية</span>
                           </div>
                           <p
-                            className="text-[13.5px] font-semibold leading-relaxed"
+                            className="text-[13.5px] font-semibold leading-[1.8]"
                             style={{ color: "var(--text-primary)" }}
                             dangerouslySetInnerHTML={{ __html: slide.why }}
                           />
                         </div>
 
-                        {/* Deep Explanation Points */}
+                        {/* Open, Breathable Explanation List (No heavy box per bullet!) */}
                         <div className="space-y-2">
                           <div
-                            className="text-[12px] font-extrabold"
+                            className="text-[11.5px] font-extrabold tracking-wide"
                             style={{ color: "var(--text-muted)" }}
                           >
-                            الشرح المفصل بالعربي والمصطلح الإنجليزي:
+                            الشرح المفصل
                           </div>
-                          <ul className="chapter-deep-list space-y-2">
+                          <ul
+                            className="chapter-deep-list divide-y"
+                            style={{
+                              borderColor:
+                                "color-mix(in srgb, var(--border-soft) 65%, transparent)",
+                            }}
+                          >
                             {slide.deepPoints.map((pt, i) => (
                               <li
                                 key={i}
-                                className="flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5 text-[13.5px] leading-relaxed"
+                                className="flex items-start gap-3 py-2.5 text-[13.5px] leading-[1.85] first:pt-1 last:pb-1"
                                 style={{
-                                  background: "var(--bg-canvas)",
-                                  borderColor: "var(--border-soft)",
-                                  color: "var(--text-primary)",
+                                  color: "var(--text-secondary)",
+                                  borderColor:
+                                    "color-mix(in srgb, var(--border-soft) 65%, transparent)",
                                 }}
                               >
                                 <span
-                                  className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
-                                  style={{ background: "var(--accent-warm)" }}
+                                  className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full opacity-75"
+                                  style={{ background: "var(--brand-primary)" }}
                                 />
                                 <span
                                   className="min-w-0 flex-1"
@@ -685,48 +716,62 @@ export default function ChapterInteractiveViewer({
                           </ul>
                         </div>
 
-                        {/* Exam Spot Callout */}
+                        {/* Soft Warm Exam Focus Callout */}
                         <div
-                          className="rounded-xl border p-3.5"
+                          className="rounded-xl border px-4 py-3.5"
                           style={{
-                            background: "var(--accent-warm-soft)",
+                            background:
+                              "color-mix(in srgb, var(--accent-warm-soft) 50%, var(--bg-canvas))",
                             borderColor:
-                              "color-mix(in srgb, var(--accent-warm) 35%, transparent)",
+                              "color-mix(in srgb, var(--accent-warm) 20%, transparent)",
                           }}
                         >
                           <div
-                            className="mb-1 flex items-center gap-1.5 text-[12px] font-extrabold"
+                            className="mb-1 flex items-center gap-1.5 text-[11.5px] font-extrabold"
                             style={{ color: "var(--accent-warm-text)" }}
                           >
-                            <Flame className="h-3.5 w-3.5 shrink-0" />
-                            <span>موضع سؤال الامتحان (Exam Spot)</span>
+                            <Target className="h-3.5 w-3.5 shrink-0 opacity-85" />
+                            <span>موضع سؤال الامتحان</span>
                           </div>
                           <p
-                            className="text-[13px] font-semibold leading-relaxed text-[var(--text-primary)]"
+                            className="text-[13px] font-medium leading-[1.8]"
+                            style={{ color: "var(--text-primary)" }}
                             dangerouslySetInnerHTML={{ __html: slide.examSpot }}
                           />
                         </div>
                       </div>
 
-                      {/* Quick Notebook Strip (Editorial Navy Gradient) */}
+                      {/* Calm Sage-Mint Quick Takeaway Card (Airy in both Light & Dark!) */}
                       <div
-                        className="rounded-xl border border-white/10 p-3.5 text-white"
+                        className="rounded-xl border px-4 py-3.5"
                         style={{
                           background:
-                            "linear-gradient(135deg, var(--hero-bg) 0%, var(--hero-bg-end) 100%)",
+                            "color-mix(in srgb, var(--success-soft) 45%, var(--bg-canvas))",
+                          borderColor:
+                            "color-mix(in srgb, var(--success-fg) 20%, transparent)",
                         }}
                       >
-                        <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold text-[#66c7a6]">
-                          <NotebookPen className="h-3.5 w-3.5 shrink-0" />
-                          <span>كشكولك — ملخص الحفظ السريع</span>
+                        <div
+                          className="mb-1.5 flex items-center gap-1.5 text-[11.5px] font-extrabold"
+                          style={{ color: "var(--success-fg)" }}
+                        >
+                          <NotebookPen className="h-3.5 w-3.5 shrink-0 opacity-85" />
+                          <span>الخلاصة السريعة للحفظ</span>
                         </div>
-                        <pre
+                        <p
                           dir="ltr"
-                          className="font-mono-code whitespace-pre-wrap text-[12px] leading-relaxed text-slate-100"
+                          className="font-en whitespace-pre-line text-left text-[12.5px] font-semibold leading-[1.7] text-[var(--text-primary)]"
                         >
                           {slide.notebookEn}
-                        </pre>
-                        <p className="mt-2 border-t border-white/10 pt-2 text-[12.5px] font-semibold leading-relaxed text-slate-200">
+                        </p>
+                        <p
+                          className="mt-2 border-t pt-2 text-[12.5px] font-medium leading-relaxed"
+                          style={{
+                            borderColor:
+                              "color-mix(in srgb, var(--success-fg) 16%, transparent)",
+                            color: "var(--text-secondary)",
+                          }}
+                        >
                           {slide.notebookAr}
                         </p>
                       </div>
@@ -737,10 +782,10 @@ export default function ChapterInteractiveViewer({
             })}
           </div>
 
-          {/* Single-Slide Stepper Footer */}
+          {/* Single-Slide Stepper Navigation Bar */}
           {displayMode === "single" ? (
             <div
-              className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border p-3"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3"
               style={{
                 background: "var(--bg-surface)",
                 borderColor: "var(--border-soft)",
@@ -749,10 +794,8 @@ export default function ChapterInteractiveViewer({
               <button
                 type="button"
                 disabled={activeSlideIndex <= 0}
-                onClick={() =>
-                  setActiveSlideIndex((prev) => Math.max(0, prev - 1))
-                }
-                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border px-4 py-2 text-[12.5px] font-extrabold transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                onClick={() => handleStepSlide(activeSlideIndex - 1)}
+                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border px-4 py-2 text-[12.5px] font-bold transition-colors hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
                 style={{
                   background: "var(--bg-canvas)",
                   borderColor: "var(--border-soft)",
@@ -763,31 +806,65 @@ export default function ChapterInteractiveViewer({
                 <span>السلايد السابقة</span>
               </button>
 
-              <span className="font-mono-code text-[12px] font-bold text-[var(--text-muted)]">
-                {activeSlideIndex + 1} / {totalSlides}
-              </span>
+              <div className="flex flex-col items-center gap-1">
+                <span className="font-mono-code text-[12px] font-bold text-[var(--text-secondary)]">
+                  Slide {activeSlideIndex + 1} / {totalSlides}
+                </span>
+                <div
+                  className="h-1 w-28 overflow-hidden rounded-full sm:w-40"
+                  style={{ background: "var(--bg-subtle)" }}
+                >
+                  <div
+                    className="h-full rounded-full transition-all duration-300"
+                    style={{
+                      width: `${Math.round(((activeSlideIndex + 1) / totalSlides) * 100)}%`,
+                      background: "var(--brand-primary)",
+                    }}
+                  />
+                </div>
+              </div>
 
-              <button
-                type="button"
-                disabled={activeSlideIndex >= totalSlides - 1}
-                onClick={() =>
-                  setActiveSlideIndex((prev) =>
-                    Math.min(totalSlides - 1, prev + 1)
-                  )
-                }
-                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl px-4 py-2 text-[12.5px] font-extrabold text-white transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-                style={{ background: "var(--hero-bg)" }}
-              >
-                <span>السلايد التالية</span>
-                <ChevronLeft className="h-4 w-4" />
-              </button>
+              {activeSlideIndex < totalSlides - 1 ? (
+                <button
+                  type="button"
+                  onClick={() => handleStepSlide(activeSlideIndex + 1)}
+                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl px-4 py-2 text-[12.5px] font-extrabold text-white transition-opacity hover:opacity-95 cursor-pointer"
+                  style={{ background: "var(--hero-bg)" }}
+                >
+                  <span>السلايد التالية</span>
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+              ) : onGoToQuiz ? (
+                <button
+                  type="button"
+                  onClick={onGoToQuiz}
+                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl px-4 py-2 text-[12.5px] font-extrabold text-white transition-opacity hover:opacity-95 cursor-pointer"
+                  style={{ background: "var(--success-fg)" }}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>ابدأ كويز الشابتر</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border px-4 py-2 text-[12.5px] font-bold opacity-45"
+                  style={{
+                    background: "var(--bg-canvas)",
+                    borderColor: "var(--border-soft)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  <span>نهاية الشابتر ✓</span>
+                </button>
+              )}
             </div>
           ) : null}
         </div>
       ) : (
         /* ==================== TAB 2: INTERACTIVE LAB ==================== */
         <div
-          className="space-y-4 rounded-2xl border p-4 sm:p-5"
+          className="space-y-4 rounded-2xl border p-4 sm:p-6"
           style={{
             background: "var(--bg-surface)",
             borderColor: "var(--border-soft)",
@@ -795,12 +872,12 @@ export default function ChapterInteractiveViewer({
         >
           <div className="space-y-1">
             <span
-              className="text-[11px] font-extrabold"
+              className="text-[11px] font-bold"
               style={{ color: "var(--success-fg)" }}
             >
-              المعمل التفاعلي العملي
+              تطبيق عملي تفاعلي
             </span>
-            <h4 className="text-[16.5px] font-black text-[var(--text-primary)] sm:text-[18px]">
+            <h4 className="text-[16px] font-black text-[var(--text-primary)] sm:text-[17.5px]">
               {chapter.lab.title}
             </h4>
             <p
@@ -811,7 +888,7 @@ export default function ChapterInteractiveViewer({
             </p>
           </div>
 
-          {/* Step Selector Buttons */}
+          {/* Calm Step Selector Pills */}
           <div className="flex flex-wrap items-center gap-2">
             {chapter.lab.steps.map((step, idx) => {
               const active = idx === activeLabStep;
@@ -820,12 +897,12 @@ export default function ChapterInteractiveViewer({
                   key={`${step.btn}-${idx}`}
                   type="button"
                   onClick={() => setActiveLabStep(idx)}
-                  className="inline-flex min-h-[40px] items-center rounded-xl border px-3.5 py-2 text-[12.5px] font-extrabold transition-all cursor-pointer"
+                  className="inline-flex min-h-[38px] items-center rounded-xl border px-3.5 py-1.5 text-[12px] font-bold transition-all cursor-pointer"
                   style={
                     active
                       ? {
-                          background: "var(--accent-warm)",
-                          borderColor: "var(--accent-warm)",
+                          background: "var(--hero-bg)",
+                          borderColor: "var(--hero-bg)",
                           color: "#ffffff",
                         }
                       : {
@@ -841,9 +918,9 @@ export default function ChapterInteractiveViewer({
             })}
           </div>
 
-          {/* Dark Editorial Navy Lab Stage */}
+          {/* Soft Matte Dark Slate Lab Stage */}
           {currentLabStep ? (
-            <div className="space-y-4 overflow-hidden rounded-2xl border border-white/10 bg-[#0e1726] p-4 text-white sm:p-5">
+            <div className="space-y-4 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111a2b] p-4 text-white sm:p-5">
               <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-white/10 pb-3">
                 <h5
                   dir="ltr"
@@ -851,7 +928,7 @@ export default function ChapterInteractiveViewer({
                 >
                   {currentLabStep.heading}
                 </h5>
-                <span className="font-mono-code rounded-full border border-[#66c7a6]/40 bg-[#66c7a6]/15 px-3 py-1 text-[11.5px] font-extrabold text-[#66c7a6]">
+                <span className="font-mono-code rounded-md border border-[#66c7a6]/30 bg-[#66c7a6]/12 px-2.5 py-1 text-[11px] font-bold text-[#88d4b9]">
                   {currentLabStep.badge}
                 </span>
               </div>
@@ -866,7 +943,7 @@ export default function ChapterInteractiveViewer({
                 />
               ) : null}
 
-              <div className="rounded-xl border border-white/10 bg-white/[0.05] p-3.5 text-[13.5px] leading-relaxed text-slate-100">
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-4 text-[13.5px] leading-[1.85] text-slate-100">
                 {currentLabStep.detail}
               </div>
 
@@ -877,7 +954,7 @@ export default function ChapterInteractiveViewer({
                 <span className="text-slate-300">
                   {currentLabStep.telemetryLeft}
                 </span>
-                <span className="font-bold text-[#f0a786]">
+                <span className="font-semibold text-[#e8b398]">
                   {currentLabStep.telemetryRight}
                 </span>
               </div>
@@ -897,11 +974,11 @@ export default function ChapterInteractiveViewer({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0e1726] text-white shadow-2xl"
+            className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#111a2b] text-white shadow-2xl"
           >
             <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5">
               <div className="min-w-0">
-                <span className="font-mono-code text-[11px] font-bold text-[#e58a62]">
+                <span className="font-mono-code text-[11px] font-semibold text-slate-400">
                   {zoomedSlide.slideRef}
                 </span>
                 <h5 className="truncate text-[14px] font-extrabold text-white">
