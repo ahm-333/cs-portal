@@ -110,7 +110,7 @@ export function WithWithoutCompare() {
         <div
           role="tablist"
           aria-label="تبديل عرض المقارنة"
-          className="inline-flex items-center gap-1 p-1 rounded-full border"
+          className="grid grid-cols-2 w-full max-w-[300px] items-center gap-1 p-1 rounded-2xl border"
           style={{
             background: "var(--bg-surface)",
             borderColor: "var(--border-soft)",
@@ -121,7 +121,7 @@ export function WithWithoutCompare() {
             role="tab"
             aria-selected={mobileSide === "with"}
             onClick={() => setMobileSide("with")}
-            className="px-4 py-1.5 rounded-full text-[12px] font-extrabold transition-all cursor-pointer"
+            className="min-h-[38px] px-3 py-1.5 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer"
             style={
               mobileSide === "with"
                 ? { background: "var(--hero-bg)", color: "#ffffff" }
@@ -135,7 +135,7 @@ export function WithWithoutCompare() {
             role="tab"
             aria-selected={mobileSide === "without"}
             onClick={() => setMobileSide("without")}
-            className="px-4 py-1.5 rounded-full text-[12px] font-extrabold transition-all cursor-pointer"
+            className="min-h-[38px] px-3 py-1.5 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer"
             style={
               mobileSide === "without"
                 ? {

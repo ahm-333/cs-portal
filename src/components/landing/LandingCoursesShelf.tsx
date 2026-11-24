@@ -159,7 +159,7 @@ export function LandingCoursesShelf({
         <div
           role="tablist"
           aria-label="تصفية المقررات"
-          className="flex flex-wrap items-center justify-center lg:justify-start gap-2"
+          className="flex items-center justify-start sm:justify-center lg:justify-start gap-2 overflow-x-auto hide-scrollbar pb-1 sm:pb-0 sm:flex-wrap"
         >
           {showMyYearTab && (
             <button

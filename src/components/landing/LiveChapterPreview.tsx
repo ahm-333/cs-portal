@@ -662,7 +662,7 @@ export function LiveChapterPreview() {
             >
               {/* Cinema Video Frame */}
               <div className="lg:col-span-8 flex flex-col">
-                <div className="relative w-full h-[230px] sm:h-[300px] lg:h-[340px] rounded-2xl overflow-hidden border border-white/15 bg-[#0b1322] shadow-lg group">
+                <div className="relative w-full aspect-[16/10] sm:aspect-auto sm:h-[300px] lg:h-[340px] rounded-2xl overflow-hidden border border-white/15 bg-[#0b1322] shadow-lg group">
                   <Image
                     src="/images/tools/video-preview.jpg"
                     alt="معاينة فيديو شرح القوائم المترابطة"
