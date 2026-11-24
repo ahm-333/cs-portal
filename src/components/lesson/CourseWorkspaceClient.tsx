@@ -12,7 +12,6 @@ import Image from "next/image";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import {
-  ArrowLeft,
   ArrowRight,
   BookmarkCheck,
   Check,
@@ -416,12 +415,6 @@ export default function CourseWorkspaceClient({
   }, [sortedLessons, currentLessonId]);
 
   const activeLessonMeta = sortedLessons[currentLessonIndex] ?? null;
-  const prevLesson =
-    currentLessonIndex > 0 ? sortedLessons[currentLessonIndex - 1] : null;
-  const nextLesson =
-    currentLessonIndex < sortedLessons.length - 1
-      ? sortedLessons[currentLessonIndex + 1]
-      : null;
 
   const isUnlockedLocally = useMemo(() => {
     if (!course.is_paid) return true;
@@ -1630,62 +1623,6 @@ export default function CourseWorkspaceClient({
                 </div>
               </>
             )}
-
-            {/* ==================== PREVIOUS / NEXT CHAPTER FOOTER ==================== */}
-            {!isLockedView && !examNight && (prevLesson || nextLesson) ? (
-              <div
-                className="flex flex-wrap items-center justify-between gap-2.5 border-t pt-4"
-                style={{ borderColor: "var(--border-soft)" }}
-              >
-                {prevLesson ? (
-                  <Link
-                    href={`/courses/${course.slug}/${prevLesson.id}`}
-                    className="inline-flex min-h-[40px] max-w-[48%] items-center gap-2 rounded-xl border px-3.5 py-2 text-[12px] font-bold transition-colors hover:border-[var(--brand-primary)]"
-                    style={{
-                      background: "var(--bg-canvas)",
-                      borderColor: "var(--border-soft)",
-                      color: "var(--text-primary)",
-                    }}
-                  >
-                    <ArrowRight className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">
-                      السابق: {splitBilingualTitle(prevLesson.title).primary}
-                    </span>
-                  </Link>
-                ) : (
-                  <span />
-                )}
-
-                {nextLesson ? (
-                  course.is_paid &&
-                  !nextLesson.is_free_preview &&
-                  !isUnlockedLocally ? (
-                    <button
-                      type="button"
-                      onClick={handleTriggerUnlock}
-                      className="inline-flex min-h-[40px] max-w-[48%] cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-[12px] font-extrabold text-white transition-transform hover:-translate-y-0.5"
-                      style={{ background: "#c25e33" }}
-                    >
-                      <Lock className="h-3.5 w-3.5 shrink-0" />
-                      <span className="truncate">
-                        التالي: {splitBilingualTitle(nextLesson.title).primary}
-                      </span>
-                    </button>
-                  ) : (
-                    <Link
-                      href={`/courses/${course.slug}/${nextLesson.id}`}
-                      className="inline-flex min-h-[40px] max-w-[48%] items-center gap-2 rounded-xl px-4 py-2 text-[12px] font-extrabold text-white transition-transform hover:-translate-y-0.5"
-                      style={{ background: "var(--hero-bg)" }}
-                    >
-                      <span className="truncate">
-                        التالي: {splitBilingualTitle(nextLesson.title).primary}
-                      </span>
-                      <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
-                    </Link>
-                  )
-                ) : null}
-              </div>
-            ) : null}
 
             {/* ==================== QUICK LESSON NOTES DRAWER ==================== */}
             {notesOpen ? (
