@@ -61,6 +61,8 @@ import type {
   Question,
   VideoChapter,
 } from "@/types/database";
+import { getStructuredSummaryByLessonId } from "@/lib/chapters";
+import ChapterSummarySheet from "./ChapterSummarySheet";
 import CourseInteractiveLab from "./CourseInteractiveLab";
 import MarkdownViewer from "./MarkdownViewer";
 import QuizEngine from "./QuizEngine";
@@ -526,6 +528,11 @@ export default function CourseWorkspaceClient({
   }, [lesson, activeLessonMeta, course]);
 
   const hasLessonCode = Boolean(activeKeyCode && activeKeyCode.trim().length > 0);
+  const structuredSummary = useMemo(
+    () =>
+      currentLessonId ? getStructuredSummaryByLessonId(currentLessonId) : null,
+    [currentLessonId]
+  );
 
   const activeExamTip =
     lesson?.exam_tip || activeLessonMeta?.exam_tip || course.exam_tip;
@@ -1403,6 +1410,11 @@ export default function CourseWorkspaceClient({
                       {activeKeyCode}
                     </pre>
                   </div>
+                ) : structuredSummary ? (
+                  <ChapterSummarySheet
+                    summary={structuredSummary}
+                    onGoToQuiz={() => handleSelectTab("quiz")}
+                  />
                 ) : lesson?.summary_md ? (
                   <MarkdownViewer content={lesson.summary_md} embedded />
                 ) : null}
@@ -1506,56 +1518,65 @@ export default function CourseWorkspaceClient({
                 <div
                   className={activeTab === "summary" ? "space-y-5" : "hidden"}
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <span
-                        className="text-[11px] font-extrabold"
-                        style={{
-                          color: hasLessonCode
-                            ? "var(--accent-warm)"
-                            : "var(--brand-primary)",
-                        }}
-                      >
-                        {hasLessonCode
-                          ? "ملخص هندسي + كود LTR"
-                          : "ملخص شامل للمراجعة (English + توضيح مبسّط)"}
-                      </span>
-                      <h2
-                        className="mt-0.5 text-lg font-black"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        ملخص {parsedLessonTitle.primary}
-                      </h2>
-                    </div>
+                  {structuredSummary ? (
+                    <ChapterSummarySheet
+                      summary={structuredSummary}
+                      onGoToQuiz={() => handleSelectTab("quiz")}
+                    />
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <span
+                            className="text-[11px] font-extrabold"
+                            style={{
+                              color: hasLessonCode
+                                ? "var(--accent-warm)"
+                                : "var(--brand-primary)",
+                            }}
+                          >
+                            {hasLessonCode
+                              ? "ملخص هندسي + كود LTR"
+                              : "ملخص شامل للمراجعة (English + توضيح مبسّط)"}
+                          </span>
+                          <h2
+                            className="mt-0.5 text-lg font-black"
+                            style={{ color: "var(--text-primary)" }}
+                          >
+                            ملخص {parsedLessonTitle.primary}
+                          </h2>
+                        </div>
 
-                    {hasLessonCode ? (
-                      <button
-                        type="button"
-                        onClick={handleCopyKeyCode}
-                        className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-[12px] font-bold transition-colors hover:opacity-85"
-                        style={{
-                          background: "var(--bg-canvas)",
-                          borderColor: "var(--border-soft)",
-                          color: "var(--text-primary)",
-                        }}
-                      >
-                        {copiedCode ? (
-                          <Check
-                            className="h-3.5 w-3.5"
-                            style={{ color: "var(--success-fg)" }}
-                          />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )}
-                        <span>{copiedCode ? "تم النسخ ✓" : "نسخ الكود"}</span>
-                      </button>
-                    ) : null}
-                  </div>
+                        {hasLessonCode ? (
+                          <button
+                            type="button"
+                            onClick={handleCopyKeyCode}
+                            className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-[12px] font-bold transition-colors hover:opacity-85"
+                            style={{
+                              background: "var(--bg-canvas)",
+                              borderColor: "var(--border-soft)",
+                              color: "var(--text-primary)",
+                            }}
+                          >
+                            {copiedCode ? (
+                              <Check
+                                className="h-3.5 w-3.5"
+                                style={{ color: "var(--success-fg)" }}
+                              />
+                            ) : (
+                              <Copy className="h-3.5 w-3.5" />
+                            )}
+                            <span>{copiedCode ? "تم النسخ ✓" : "نسخ الكود"}</span>
+                          </button>
+                        ) : null}
+                      </div>
 
-                  {/* Full Markdown + KaTeX Summary when available */}
-                  {lesson?.summary_md ? (
-                    <MarkdownViewer content={lesson.summary_md} embedded />
-                  ) : null}
+                      {/* Full Markdown + KaTeX Summary when available */}
+                      {lesson?.summary_md ? (
+                        <MarkdownViewer content={lesson.summary_md} embedded />
+                      ) : null}
+                    </>
+                  )}
 
                   {/* Key Code LTR Block — rendered ONLY when this lesson actually has code */}
                   {hasLessonCode && activeKeyCode ? (
@@ -1575,8 +1596,8 @@ export default function CourseWorkspaceClient({
                     </div>
                   ) : null}
 
-                  {/* Exam Tip Callout (calm warm whisper) */}
-                  {activeExamTip ? (
+                  {/* Exam Tip Callout (for non-structured lessons; structured sheets have a full Exam Traps section) */}
+                  {!structuredSummary && activeExamTip ? (
                     <div
                       className="rounded-xl border p-4 text-[13px] font-semibold leading-relaxed"
                       style={{
@@ -1591,8 +1612,8 @@ export default function CourseWorkspaceClient({
                     </div>
                   ) : null}
 
-                  {/* Course-level Quick Cheat Sheet Table (shown for coding courses or lessons without rich chapter tables) */}
-                  {hasLessonCode || !lesson?.summary_md ? (
+                  {/* Course-level Quick Cheat Sheet Table (shown for coding courses or lessons without structured/markdown summaries) */}
+                  {!structuredSummary && (hasLessonCode || !lesson?.summary_md) ? (
                     <div className="space-y-2 pt-2">
                       <div
                         className="flex items-center gap-1.5 text-[12px] font-extrabold"
