@@ -16,10 +16,14 @@ import type {
   LessonInteractive,
   LessonInteractiveMeta,
 } from "@/types/database";
+import { getInteractiveChapterByLessonId } from "@/lib/chapters";
+import ChapterInteractiveViewer from "./ChapterInteractiveViewer";
 
 interface CourseInteractiveLabProps {
   course: Course;
+  lessonId?: string;
   interactives: LessonInteractiveMeta[];
+  onGoToQuiz?: () => void;
 }
 
 type InteractiveApiPayload =
@@ -169,8 +173,15 @@ function parseInteractiveResponse(
 
 export default function CourseInteractiveLab({
   course,
+  lessonId,
   interactives,
+  onGoToQuiz,
 }: CourseInteractiveLabProps) {
+  const interactiveChapter = useMemo(
+    () => (lessonId ? getInteractiveChapterByLessonId(lessonId) : null),
+    [lessonId]
+  );
+
   // --- Built-in Simulator State ---
   const [dsNodes, setDsNodes] = useState<number[]>([14, 29, 42]);
   const [dsCounter, setDsCounter] = useState(0);
@@ -347,6 +358,18 @@ export default function CourseInteractiveLab({
   const safeExternalUrl = isSafeHttpUrl(
     loadedLab?.external_url ?? activeLab?.external_url
   );
+
+  // When this lesson has a rich native Interactive Chapter (slides + lab),
+  // render it directly in CS Portal's exact theme with zero clutter.
+  if (interactiveChapter) {
+    return (
+      <ChapterInteractiveViewer
+        key={interactiveChapter.lessonId}
+        chapter={interactiveChapter}
+        onGoToQuiz={onGoToQuiz}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

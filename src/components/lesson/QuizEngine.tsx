@@ -35,6 +35,12 @@ interface QuizEngineProps {
 
 const OPTION_LETTERS = ["A", "B", "C", "D", "E", "F"] as const;
 
+function isEnglishText(text: string): boolean {
+  const hasArabic = /[\u0600-\u06FF]/.test(text);
+  const hasLatin = /[A-Za-z]/.test(text);
+  return hasLatin && !hasArabic;
+}
+
 function fireQuizConfetti(particleCount = 45, spread = 60): void {
   if (typeof window === "undefined") return;
   try {
@@ -122,6 +128,7 @@ export default function QuizEngine({
   const useTwoColOptions = currentQuestion.options.every(
     (opt) => opt.length <= 42
   );
+  const isEnglishQuestion = isEnglishText(currentQuestion.question_text);
 
   function handleSelectOption(optionIndex: number) {
     if (hasAnswered) return;
@@ -421,7 +428,12 @@ export default function QuizEngine({
           borderColor: "var(--border-soft)",
         }}
       >
-        <p className="text-[15px] font-extrabold leading-relaxed text-[var(--text-primary)]">
+        <p
+          dir={isEnglishQuestion ? "ltr" : undefined}
+          className={`text-[15px] font-extrabold leading-relaxed text-[var(--text-primary)] ${
+            isEnglishQuestion ? "font-en text-left" : ""
+          }`}
+        >
           {currentQuestion.question_text}
         </p>
 
@@ -488,13 +500,18 @@ export default function QuizEngine({
               }
             }
 
+            const isEngOption = isEnglishText(optionText);
+
             return (
               <button
                 key={`${currentQuestion.id}-opt-${optionIndex}`}
                 type="button"
                 disabled={hasAnswered}
+                dir={isEngOption ? "ltr" : undefined}
                 onClick={() => handleSelectOption(optionIndex)}
-                className="flex min-h-[48px] w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-right text-[13px] font-bold transition-all hover:opacity-95 disabled:cursor-default sm:px-4"
+                className={`flex min-h-[48px] w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-[13px] font-bold transition-all hover:opacity-95 disabled:cursor-default sm:px-4 ${
+                  isEngOption ? "font-en text-left" : "text-right"
+                }`}
                 style={{
                   borderColor,
                   background,

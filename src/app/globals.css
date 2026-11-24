@@ -1532,6 +1532,106 @@ html.dark .founder-portrait-frame,
 }
 
 /* ==========================================================================
+   Native Interactive Chapter Viewer Helpers (Warm Editorial Navy Theme)
+   ========================================================================== */
+
+.chapter-orig-slide code,
+.code-pill {
+  display: inline-block;
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 0.84em;
+  font-weight: 600;
+  padding: 0.08rem 0.42rem;
+  border-radius: 6px;
+  background-color: var(--brand-soft);
+  color: var(--brand-soft-text);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent);
+}
+
+.chapter-deep-list strong {
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.chapter-svg-stage svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+}
+
+.chapter-svg-zoom svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 560px;
+}
+
+table.clean-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 440px;
+  font-size: 12px;
+}
+
+table.clean-table th,
+table.clean-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: top;
+  color: var(--text-secondary);
+}
+
+table.clean-table th {
+  background: var(--bg-subtle);
+  font-weight: 800;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+table.clean-table th.ltr,
+table.clean-table td.ltr {
+  direction: ltr;
+  text-align: left;
+  font-family: var(--font-inter), sans-serif;
+}
+
+table.clean-table tr:last-child td {
+  border-bottom: none;
+}
+
+.gantt-row {
+  display: flex;
+  width: 100%;
+  min-height: 58px;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.gantt-seg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 6px;
+  border-right: 1px solid rgba(0, 0, 0, 0.28);
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+  text-align: center;
+  min-width: 54px;
+}
+
+.gantt-seg:last-child {
+  border-right: none;
+}
+
+/* ==========================================================================
    Reduced Motion Guards
    ========================================================================== */
 

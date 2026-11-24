@@ -4,6 +4,8 @@ import type {
   LessonInteractive,
   Question,
 } from "@/types/database";
+import { OS_QUESTIONS } from "./chapters/os-questions";
+import { OS_SUMMARIES } from "./chapters/os-summaries";
 
 // ============================================================================
 // Deterministic UUIDs (shared with supabase/seed/seed.sql)
@@ -23,8 +25,9 @@ const LESSON_IDS = {
   DS_LINKED_LISTS_STACKS: "22222222-2222-4222-8222-222222222103",
   ALGO_BIG_O: "22222222-2222-4222-8222-222222222201",
   ALGO_SORTING: "22222222-2222-4222-8222-222222222202",
-  OS_PROCESSES: "22222222-2222-4222-8222-222222222301",
-  OS_CPU_SCHEDULING: "22222222-2222-4222-8222-222222222302",
+  OS_CH1: "22222222-2222-4222-8222-222222222301",
+  OS_CH2: "22222222-2222-4222-8222-222222222302",
+  OS_CH3: "22222222-2222-4222-8222-222222222303",
 } as const;
 
 const INTERACTIVE_IDS = {
@@ -2077,7 +2080,7 @@ export const MOCK_COURSES: Course[] = [
     is_published: true,
     accent: "#c25e33",
     icon: "cpu",
-    duration_minutes: 40,
+    duration_minutes: 65,
     site_url: "cs-portal.app/courses/operating-systems",
     exam_tip:
       "💡 فكرة امتحان مهمة: خوارزمية SJF تعطي أقل Average Waiting Time لكنها قد تسبب Starvation للعمليات الطويلة (الحل: Aging).",
@@ -2732,14 +2735,64 @@ void insertionSort(vector<int>& arr) {
     created_at: "2025-09-02T10:20:00Z",
   },
 
-  // ---------- Course 3: Operating Systems (Paid course with 1 free preview + 1 locked) ----------
+  // ---------- Course 3: Operating Systems (Chapters 1, 2, 3 — Full Interactive + Quizzes) ----------
   {
-    id: LESSON_IDS.OS_PROCESSES,
+    id: LESSON_IDS.OS_CH1,
     course_id: COURSE_IDS.OPERATING_SYSTEMS,
-    section_title: "الوحدة الأولى: إدارة العمليات",
-    title: "العمليات والخيوط ودورة حياتها (Processes & Threads)",
-    title_en: "OS Architecture, Processes & Threads",
+    section_title: "Chapter 1 · Introduction",
+    title: "Chapter 1: Introduction (مقدمة في نظم التشغيل وبنية الحاسب)",
+    title_en: "Chapter 1: Introduction",
     order_index: 1,
+    is_free_preview: true,
+    duration_minutes: 22,
+    video_provider: "youtube",
+    video_id: "26QPDBe-NB8",
+    chapters: [
+      {
+        time: "00:00",
+        name: "مكونات الحاسب الأربعة ودور الـ Kernel",
+        pct: "30%",
+        visual: "Users → Apps → Operating System (Kernel) → Hardware",
+      },
+      {
+        time: "08:00",
+        name: "Interrupts و Storage Hierarchy",
+        pct: "65%",
+        visual: "Registers → Cache → RAM → SSD → Disk",
+      },
+      {
+        time: "15:00",
+        name: "Dual-Mode Operation & Timer Protection",
+        pct: "95%",
+        visual: "User Mode (1) ⇄ Trap/System Call ⇄ Kernel Mode (0)",
+      },
+    ],
+    key_code: OS_SUMMARIES[LESSON_IDS.OS_CH1].key_code,
+    exam_tip: `💡 فكرة امتحان: ${OS_SUMMARIES[LESSON_IDS.OS_CH1].exam_tip}`,
+    summary_md: OS_SUMMARIES[LESSON_IDS.OS_CH1].summary_md,
+    resources: [
+      {
+        title: "OSTEP — Operating Systems: Three Easy Pieces",
+        url: "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+        type: "article",
+        description: "أشهر مرجع مجاني مفتوح المصدر في نظم التشغيل.",
+      },
+      {
+        title: "GeeksforGeeks — Operating Systems Basics",
+        url: "https://www.geeksforgeeks.org/operating-systems/",
+        type: "article",
+        description: "مرجع سريع لمفاهيم الـ Kernel والمقاطعات و Dual-Mode.",
+      },
+    ],
+    created_at: "2025-09-03T10:10:00Z",
+  },
+  {
+    id: LESSON_IDS.OS_CH2,
+    course_id: COURSE_IDS.OPERATING_SYSTEMS,
+    section_title: "Chapter 2 · Operating System Structures",
+    title: "Chapter 2: Operating System Structures (خدمات وهياكل نظم التشغيل)",
+    title_en: "Chapter 2: Operating System Structures",
+    order_index: 2,
     is_free_preview: true,
     duration_minutes: 20,
     video_provider: "youtube",
@@ -2747,176 +2800,85 @@ void insertionSort(vector<int>& arr) {
     chapters: [
       {
         time: "00:00",
-        name: "دورة حياة العملية Process States",
-        pct: "25%",
-        visual: "New → Ready → Running → Waiting → Terminated",
+        name: "خدمات نظام التشغيل والواجهات (CLI / GUI)",
+        pct: "30%",
+        visual: "UI (CLI/GUI) → System Calls → OS Services → Hardware",
       },
       {
-        time: "08:15",
-        name: "كتلة التحكم PCB و Context Switch",
+        time: "07:30",
+        name: "System Calls و APIs (POSIX / Win32 / Java)",
         pct: "65%",
-        visual: "PCB stores: PID · State · Program Counter · Registers",
+        visual: "User App → API → System Call Interface → Kernel",
       },
       {
-        time: "15:30",
-        name: "الفرق بين Processes و Threads في الذاكرة",
+        time: "14:00",
+        name: "هياكل نظام التشغيل (Monolithic, Layered, Microkernel, Hybrid)",
         pct: "95%",
-        visual: "Shared: Code, Data, Heap  |  Private: Stack, Registers",
+        visual: "Simple | Layered | Microkernel | Modules | Hybrid",
       },
     ],
-    key_code: `// Waiting Time = Turnaround Time - Burst Time
-// FCFS Order: P1(8ms) -> P2(2ms) -> P3(4ms)
-// Wait Times: P1=0, P2=8, P3=10  => Avg = 6.00 ms
-
-// SJF Order:  P2(2ms) -> P3(4ms) -> P1(8ms)
-// Wait Times: P2=0, P3=2, P1=6   => Avg = 2.67 ms (Optimal!)`,
-    exam_tip:
-      "💡 فكرة امتحان: خيوط نفس العملية (Threads) تتشارك Code و Data و Heap، لكن كل Thread يحتفظ بـ Stack و Registers و Program Counter مستقل.",
-    summary_md: `## الفرق بين البرنامج والعملية (Program vs. Process)
-
-- **البرنامج (Program):** كيان ساكن (Passive) مخزّن على القرص الصلب (ملف تنفيذي).
-- **العملية (Process):** برنامج قيد التنفيذ (Active Entity) داخل الذاكرة، ويمثّله نظام التشغيل بكتلة تحكم تُسمى **PCB (Process Control Block)**.
-
-### حالات العملية الخمس (Process State Model)
-
-1. **New:** جاري إنشاء العملية وتخصيص الـ PCB.
-2. **Ready:** جاهزة وتنتظر دورها في طابور المعالج (Ready Queue).
-3. **Running:** قيد التنفيذ حالياً على إحدى أنوية المعالج (CPU Core).
-4. **Waiting (Blocked):** متوقفة بانتظار حدث خارجي مثل قراءة ملف (I/O).
-5. **Terminated:** انتهى تنفيذها ويجري تحرير مواردها.
-
-### مقارنة بين العمليات (Processes) والخيوط (Threads)
-
-| وجه المقارنة | العملية (Process) | الخيط (Thread) |
-| :--- | :--- | :--- |
-| مساحة العناوين (Memory Space) | معزولة تماماً لكل عملية | مشتركة في Code و Data و Heap |
-| العناصر الخاصة بكل وحدة | كل الموارد والملفات المفتوحة | \`Stack\` و \`Registers\` و \`Program Counter\` |
-| تكلفة التبديل (Context Switch) | مرتفعة نسبياً | خفيفة وسريعة جداً |
-| تأثير تعطل وحدة واحدة | لا يُسقط باقي العمليات | قد يُسقط العملية كاملة |
-
-### مثال إنشاء خيوط متوازية بلغة Python
-
-\`\`\`python
-import threading
-
-def worker(task_id: int) -> None:
-    print(f"Thread {task_id} is running inside the shared process")
-
-threads = [threading.Thread(target=worker, args=(i,)) for i in range(3)]
-for t in threads:
-    t.start()
-for t in threads:
-    t.join()
-\`\`\`
-
-إجمالي زمن التبديل بين $k$ عملية يضيف عبئاً إضافياً قدره $T_{\\text{overhead}} = k \\times t_{\\text{cs}}$ حيث $t_{\\text{cs}}$ هو زمن **Context Switch**.`,
+    key_code: OS_SUMMARIES[LESSON_IDS.OS_CH2].key_code,
+    exam_tip: `💡 فكرة امتحان: ${OS_SUMMARIES[LESSON_IDS.OS_CH2].exam_tip}`,
+    summary_md: OS_SUMMARIES[LESSON_IDS.OS_CH2].summary_md,
     resources: [
       {
-        title: "GeeksforGeeks — Process vs Thread in OS",
-        url: "https://www.geeksforgeeks.org/difference-between-process-and-thread/",
+        title: "GeeksforGeeks — Structures of Operating System",
+        url: "https://www.geeksforgeeks.org/operating-system-structure/",
         type: "article",
-        description: "مقارنة منظّمة بين العمليات والخيوط وتكلفة Context Switching.",
-      },
-      {
-        title: "OSTEP — Operating Systems: Three Easy Pieces",
-        url: "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-        type: "article",
-        description: "أشهر كتاب مجاني مفتوح المصدر في نظم التشغيل.",
+        description: "مقارنة تفصيلية بين Monolithic و Microkernel و Hybrid.",
       },
     ],
-    created_at: "2025-09-03T10:10:00Z",
+    created_at: "2025-09-03T10:20:00Z",
   },
   {
-    id: LESSON_IDS.OS_CPU_SCHEDULING,
+    id: LESSON_IDS.OS_CH3,
     course_id: COURSE_IDS.OPERATING_SYSTEMS,
-    section_title: "الوحدة الثانية: جدولة المعالج",
-    title: "خوارزميات جدولة المعالج (CPU Scheduling: FCFS, SJF, RR)",
-    title_en: "Processes & CPU Scheduling",
-    order_index: 2,
-    is_free_preview: false,
-    duration_minutes: 20,
+    section_title: "Chapter 3 · Processes",
+    title: "Chapter 3: Processes (العمليات، الجدولة، والتواصل IPC)",
+    title_en: "Chapter 3: Processes",
+    order_index: 3,
+    is_free_preview: true,
+    duration_minutes: 23,
     video_provider: "youtube",
     video_id: "EWkQl0n0w5M",
     chapters: [
       {
         time: "00:00",
-        name: "دورة حياة العملية Process States",
+        name: "مفهوم Process وأقسام الذاكرة والـ PCB",
         pct: "25%",
-        visual: "New → Ready → Running → Terminated",
+        visual: "Text | Data | Heap | Stack  +  PCB (PID, State, PC)",
       },
       {
         time: "08:15",
-        name: "جدولة المعالج FCFS مقابل SJF",
+        name: "دورة حياة العملية وجدولة المعالج (FCFS vs SJF)",
         pct: "65%",
-        visual: "Gantt Chart: | P1 (0-4) | P2 (4-7) | P3 (7-12) |",
+        visual: "New → Ready → Running → Waiting → Terminated",
       },
       {
         time: "15:30",
-        name: "حساب Average Waiting Time و Round Robin",
+        name: "التواصل بين العمليات (IPC: Shared Memory & Message Passing)",
         pct: "95%",
-        visual: "Avg WT = (0 + 4 + 7) / 3 = 3.67 ms",
+        visual: "Shared Memory (Fast)  vs  Message Passing (Kernel)",
       },
     ],
-    key_code: `// Waiting Time = Turnaround Time - Burst Time
-// FCFS Order: P1(8ms) -> P2(2ms) -> P3(4ms)
-// Wait Times: P1=0, P2=8, P3=10  => Avg = 6.00 ms
-
-// SJF Order:  P2(2ms) -> P3(4ms) -> P1(8ms)
-// Wait Times: P2=0, P3=2, P1=6   => Avg = 2.67 ms (Optimal!)`,
-    exam_tip:
-      "💡 فكرة امتحان مهمة: خوارزمية SJF تعطي أقل Average Waiting Time لكنها قد تسبب Starvation للعمليات الطويلة (الحل: Aging).",
-    summary_md: `## مقاييس أداء جدولة المعالج (Scheduling Metrics)
-
-عندما تتنافس عدة عمليات في الـ **Ready Queue** على المعالج، نقيس كفاءة خوارزمية الجدولة عبر معادلتين أساسيتين:
-
-$$\\text{Turnaround Time (TAT)} = \\text{Completion Time} - \\text{Arrival Time}$$
-
-$$\\text{Waiting Time (WT)} = \\text{Turnaround Time} - \\text{Burst Time}$$
-
-### مقارنة أشهر خوارزميات الجدولة
-
-| الخوارزمية | النوع | الميزة الأساسية | العيب الرئيسي |
-| :--- | :---: | :--- | :--- |
-| **FCFS** | Non-Preemptive | بسيطة ولا تسبب مجاعة | ظاهرة القافلة (**Convoy Effect**) |
-| **SJF / SRTF** | كلاهما | أقل متوسط زمن انتظار نظرياً | قد تسبب مجاعة (**Starvation**) للعمليات الطويلة |
-| **Round Robin (RR)** | Preemptive | زمن استجابة ممتاز للأنظمة التفاعلية | يعتمد أداؤها بشدة على حجم الحصة الزمنية $q$ |
-
-### محاكاة حساب Turnaround و Waiting Time لـ FCFS بلغة Python
-
-\`\`\`python
-def fcfs_schedule(processes: list[tuple[str, int, int]]) -> None:
-    # processes: (name, arrival_time, burst_time)
-    current_time = 0
-    total_wt = 0
-
-    for name, arrival, burst in sorted(processes, key=lambda p: p[1]):
-        start = max(current_time, arrival)
-        completion = start + burst
-        tat = completion - arrival
-        wt = tat - burst
-        total_wt += wt
-        current_time = completion
-        print(f"{name}: TAT={tat}, WT={wt}")
-
-    print(f"Average Waiting Time = {total_wt / len(processes):.2f}")
-\`\`\`
-
-> **قاعدة اختيار Quantum ($q$) في Round Robin:** إذا كان $q$ كبيراً جداً تتحول الخوارزمية إلى FCFS، وإذا كان صغيراً جداً تستهلك معظم وقت المعالج في Context Switching.`,
+    key_code: OS_SUMMARIES[LESSON_IDS.OS_CH3].key_code,
+    exam_tip: `💡 فكرة امتحان: ${OS_SUMMARIES[LESSON_IDS.OS_CH3].exam_tip}`,
+    summary_md: OS_SUMMARIES[LESSON_IDS.OS_CH3].summary_md,
     resources: [
       {
         title: "GeeksforGeeks — CPU Scheduling in OS",
         url: "https://www.geeksforgeeks.org/cpu-scheduling-in-operating-systems/",
         type: "article",
-        description: "أمثلة محلولة بمخططات Gantt Chart لكل خوارزميات الجدولة.",
+        description: "أمثلة محلولة بمخططات Gantt Chart لخوارزميات FCFS و SJF.",
       },
       {
-        title: "OSTEP — Proportional Share & Multi-Level Feedback Queue",
-        url: "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched.pdf",
+        title: "GeeksforGeeks — Inter Process Communication (IPC)",
+        url: "https://www.geeksforgeeks.org/inter-process-communication-ipc/",
         type: "article",
-        description: "فصل الجدولة من مرجع جامعة ويسكونسن الشهير.",
+        description: "مقارنة Shared Memory مقابل Message Passing والـ Pipes.",
       },
     ],
-    created_at: "2025-09-03T10:20:00Z",
+    created_at: "2025-09-03T10:30:00Z",
   },
 ];
 
@@ -3163,69 +3125,6 @@ print(stack.pop(), stack[-1])`,
     order_index: 2,
   },
 
-  // --- Lesson 6: Processes & Threads ---
-  {
-    id: "44444444-4444-4444-8444-444444444601",
-    lesson_id: LESSON_IDS.OS_PROCESSES,
-    question_text:
-      "أي من الموارد التالية يكون خاصاً بكل خيط (Thread) ولا يتم مشاركته مع باقي خيوط نفس العملية؟",
-    code_snippet: null,
-    code_lang: null,
-    options: [
-      "قسم الكود (Code Section)",
-      "المتغيرات العامة والـ Heap",
-      "مكدس الاستدعاءات (Stack) ومسجلات المعالج (Registers)",
-      "الملفات المفتوحة (Open Files)",
-    ],
-    correct_index: 2,
-    explanation:
-      "تتشارك خيوط نفس العملية في Code و Data و Heap والملفات المفتوحة، بينما يمتلك كل Thread مكدساً (Stack) ومسجلات (Registers) و Program Counter خاصاً به لتتبّع مسار تنفيذه المستقل.",
-    order_index: 1,
-  },
-  {
-    id: "44444444-4444-4444-8444-444444444602",
-    lesson_id: LESSON_IDS.OS_PROCESSES,
-    question_text:
-      "عندما تطلب عملية قيد التنفيذ (Running) قراءة ملف من القرص الصلب (Disk I/O)، إلى أي حالة تنتقل فوراً؟",
-    code_snippet: null,
-    code_lang: null,
-    options: ["Ready", "Waiting (Blocked)", "New", "Terminated"],
-    correct_index: 1,
-    explanation:
-      "لأن عملية الإدخال/الإخراج بطيئة مقارنة بالمعالج، ينقل نظام التشغيل العملية إلى حالة Waiting (Blocked) ويعطي المعالج لعملية أخرى من الـ Ready Queue.",
-    order_index: 2,
-  },
-
-  // --- Lesson 7: CPU Scheduling ---
-  {
-    id: "44444444-4444-4444-8444-444444444701",
-    lesson_id: LESSON_IDS.OS_CPU_SCHEDULING,
-    question_text:
-      "ما الظاهرة التي تحدث في خوارزمية FCFS عندما تصل عملية طويلة جداً (CPU-bound) قبل عدة عمليات قصيرة فتؤخرها جميعاً؟",
-    code_snippet: null,
-    code_lang: null,
-    options: [
-      "Thrashing",
-      "Deadlock",
-      "Convoy Effect (ظاهرة القافلة)",
-      "Belady's Anomaly",
-    ],
-    correct_index: 2,
-    explanation:
-      "ظاهرة القافلة (Convoy Effect) ترفع متوسط زمن الانتظار بشكل حاد في FCFS لأن العمليات القصيرة تضطر لانتظار انتهاء العملية الطويلة بالكامل.",
-    order_index: 1,
-  },
-  {
-    id: "44444444-4444-4444-8444-444444444702",
-    lesson_id: LESSON_IDS.OS_CPU_SCHEDULING,
-    question_text:
-      "ثلاث عمليات وصلت جميعها في الزمن 0 بأزمنة تنفيذ (Burst Times): P1=24, P2=3, P3=3. ما متوسط زمن الانتظار (Average Waiting Time) باستخدام FCFS بترتيب P1 ثم P2 ثم P3؟",
-    code_snippet: "P1: Burst=24 | P2: Burst=3 | P3: Burst=3 (Arrival = 0 for all)",
-    code_lang: "text",
-    options: ["10", "17", "3", "27"],
-    correct_index: 1,
-    explanation:
-      "أزمنة الانتظار: WT(P1)=0، WT(P2)=24، WT(P3)=24+3=27. المتوسط = (0 + 24 + 27) / 3 = 51 / 3 = 17.",
-    order_index: 2,
-  },
+  // --- Operating Systems (CS-311): Chapters 1, 2, 3 (18 Verified Exam Questions) ---
+  ...OS_QUESTIONS,
 ];

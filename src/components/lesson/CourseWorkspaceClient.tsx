@@ -1460,7 +1460,9 @@ export default function CourseWorkspaceClient({
                   {hasOpenedLab ? (
                     <CourseInteractiveLab
                       course={course}
+                      lessonId={currentLessonId}
                       interactives={interactives}
+                      onGoToQuiz={() => handleSelectTab("quiz")}
                     />
                   ) : null}
                 </div>
