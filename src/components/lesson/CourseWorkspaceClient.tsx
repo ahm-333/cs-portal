@@ -398,6 +398,7 @@ export default function CourseWorkspaceClient({
   const [examNight, setExamNight] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const autoFocusByLabRef = useRef(false);
   const [mobileLessonsOpen, setMobileLessonsOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const notesDrawerRef = useRef<HTMLDivElement | null>(null);
@@ -555,13 +556,24 @@ export default function CourseWorkspaceClient({
 
   const currentNote = portal.notes[currentLessonId] ?? "";
 
-  const handleSelectTab = useCallback((tab: WorkspaceTab) => {
-    setExamNight(false);
-    setActiveTab(tab);
-    if (tab === "lab") {
-      setHasOpenedLab(true);
-    }
-  }, []);
+  const handleSelectTab = useCallback(
+    (tab: WorkspaceTab) => {
+      setExamNight(false);
+      setActiveTab(tab);
+      if (tab === "lab") {
+        setHasOpenedLab(true);
+        // Automatically open Focus / Full-Width mode when entering Interactive Explanation
+        if (!focusMode) {
+          autoFocusByLabRef.current = true;
+          setFocusMode(true);
+        }
+      } else if (autoFocusByLabRef.current) {
+        autoFocusByLabRef.current = false;
+        setFocusMode(false);
+      }
+    },
+    [focusMode]
+  );
 
   const handleToggleDone = useCallback(() => {
     if (!currentLessonId) return;
@@ -851,7 +863,10 @@ export default function CourseWorkspaceClient({
 
             <button
               type="button"
-              onClick={() => setFocusMode((prev) => !prev)}
+              onClick={() => {
+                autoFocusByLabRef.current = false;
+                setFocusMode((prev) => !prev);
+              }}
               aria-pressed={focusMode}
               title="إخفاء القائمة الجانبية للتركيز"
               className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all cursor-pointer ${
@@ -925,7 +940,11 @@ export default function CourseWorkspaceClient({
       </header>
 
       {/* ==================== WORKSPACE BODY (Coursera / Notion Sticky Layout) ==================== */}
-      <main className="mx-auto w-full max-w-[1260px] flex-1 px-4 py-4 pb-24 sm:px-6 lg:px-8 lg:py-5 lg:pb-8">
+      <main
+        className={`mx-auto w-full flex-1 px-4 py-4 pb-24 transition-[max-width] duration-200 sm:px-6 lg:px-8 lg:py-5 lg:pb-8 ${
+          focusMode ? "max-w-[1440px]" : "max-w-[1260px]"
+        }`}
+      >
         <input
           ref={backupInputRef}
           type="file"
