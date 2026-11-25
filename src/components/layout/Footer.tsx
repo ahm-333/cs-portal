@@ -111,8 +111,8 @@ export function Footer({ variant = "default", className = "" }: FooterProps) {
             </div>
           </div>
 
-          {/* Col 2: Quick Navigation */}
-          <div className="md:col-span-3 space-y-2.5">
+          {/* Col 2: Quick Navigation (Desktop only to keep mobile clean & short) */}
+          <div className="hidden md:block md:col-span-3 space-y-2.5">
             <div
               className="text-[12px] font-extrabold"
               style={{ color: "var(--text-primary)" }}
@@ -134,8 +134,8 @@ export function Footer({ variant = "default", className = "" }: FooterProps) {
             </ul>
           </div>
 
-          {/* Col 3: Direct Courses & Keyboard Tip */}
-          <div className="md:col-span-4 space-y-2.5">
+          {/* Col 3: Direct Courses & Keyboard Tip (Desktop only to avoid mobile clutter) */}
+          <div className="hidden md:block md:col-span-4 space-y-2.5">
             <div
               className="text-[12px] font-extrabold"
               style={{ color: "var(--text-primary)" }}

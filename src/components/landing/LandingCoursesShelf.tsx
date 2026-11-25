@@ -222,8 +222,8 @@ export function LandingCoursesShelf({
           })}
         </div>
 
-        {/* Sleek Secondary Link Row */}
-        <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2">
+        {/* Sleek Secondary Link Row (Desktop/Tablet — zero clutter on mobile) */}
+        <div className="hidden sm:flex flex-wrap items-center justify-center lg:justify-end gap-2">
           <span
             className="text-[11.5px] font-bold px-2.5 py-1 rounded-lg"
             style={{

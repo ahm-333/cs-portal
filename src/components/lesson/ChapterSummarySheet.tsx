@@ -125,31 +125,31 @@ export default function ChapterSummarySheet({
         />
 
         <div
-          className="border-b p-5 sm:p-6"
+          className="border-b p-4 sm:p-6"
           style={{
             background:
               "linear-gradient(135deg, color-mix(in srgb, var(--brand-soft) 38%, var(--bg-canvas)) 0%, var(--bg-canvas) 100%)",
             borderColor: "var(--border-soft)",
           }}
         >
-          <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
             {/* LTR English Title Block */}
-            <div dir="ltr" className="min-w-0 flex-1 space-y-2 text-left">
+            <div dir="ltr" className="min-w-0 flex-1 space-y-1.5 sm:space-y-2 text-left">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono-code inline-flex items-center gap-1 rounded-lg bg-gradient-to-l from-indigo-600 to-blue-600 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-xs">
                   <Layers className="h-3 w-3" />
                   {summary.courseCode} · Chapter {summary.chapterNum}
                 </span>
-                <span className="inline-flex items-center rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                <span className="hidden sm:inline-flex items-center rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
                   Bilingual Study Sheet · {summary.sections.length} Sections
                 </span>
               </div>
 
-              <h3 className="font-en text-[20px] font-black leading-tight text-[var(--text-primary)] sm:text-[23px]">
+              <h3 className="font-en text-[18px] font-black leading-tight text-[var(--text-primary)] sm:text-[23px]">
                 {summary.titleEn}
               </h3>
 
-              <p className="font-en max-w-3xl text-[13.5px] leading-[1.75] text-[var(--text-secondary)]">
+              <p className="hidden sm:block font-en max-w-3xl text-[13.5px] leading-[1.75] text-[var(--text-secondary)]">
                 {summary.overviewEn}
               </p>
             </div>
@@ -222,7 +222,7 @@ export default function ChapterSummarySheet({
           <section
             key={section.id}
             id={`summary-sec-${summary.chapterNum}-${section.id}`}
-            className="scroll-mt-24 space-y-5 rounded-2xl border p-4 sm:p-6"
+            className="scroll-mt-24 space-y-4 sm:space-y-5 rounded-2xl border p-3.5 sm:p-6"
             style={{
               background: "var(--bg-surface)",
               borderColor: "var(--border-soft)",

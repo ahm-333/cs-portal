@@ -499,9 +499,9 @@ export function LiveChapterPreview() {
             : ""
         }`}
       >
-        {/* Top Workspace Chrome Bar */}
+        {/* Top Workspace Chrome Bar (Desktop / Tablet only — zero redundant chrome on mobile) */}
         <div
-          className="px-4 sm:px-6 py-3.5 border-b flex flex-wrap items-center justify-between gap-3"
+          className="hidden sm:flex px-4 sm:px-6 py-3.5 border-b flex-wrap items-center justify-between gap-3"
           style={{
             background: "var(--bg-canvas)",
             borderColor: "var(--border-soft)",
@@ -578,9 +578,9 @@ export function LiveChapterPreview() {
           </div>
         </div>
 
-        {/* 4 Clean Accessible Tabs */}
+        {/* 4 Clean Accessible Tabs (Compact 1-row bar on mobile, spacious cards on desktop) */}
         <div
-          className="px-3 sm:px-5 py-3 border-b"
+          className="px-2.5 sm:px-5 py-2.5 sm:py-3 border-b"
           style={{
             background: "var(--bg-subtle)",
             borderColor: "var(--border-soft)",
@@ -589,10 +589,18 @@ export function LiveChapterPreview() {
           <div
             role="tablist"
             aria-label="معاينة أركان الفصل الأربعة"
-            className="grid grid-cols-2 lg:grid-cols-4 gap-2"
+            className="grid grid-cols-4 gap-1.5 sm:gap-2"
           >
             {PREVIEW_TABS.map((tab, idx) => {
               const isSelected = activeTab === tab.id;
+              const mobileShort =
+                tab.id === "video"
+                  ? "فيديو"
+                  : tab.id === "interactive"
+                    ? "تفاعلي"
+                    : tab.id === "summary"
+                      ? "ملخص"
+                      : "كويز";
               return (
                 <button
                   key={tab.id}
@@ -604,7 +612,7 @@ export function LiveChapterPreview() {
                   tabIndex={isSelected ? 0 : -1}
                   onClick={() => setActiveTab(tab.id)}
                   onKeyDown={(e) => handleTabKeyDown(idx, e)}
-                  className="group relative rounded-2xl px-3 py-2.5 sm:px-3.5 sm:py-3 border text-right flex items-center gap-2.5 cursor-pointer transition-all duration-200"
+                  className="group relative rounded-xl sm:rounded-2xl px-1.5 py-2 sm:px-3.5 sm:py-3 border flex flex-col sm:flex-row items-center justify-center sm:justify-start sm:text-right gap-1 sm:gap-2.5 cursor-pointer transition-all duration-200"
                   style={{
                     background: isSelected
                       ? "var(--bg-surface)"
@@ -616,7 +624,7 @@ export function LiveChapterPreview() {
                   }}
                 >
                   <span
-                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105"
+                    className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105"
                     style={{
                       background: isSelected
                         ? tab.accentSoft
@@ -629,9 +637,19 @@ export function LiveChapterPreview() {
                     {renderTabIcon(tab.id)}
                   </span>
 
-                  <span className="min-w-0 flex-1">
+                  <span className="min-w-0 sm:flex-1">
                     <span
-                      className="block text-[11.5px] sm:text-[12.5px] font-extrabold leading-snug line-clamp-2"
+                      className="sm:hidden block text-[11px] font-extrabold leading-tight truncate"
+                      style={{
+                        color: isSelected
+                          ? "var(--text-primary)"
+                          : "var(--text-secondary)",
+                      }}
+                    >
+                      {mobileShort}
+                    </span>
+                    <span
+                      className="hidden sm:block text-[12.5px] font-extrabold leading-snug line-clamp-2"
                       style={{
                         color: isSelected
                           ? "var(--text-primary)"

@@ -751,15 +751,15 @@ export default function CourseWorkspaceClient({
           borderColor: "var(--border-soft)",
         }}
       >
-        <div className="mx-auto flex h-16 max-w-[1260px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-14 sm:h-16 max-w-[1260px] items-center justify-between gap-2 sm:gap-3 px-3 sm:px-6 lg:px-8">
           {/* Right side (RTL start): Founder Avatar + Clean Breadcrumb (المقررات / المادة) */}
-          <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
+          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
             <Link
               href="/courses"
-              className="group inline-flex items-center gap-2 shrink-0 rounded-full py-1 pl-2.5 pr-1 transition-colors hover:bg-[var(--bg-subtle)]"
+              className="group inline-flex items-center gap-1.5 sm:gap-2 shrink-0 rounded-full py-1 pl-1.5 sm:pl-2.5 pr-1 transition-colors hover:bg-[var(--bg-subtle)]"
               title="العودة لمكتبة المقررات"
             >
-              <span className="relative w-8 h-8 rounded-full overflow-hidden ring-[1.5px] ring-[#c25e33] shrink-0 shadow-xs">
+              <span className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden ring-[1.5px] ring-[#c25e33] shrink-0 shadow-xs">
                 <Image
                   src="/images/founder.jpg"
                   alt="ENG. AHMED AMIR"
@@ -787,7 +787,7 @@ export default function CourseWorkspaceClient({
 
             <div className="flex min-w-0 items-center gap-2">
               <span
-                className="font-mono-code shrink-0 rounded-md px-2 py-0.5 text-[10.5px] font-extrabold"
+                className="hidden sm:inline-block font-mono-code shrink-0 rounded-md px-2 py-0.5 text-[10.5px] font-extrabold"
                 style={{
                   background: "var(--bg-subtle)",
                   color: "var(--text-primary)",
@@ -948,7 +948,7 @@ export default function CourseWorkspaceClient({
 
       {/* ==================== WORKSPACE BODY (Coursera / Notion Sticky Layout) ==================== */}
       <main
-        className={`mx-auto w-full flex-1 px-4 py-4 pb-24 transition-[max-width] duration-200 sm:px-6 lg:px-8 lg:py-5 lg:pb-8 ${
+        className={`mx-auto w-full flex-1 px-2.5 py-3 pb-24 transition-[max-width] duration-200 sm:px-6 sm:py-4 lg:px-8 lg:py-5 lg:pb-8 ${
           focusMode ? "max-w-[1440px]" : "max-w-[1260px]"
         }`}
       >
@@ -1220,14 +1220,14 @@ export default function CourseWorkspaceClient({
 
           {/* Left Main Feature Stage (Single-Screen Header + 4 Pillars + Active Content) */}
           <section
-            className={`surface-card min-h-[420px] space-y-4 overflow-hidden rounded-[24px] p-4 sm:p-5 ${
+            className={`surface-card min-h-[420px] space-y-3.5 sm:space-y-4 overflow-hidden rounded-2xl sm:rounded-[24px] p-3 sm:p-5 ${
               focusMode ? "lg:col-span-12" : "lg:col-span-8"
             }`}
           >
             {/* Compact Single-Row Lesson Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="min-w-0 space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center justify-between gap-2.5 sm:gap-3">
+              <div className="min-w-0 flex-1 space-y-0.5 sm:space-y-1">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <span
                     className="font-mono-code rounded-md px-2 py-0.5 text-[10.5px] font-extrabold"
                     style={{
@@ -1238,7 +1238,7 @@ export default function CourseWorkspaceClient({
                     الفصل {lessonNumPadded}
                   </span>
                   <span
-                    className="rounded-full px-2 py-0.5 text-[10.5px] font-extrabold"
+                    className="hidden sm:inline-block rounded-full px-2 py-0.5 text-[10.5px] font-extrabold"
                     style={{
                       background:
                         !course.is_paid || isUnlockedLocally
@@ -1259,7 +1259,7 @@ export default function CourseWorkspaceClient({
                 </div>
 
                 <h1
-                  className="truncate text-base font-black sm:text-xl"
+                  className="truncate text-[14.5px] font-black sm:text-xl"
                   style={{ color: "var(--text-primary)" }}
                 >
                   {parsedLessonTitle.primary}
@@ -1271,7 +1271,8 @@ export default function CourseWorkspaceClient({
                   type="button"
                   onClick={handleToggleDone}
                   aria-pressed={isCurrentLessonDone}
-                  className="inline-flex min-h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-[12px] font-extrabold transition-all hover:opacity-90"
+                  title={isCurrentLessonDone ? "مكتمل" : "تحديد كمكتمل"}
+                  className="inline-flex min-h-[36px] sm:min-h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 sm:px-3.5 py-1.5 text-[11.5px] sm:text-[12px] font-extrabold transition-all hover:opacity-90"
                   style={{
                     background: isCurrentLessonDone
                       ? "var(--success-soft)"
@@ -1285,28 +1286,31 @@ export default function CourseWorkspaceClient({
                   }}
                 >
                   <Check className="h-3.5 w-3.5 shrink-0" />
-                  <span>
+                  <span className="hidden sm:inline">
                     {isCurrentLessonDone ? "مكتمل ✓" : "تحديد كمكتمل"}
+                  </span>
+                  <span className="sm:hidden">
+                    {isCurrentLessonDone ? "تم" : "إتمام"}
                   </span>
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={handleTriggerUnlock}
-                  className="inline-flex min-h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[12px] font-extrabold text-white transition-transform hover:scale-[1.02]"
+                  className="inline-flex min-h-[36px] sm:min-h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-xl px-3 sm:px-3.5 py-1.5 text-[11.5px] sm:text-[12px] font-extrabold text-white transition-transform hover:scale-[1.02]"
                   style={{ background: "#c25e33" }}
                 >
                   <KeyRound className="h-3.5 w-3.5 shrink-0" />
-                  <span>تفعيل المقرر</span>
+                  <span>تفعيل</span>
                 </button>
               )}
             </div>
 
-            {/* Unified 4-Pillar Tab Bar */}
+            {/* Unified 4-Pillar Tab Bar (Sleek Single-Row Segmented Bar on Mobile & Desktop!) */}
             <div
               role="tablist"
               aria-label="أركان دراسة الفصل الأربعة"
-              className="grid grid-cols-2 gap-1.5 rounded-2xl border p-1 sm:grid-cols-4"
+              className="grid grid-cols-4 gap-1 sm:gap-1.5 rounded-2xl border p-1"
               style={{
                 background: "var(--bg-canvas)",
                 borderColor: "var(--border-soft)",
@@ -1316,6 +1320,14 @@ export default function CourseWorkspaceClient({
                 const isActive = !examNight && activeTab === id;
                 const resolvedLabel =
                   id === "summary" && !hasLessonCode ? "الملخص" : label;
+                const mobileLabel =
+                  id === "video"
+                    ? "فيديو"
+                    : id === "lab"
+                      ? "تفاعلي"
+                      : id === "summary"
+                        ? "ملخص"
+                        : "كويز";
                 const ResolvedIcon =
                   id === "summary" && !hasLessonCode ? FileText : Icon;
                 return (
@@ -1325,12 +1337,15 @@ export default function CourseWorkspaceClient({
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => handleSelectTab(id)}
-                    className={`tool-dock-pill min-h-[38px] justify-center whitespace-nowrap ${
+                    className={`tool-dock-pill min-h-[44px] sm:min-h-[38px] flex-col sm:flex-row gap-0.5 sm:gap-1.5 px-1 sm:px-3 py-1.5 justify-center whitespace-nowrap ${
                       isActive ? "active" : ""
                     }`}
                   >
                     <ResolvedIcon className="h-4 w-4 shrink-0" />
-                    <span>{resolvedLabel}</span>
+                    <span className="sm:hidden text-[10.5px] font-extrabold leading-tight">
+                      {mobileLabel}
+                    </span>
+                    <span className="hidden sm:inline">{resolvedLabel}</span>
                   </button>
                 );
               })}

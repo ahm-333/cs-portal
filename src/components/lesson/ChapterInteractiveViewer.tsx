@@ -251,19 +251,22 @@ export default function ChapterInteractiveViewer({
           }}
         />
 
-        <div className="p-4 sm:p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 space-y-1.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono-code inline-flex items-center rounded-lg bg-gradient-to-l from-indigo-600 to-blue-600 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-xs">
-                  Chapter {chapter.chapterNum} · {chapter.courseCode}
+        <div className="p-3 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span className="font-mono-code inline-flex items-center rounded-lg bg-gradient-to-l from-indigo-600 to-blue-600 px-2 py-0.5 text-[10.5px] sm:text-[11px] font-bold text-white shadow-xs">
+                  Ch {chapter.chapterNum} · {chapter.courseCode}
                 </span>
-                <span className="inline-flex items-center rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                <span className="hidden sm:inline-flex items-center rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
                   {totalSlides} سلايد تفاعلية
+                </span>
+                <span className="sm:hidden font-mono-code text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400">
+                  {masteredCount}/{totalSlides} ✓
                 </span>
               </div>
 
-              <h3 className="text-[17px] font-black leading-snug text-[var(--text-primary)] sm:text-[19px]">
+              <h3 className="hidden sm:block text-[17px] font-black leading-snug text-[var(--text-primary)] sm:text-[19px]">
                 <span className="font-en">{chapter.titleEn}</span>
                 <span className="mx-2 font-normal text-[var(--text-muted)] opacity-50">
                   ·
@@ -274,10 +277,10 @@ export default function ChapterInteractiveViewer({
               </h3>
             </div>
 
-            {/* Mastery Progress + Fullscreen */}
-            <div className="flex flex-wrap items-center gap-2">
+            {/* Mastery Progress (Desktop) + Compact Controls */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <div
-                className="flex items-center gap-2.5 rounded-xl border px-3 py-1.5"
+                className="hidden sm:flex items-center gap-2.5 rounded-xl border px-3 py-1.5"
                 style={{
                   background: "var(--bg-canvas)",
                   borderColor: "var(--border-soft)",
@@ -297,11 +300,32 @@ export default function ChapterInteractiveViewer({
                 </div>
               </div>
 
+              {activeSection === "slides" ? (
+                <button
+                  type="button"
+                  onClick={() => setRecallBlur((prev) => !prev)}
+                  aria-label="تغبيش الهايلايت"
+                  title="غبّش الهايلايت ومرر الماوس للكشف عشان تختبر حفظك"
+                  className={`sm:hidden inline-flex h-8 items-center gap-1 rounded-lg border px-2.5 text-[11px] font-bold cursor-pointer ${
+                    recallBlur
+                      ? "border-violet-500/40 bg-violet-500/15 text-violet-700 dark:text-violet-300"
+                      : "border-[var(--border-soft)] bg-[var(--bg-canvas)] text-[var(--text-secondary)]"
+                  }`}
+                >
+                  {recallBlur ? (
+                    <Eye className="h-3.5 w-3.5" />
+                  ) : (
+                    <EyeOff className="h-3.5 w-3.5" />
+                  )}
+                  <span>تغبيش</span>
+                </button>
+              ) : null}
+
               <button
                 type="button"
                 onClick={() => setIsFullscreen((prev) => !prev)}
                 aria-label={isFullscreen ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:opacity-85 cursor-pointer sm:w-auto sm:gap-1.5 sm:px-3"
+                className="inline-flex h-8 w-8 sm:h-9 sm:w-auto items-center justify-center rounded-lg sm:rounded-xl border transition-colors hover:opacity-85 cursor-pointer sm:gap-1.5 sm:px-3"
                 style={{
                   background: "var(--bg-canvas)",
                   borderColor: "var(--border-soft)",
@@ -327,15 +351,15 @@ export default function ChapterInteractiveViewer({
             </div>
           </div>
 
-          {/* Interactive Toolbar Row */}
+          {/* Interactive Toolbar Row (Ultra-Clean on Mobile — Full Controls on Desktop) */}
           <div
-            className="mt-4 flex flex-wrap items-center justify-between gap-2.5 border-t pt-3.5"
+            className={`${hasBonusProblems ? "flex" : "hidden sm:flex"} mt-3 sm:mt-4 flex-wrap items-center justify-between gap-2 border-t pt-3 sm:pt-3.5`}
             style={{ borderColor: "var(--border-soft)" }}
           >
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex w-full sm:w-auto flex-wrap items-center gap-2">
               {hasBonusProblems ? (
                 <div
-                  className="inline-flex items-center gap-1 rounded-xl border p-1"
+                  className="grid w-full grid-cols-2 sm:inline-flex sm:w-auto items-center gap-1 rounded-xl border p-1"
                   style={{
                     background: "var(--bg-canvas)",
                     borderColor: "var(--border-soft)",
@@ -344,26 +368,26 @@ export default function ChapterInteractiveViewer({
                   <button
                     type="button"
                     onClick={() => setActiveSection("slides")}
-                    className={`inline-flex min-h-[34px] items-center gap-1.5 rounded-lg px-3.5 py-1 text-[12px] font-extrabold transition-all cursor-pointer ${
+                    className={`inline-flex min-h-[34px] items-center justify-center gap-1.5 rounded-lg px-3 py-1 text-[11.5px] sm:text-[12px] font-extrabold transition-all cursor-pointer ${
                       activeSection === "slides"
                         ? "bg-gradient-to-l from-blue-600 to-indigo-600 text-white shadow-xs"
                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     }`}
                   >
-                    <BookOpen className="h-3.5 w-3.5" />
+                    <BookOpen className="h-3.5 w-3.5 shrink-0" />
                     <span>شرح السلايدات</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveSection("bonus")}
-                    className={`inline-flex min-h-[34px] items-center gap-1.5 rounded-lg px-3.5 py-1 text-[12px] font-extrabold transition-all cursor-pointer ${
+                    className={`inline-flex min-h-[34px] items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3.5 py-1 text-[11.5px] sm:text-[12px] font-extrabold transition-all cursor-pointer ${
                       activeSection === "bonus"
                         ? "bg-gradient-to-l from-amber-600 to-orange-600 text-white shadow-xs"
                         : "text-amber-700 dark:text-amber-400 hover:opacity-85"
                     }`}
                   >
-                    <Calculator className="h-3.5 w-3.5" />
-                    <span>شرح مسائل شابتر 3 و 4 (بونص)</span>
+                    <Calculator className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">مسائل 3 و 4 (بونص)</span>
                   </button>
                 </div>
               ) : null}
@@ -371,7 +395,7 @@ export default function ChapterInteractiveViewer({
               {activeSection === "slides" ? (
                 <>
                   <div
-                    className="inline-flex items-center gap-0.5 rounded-xl border p-0.5"
+                    className="hidden sm:inline-flex items-center gap-0.5 rounded-xl border p-0.5"
                     style={{
                       background: "var(--bg-canvas)",
                       borderColor: "var(--border-soft)",
@@ -413,11 +437,11 @@ export default function ChapterInteractiveViewer({
                     </button>
                   </div>
 
-                  {/* Active Recall Blur Highlights Toggle */}
+                  {/* Active Recall Blur Highlights Toggle (Desktop) */}
                   <button
                     type="button"
                     onClick={() => setRecallBlur((prev) => !prev)}
-                    className={`inline-flex min-h-[34px] items-center gap-1.5 rounded-xl border px-3 py-1 text-[12px] font-bold transition-all cursor-pointer ${
+                    className={`hidden sm:inline-flex min-h-[34px] items-center gap-1.5 rounded-xl border px-3 py-1 text-[12px] font-bold transition-all cursor-pointer ${
                       recallBlur
                         ? "border-violet-500/40 bg-violet-500/15 text-violet-700 dark:text-violet-300"
                         : "border-[var(--border-soft)] bg-[var(--bg-canvas)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -443,7 +467,7 @@ export default function ChapterInteractiveViewer({
               <button
                 type="button"
                 onClick={onGoToQuiz}
-                className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl bg-gradient-to-l from-emerald-600 to-teal-600 px-4 py-1.5 text-[12px] font-extrabold text-white shadow-xs transition-opacity hover:opacity-95 cursor-pointer"
+                className="hidden sm:inline-flex min-h-[36px] items-center gap-1.5 rounded-xl bg-gradient-to-l from-emerald-600 to-teal-600 px-4 py-1.5 text-[12px] font-extrabold text-white shadow-xs transition-opacity hover:opacity-95 cursor-pointer"
               >
                 <Sparkles className="h-3.5 w-3.5" />
                 <span>اختبر نفسك في الكويز</span>
@@ -461,9 +485,30 @@ export default function ChapterInteractiveViewer({
       {/* ==================== VIVID SLIDE VIEWER ==================== */}
       {activeSection === "slides" ? (
         <div ref={slideTopRef} className="space-y-4">
-          {/* Quick-Jump Slide Navigator */}
+          {/* Mobile Compact 1-Line Slide Selector (Zero Clutter) */}
+          <div className="sm:hidden flex items-center gap-2">
+            <select
+              aria-label="الانتقال السريع لأي سلايد"
+              value={activeSlideIndex}
+              onChange={(e) => handleJumpToSlide(Number(e.target.value))}
+              className="w-full h-10 rounded-xl border px-3 text-[12.5px] font-bold outline-none"
+              style={{
+                background: "var(--bg-surface)",
+                borderColor: "var(--border-soft)",
+                color: "var(--text-primary)",
+              }}
+            >
+              {chapter.slides.map((slide, idx) => (
+                <option key={slide.id} value={idx}>
+                  {`${idx + 1}/${totalSlides} · ${slide.title}${masteredSet.has(slide.id) ? " ✓" : ""}`}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Desktop Quick-Jump Slide Navigator */}
           <div
-            className="rounded-2xl border px-3.5 py-3"
+            className="hidden sm:block rounded-2xl border px-3.5 py-3"
             style={{
               background: "var(--bg-surface)",
               borderColor: "var(--border-soft)",
@@ -561,7 +606,7 @@ export default function ChapterInteractiveViewer({
                   </div>
 
                   {/* Rich Split-View Content */}
-                  <div className="grid grid-cols-1 gap-6 p-4 sm:p-6 xl:grid-cols-12 xl:gap-7">
+                  <div className="grid grid-cols-1 gap-4 sm:gap-6 p-3 sm:p-6 xl:grid-cols-12 xl:gap-7">
                     {/* RIGHT PANE: Original Academic Slide + Visual Diagram */}
                     <div className="space-y-4 xl:col-span-5">
                       <div

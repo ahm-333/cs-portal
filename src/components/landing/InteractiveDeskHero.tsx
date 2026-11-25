@@ -175,45 +175,38 @@ export function InteractiveDeskHero() {
           }}
         />
 
-        {/* ==================== MOBILE & TABLET HERO (< lg): CRISP, BALANCED, ZERO-OVERFLOW ==================== */}
-        <div className="lg:hidden relative z-10 w-full max-w-[440px] mx-auto px-4 pt-20 pb-7 flex flex-col items-center gap-5">
-          {/* 1. Identity Badges Row */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5">
+        {/* ==================== MOBILE & TABLET HERO (< lg): ULTRA-CLEAN, ZERO CLUTTER ==================== */}
+        <div className="lg:hidden relative z-10 w-full max-w-[420px] mx-auto px-4 pt-20 pb-8 flex flex-col items-center gap-5">
+          {/* 1. Minimal Single Identity Pill */}
+          <span
+            dir="ltr"
+            className="font-mono-code inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.07] border border-white/12 text-[10.5px] font-bold tracking-wide text-slate-200"
+          >
             <span
-              dir="ltr"
-              className="font-mono-code inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] border border-white/15 text-[10.5px] font-bold tracking-wide text-slate-100 backdrop-blur-md"
-            >
-              <span
-                className="w-1.5 h-1.5 rounded-full bg-[#66c7a6] shrink-0"
-                aria-hidden="true"
-              />
-              AI · Zagazig University
-            </span>
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#c25e33]/20 border border-[#e58a62]/35 text-[10.5px] font-extrabold text-[#f5b899]">
-              <Layers className="w-3 h-3 shrink-0" />
-              <span>4 أركان لكل فصل</span>
-            </span>
-          </div>
+              className="w-1.5 h-1.5 rounded-full bg-[#66c7a6] shrink-0"
+              aria-hidden="true"
+            />
+            AI · Zagazig University
+          </span>
 
-          {/* 2. Headline & Copy FIRST — Immediate Clarity Above the Fold */}
-          <div className="text-center space-y-2.5">
-            <h1 className="text-[25px] sm:text-[31px] font-black tracking-tight leading-[1.3] text-white">
+          {/* 2. Clean 2-Line Headline + Short Subtitle */}
+          <div className="text-center space-y-2">
+            <h1 className="text-[26px] sm:text-[32px] font-black tracking-tight leading-[1.3] text-white">
               بدل تشتيت الملفات..
               <span className="block mt-0.5 bg-gradient-to-l from-[#f0a786] via-[#f6c4a8] to-[#66c7a6] bg-clip-text text-transparent">
                 كل حاجة تخص المادة في مكان واحد
               </span>
             </h1>
 
-            <p className="text-[13px] sm:text-[14px] text-slate-300/90 leading-[1.7] max-w-[340px] mx-auto">
-              فيديو الشرح، الشرح التفاعلي، الملخص المنظم، والكويزات لكل فصل في
-              مساحة مذاكرة واحدة بدون تشتيت.
+            <p className="text-[13px] text-slate-300/85 leading-relaxed max-w-[300px] mx-auto">
+              شرح تفاعلي، ملخص منظم، وكويزات لكل فصل بدون تشتيت.
             </p>
           </div>
 
-          {/* 3. Sleek, Feather-Light Mobile Action Control (Zero Heavy Stacked Bars) */}
+          {/* 3. Sleek, Feather-Light Action Control */}
           <div className="w-full">
             {lastVisited ? (
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <Link
                   href={`/courses/${lastVisited.courseSlug}/${lastVisited.lessonId}`}
                   title={lastVisited.lessonTitle}
@@ -247,7 +240,7 @@ export function InteractiveDeskHero() {
                 <div className="flex items-center justify-center">
                   <Link
                     href="/courses"
-                    className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-bold text-slate-200/90 hover:text-white transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[12px] font-bold text-slate-300 hover:text-white transition-colors"
                   >
                     <BookOpen className="w-3.5 h-3.5 text-[#66c7a6] shrink-0" />
                     <span>تصفح كل المقررات</span>
@@ -256,7 +249,7 @@ export function InteractiveDeskHero() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-1.5">
                 <Link
                   href="/courses"
                   className="cta-shimmer h-11 px-7 rounded-full text-[13.5px] font-extrabold text-white inline-flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-transform"
@@ -267,62 +260,37 @@ export function InteractiveDeskHero() {
                 </Link>
                 <a
                   href="#courses-picker"
-                  className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-bold text-slate-300 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold text-slate-300 hover:text-white transition-colors"
                 >
-                  <span>تصفح المقررات المتاحة</span>
+                  <span>تصفح المقررات</span>
                   <ArrowDown className="w-3.5 h-3.5 text-[#66c7a6] shrink-0" />
                 </a>
               </div>
             )}
           </div>
 
-          {/* 4. Properly Framed 3D Desk Showcase — Never Overflowing or Clipping */}
-          <div className="relative w-full max-w-[290px] sm:max-w-[330px] aspect-[5/4] flex items-center justify-center select-none pointer-events-none overflow-hidden rounded-3xl">
+          {/* 4. Compact Framed 3D Desk Visual — Clean Breathing Room */}
+          <div className="relative w-full max-w-[235px] sm:max-w-[290px] aspect-[5/4] flex items-center justify-center select-none pointer-events-none overflow-hidden rounded-3xl">
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-4 rounded-full blur-3xl opacity-85"
+              className="pointer-events-none absolute inset-3 rounded-full blur-2xl opacity-75"
               style={{
                 background:
-                  "radial-gradient(circle, rgba(102, 199, 166, 0.22) 0%, rgba(194, 94, 51, 0.16) 52%, transparent 74%)",
+                  "radial-gradient(circle, rgba(102, 199, 166, 0.22) 0%, rgba(194, 94, 51, 0.14) 52%, transparent 74%)",
               }}
             />
-            <div className="relative w-full h-full scale-[1.08]">
+            <div className="relative w-full h-full scale-[1.06]">
               <Image
                 src="/images/desk/frame-3.jpg"
                 alt="مكتب المذاكرة المنظم"
                 width={900}
                 height={900}
-                sizes="(max-width: 640px) 290px, 330px"
+                sizes="(max-width: 640px) 235px, 290px"
                 className="frame-3d object-contain"
                 priority
                 draggable={false}
               />
             </div>
-          </div>
-
-          {/* 5. Clean 4-Pillar Quick Jump Bar */}
-          <div className="w-full grid grid-cols-4 gap-2">
-            {CHAPTER_PILLARS.map((pillar) => (
-              <button
-                key={pillar.id}
-                type="button"
-                onClick={() => handleJumpToPillar(pillar.id)}
-                className="min-h-[60px] py-2 px-1.5 rounded-2xl bg-white/[0.06] active:bg-white/[0.12] border border-white/[0.10] flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors"
-              >
-                <span
-                  className="w-7 h-7 rounded-lg flex items-center justify-center"
-                  style={{
-                    backgroundColor: pillar.softBg,
-                    color: pillar.accent,
-                  }}
-                >
-                  <PillarIcon id={pillar.id} className="w-3.5 h-3.5" />
-                </span>
-                <span className="text-[11px] font-bold text-slate-100 truncate max-w-full">
-                  {pillar.shortLabel}
-                </span>
-              </button>
-            ))}
           </div>
         </div>
 

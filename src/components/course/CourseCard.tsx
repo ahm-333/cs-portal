@@ -43,7 +43,7 @@ function CourseIcon({ icon }: { icon: string }) {
 const TOOL_BADGES = [
   "فيديو شرح",
   "شرح تفاعلي",
-  "ملخص وأكواد",
+  "ملخص منظم",
   "كويزات وأسئلة",
 ] as const;
 
@@ -92,10 +92,10 @@ export function CourseCard({
 
   return (
     <TiltedCard className="h-full rounded-[22px]" maxTiltDeg={3.2} scaleOnHover={1.008} glare={false}>
-      <article className="spotlight-card bp-course-card bp-course-grid h-full p-5 sm:p-6 flex flex-col justify-between gap-5">
-      <div className="bp-fold-corner" aria-hidden="true" />
+      <article className="spotlight-card bp-course-card bp-course-grid h-full p-4 sm:p-6 flex flex-col justify-between gap-3.5 sm:gap-5">
+      <div className="bp-fold-corner hidden sm:block" aria-hidden="true" />
 
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {/* Header: Icon + Code/Meta + Transparent Index */}
         <div className="flex items-start justify-between gap-2.5">
           <div className="flex items-center gap-3 min-w-0">
@@ -140,7 +140,7 @@ export function CourseCard({
 
           <span
             aria-hidden="true"
-            className="font-en text-2xl sm:text-3xl font-black leading-none opacity-[0.14] pl-6 sm:pl-7 pt-0.5 shrink-0 select-none"
+            className="hidden sm:block font-en text-2xl sm:text-3xl font-black leading-none opacity-[0.14] pl-6 sm:pl-7 pt-0.5 shrink-0 select-none"
             style={{ color: "var(--text-primary)" }}
           >
             {orderNum}
@@ -148,15 +148,15 @@ export function CourseCard({
         </div>
 
         {/* Title (Prominent English) & Summary */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <h3
-            className="font-en text-right text-[18px] sm:text-[19px] font-black leading-snug tracking-tight"
+            className="font-en text-right text-[17.5px] sm:text-[19px] font-black leading-snug tracking-tight"
             style={{ color: "var(--text-primary)" }}
           >
             {course.title_en}
           </h3>
           <p
-            className="text-[12.5px] leading-relaxed"
+            className="line-clamp-2 sm:line-clamp-none text-[12.5px] leading-relaxed"
             style={{ color: "var(--text-secondary)" }}
           >
             {course.description}
@@ -164,13 +164,13 @@ export function CourseCard({
         </div>
       </div>
 
-      {/* Bottom Section: 4 Pillar Badges + Progress Bar + Price/CTA */}
+      {/* Bottom Section: 4 Pillar Badges (Desktop) + Progress Bar + Price/CTA */}
       <div
-        className="space-y-3.5 pt-3 border-t"
+        className="space-y-3 pt-3 border-t"
         style={{ borderColor: "var(--border-soft)" }}
       >
         <div
-          className="flex flex-wrap items-center gap-1.5 text-[10.5px] font-bold"
+          className="hidden sm:flex flex-wrap items-center gap-1.5 text-[10.5px] font-bold"
           style={{ color: "var(--text-secondary)" }}
         >
           {TOOL_BADGES.map((badge) => (
