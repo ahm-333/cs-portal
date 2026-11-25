@@ -146,7 +146,7 @@ export function InteractiveDeskHero() {
     <>
       <section
         id="top"
-        className="relative w-full overflow-x-clip text-white border-b border-white/[0.08] lg:min-h-[100svh] flex flex-col justify-between"
+        className="relative w-full overflow-x-clip text-white border-b border-white/[0.08] min-h-[100svh] flex flex-col justify-between"
         style={{
           background:
             "linear-gradient(180deg, #0b1322 0%, #13213a 62%, #0f1b30 100%)",
@@ -170,104 +170,107 @@ export function InteractiveDeskHero() {
           }}
         />
 
-        {/* ==================== MOBILE & TABLET HERO (< lg): BALANCED, CALM, SINGLE-SCREEN ==================== */}
-        <div className="lg:hidden relative z-10 w-full max-w-[400px] mx-auto px-4 pt-[72px] pb-6 flex flex-col items-center gap-4">
-          {/* 1. Seamless 3D Desk Visual (Radial mask melts edges 100% cleanly) */}
-          <div className="relative w-[240px] h-[185px] sm:w-[280px] sm:h-[215px] flex items-center justify-center select-none pointer-events-none">
-            <div
-              className="relative w-full h-full scale-[1.12]"
-              style={{
-                maskImage:
-                  "radial-gradient(closest-side, #000 64%, transparent 100%)",
-                WebkitMaskImage:
-                  "radial-gradient(closest-side, #000 64%, transparent 100%)",
-              }}
-            >
-              <Image
-                src="/images/desk/frame-3.jpg"
-                alt="مكتب المذاكرة المنظم"
-                width={900}
-                height={900}
-                sizes="(max-width: 640px) 240px, 280px"
-                className="frame-3d object-contain"
-                priority
-                draggable={false}
-              />
+        {/* ==================== MOBILE & TABLET HERO (< lg): FULL 100svh DEDICATED INTRO SCREEN ==================== */}
+        <div className="lg:hidden relative z-10 flex-1 w-full max-w-[400px] mx-auto px-4 pt-20 pb-6 flex flex-col items-center justify-between">
+          {/* Centered Hero Focal Group */}
+          <div className="my-auto flex flex-col items-center gap-5 py-4">
+            {/* 1. Seamless 3D Desk Visual (Radial mask melts edges 100% cleanly) */}
+            <div className="relative w-[265px] h-[205px] sm:w-[300px] sm:h-[235px] flex items-center justify-center select-none pointer-events-none">
+              <div
+                className="relative w-full h-full scale-[1.12]"
+                style={{
+                  maskImage:
+                    "radial-gradient(closest-side, #000 64%, transparent 100%)",
+                  WebkitMaskImage:
+                    "radial-gradient(closest-side, #000 64%, transparent 100%)",
+                }}
+              >
+                <Image
+                  src="/images/desk/frame-3.jpg"
+                  alt="مكتب المذاكرة المنظم"
+                  width={900}
+                  height={900}
+                  sizes="(max-width: 640px) 265px, 300px"
+                  className="frame-3d object-contain"
+                  priority
+                  draggable={false}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* 2. Balanced 2-Line Headline + Crisp 1-Line Subtitle (Zero Orphan Words) */}
-          <div className="text-center space-y-2">
-            <span
-              dir="ltr"
-              className="font-mono-code inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-[10px] font-semibold tracking-wide text-slate-300"
-            >
+            {/* 2. Balanced 2-Line Headline + Crisp 1-Line Subtitle (Zero Orphan Words) */}
+            <div className="text-center space-y-2.5">
               <span
-                className="w-1.5 h-1.5 rounded-full bg-[#66c7a6] shrink-0"
-                aria-hidden="true"
-              />
-              AI · Zagazig University
-            </span>
-
-            <h1 className="text-[21px] sm:text-[28px] font-black tracking-tight leading-[1.35] text-white text-balance">
-              بدل تشتيت الملفات..
-              <span className="block mt-0.5 bg-gradient-to-l from-[#f0a786] via-[#f6c4a8] to-[#66c7a6] bg-clip-text text-transparent">
-                كل حاجة تخص المادة في مكان واحد
+                dir="ltr"
+                className="font-mono-code inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-[10.5px] font-semibold tracking-wide text-slate-300"
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full bg-[#66c7a6] shrink-0"
+                  aria-hidden="true"
+                />
+                AI · Zagazig University
               </span>
-            </h1>
 
-            <p className="text-[12.5px] sm:text-[13.5px] text-slate-300/80 leading-relaxed text-balance">
-              فيديو، شرح تفاعلي، ملخص منظم، وكويزات لكل فصل.
-            </p>
-          </div>
+              <h1 className="text-[22px] sm:text-[28px] font-black tracking-tight leading-[1.35] text-white text-balance">
+                بدل تشتيت الملفات..
+                <span className="block mt-0.5 bg-gradient-to-l from-[#f0a786] via-[#f6c4a8] to-[#66c7a6] bg-clip-text text-transparent">
+                  كل حاجة تخص المادة في مكان واحد
+                </span>
+              </h1>
 
-          {/* 3. One Calm Focal Action + Quiet Secondary Link */}
-          <div className="w-full flex flex-col items-center gap-2 pt-1">
-            {lastVisited ? (
-              <>
-                <Link
-                  href={`/courses/${lastVisited.courseSlug}/${lastVisited.lessonId}`}
-                  title={lastVisited.lessonTitle}
-                  className="cta-shimmer h-11 px-6 rounded-full text-[13.5px] font-extrabold text-white inline-flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-transform"
-                  style={{ background: "#c25e33" }}
-                >
-                  <span>أكمل مذاكرة</span>
-                  <span
-                    dir="ltr"
-                    className="font-mono-code rounded-md bg-black/20 px-1.5 py-0.5 text-[11.5px] font-bold"
+              <p className="text-[13px] sm:text-[14px] text-slate-300/80 leading-relaxed text-balance">
+                فيديو، شرح تفاعلي، ملخص منظم، وكويزات لكل فصل.
+              </p>
+            </div>
+
+            {/* 3. One Calm Focal Action */}
+            <div className="w-full flex flex-col items-center gap-2.5 pt-1">
+              {lastVisited ? (
+                <>
+                  <Link
+                    href={`/courses/${lastVisited.courseSlug}/${lastVisited.lessonId}`}
+                    title={lastVisited.lessonTitle}
+                    className="cta-shimmer h-12 px-7 rounded-full text-[14px] font-extrabold text-white inline-flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-transform"
+                    style={{ background: "#c25e33" }}
                   >
-                    {lastVisited.courseCode}
-                  </span>
-                  <ArrowLeft className="w-4 h-4 shrink-0" />
-                </Link>
+                    <span>أكمل مذاكرة</span>
+                    <span
+                      dir="ltr"
+                      className="font-mono-code rounded-md bg-black/20 px-1.5 py-0.5 text-[11.5px] font-bold"
+                    >
+                      {lastVisited.courseCode}
+                    </span>
+                    <ArrowLeft className="w-4 h-4 shrink-0" />
+                  </Link>
+                  <Link
+                    href="/courses"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 text-[12.5px] font-semibold text-slate-300/90 hover:text-white transition-colors"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-[#66c7a6] shrink-0" />
+                    <span>تصفح كل المقررات</span>
+                  </Link>
+                </>
+              ) : (
                 <Link
                   href="/courses"
-                  className="inline-flex items-center gap-1.5 px-3 py-1 text-[12px] font-semibold text-slate-300/90 hover:text-white transition-colors"
-                >
-                  <BookOpen className="w-3.5 h-3.5 text-[#66c7a6] shrink-0" />
-                  <span>تصفح كل المقررات</span>
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/courses"
-                  className="cta-shimmer h-11 px-7 rounded-full text-[13.5px] font-extrabold text-white inline-flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-transform"
+                  className="cta-shimmer h-12 px-8 rounded-full text-[14px] font-extrabold text-white inline-flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-transform"
                   style={{ background: "#c25e33" }}
                 >
                   <span>ابدأ المذاكرة الآن</span>
                   <ArrowLeft className="w-4 h-4 shrink-0" />
                 </Link>
-                <a
-                  href="#courses-picker"
-                  className="inline-flex items-center gap-1.5 px-3 py-1 text-[12px] font-semibold text-slate-300/90 hover:text-white transition-colors"
-                >
-                  <span>تصفح المقررات</span>
-                  <ArrowDown className="w-3.5 h-3.5 text-[#66c7a6] shrink-0" />
-                </a>
-              </>
-            )}
+              )}
+            </div>
           </div>
+
+          {/* Subtle Bottom Scroll Cue Anchored Cleanly to Viewport Bottom */}
+          <a
+            href="#courses-picker"
+            className="anim-scroll-cue inline-flex flex-col items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-white transition-colors"
+          >
+            <span>اسحب لتصفح المقررات</span>
+            <ArrowDown className="w-4 h-4 text-[#66c7a6]" />
+          </a>
         </div>
 
         {/* ==================== DESKTOP HERO (>= lg): PRESERVED 2-COLUMN SPLIT ==================== */}
