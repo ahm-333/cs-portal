@@ -21,24 +21,10 @@ export const SITE_CONFIG = {
   feedbackUrl: "mailto:support@cs-portal.dev?subject=CS%20Portal%20Feedback",
   socialLinks: [
     {
-      id: "telegram",
-      label: "Telegram",
-      icon: "send",
-      color: "#0284c7",
-      url: undefined,
-    },
-    {
       id: "whatsapp",
       label: "WhatsApp",
       icon: "message-circle",
       color: "var(--success-fg)",
-      url: undefined,
-    },
-    {
-      id: "youtube",
-      label: "YouTube",
-      icon: "youtube",
-      color: "#c25e33",
       url: undefined,
     },
     {
@@ -49,10 +35,10 @@ export const SITE_CONFIG = {
       url: undefined,
     },
     {
-      id: "github",
-      label: "GitHub",
-      icon: "github",
-      color: "var(--text-primary)",
+      id: "telegram",
+      label: "Telegram",
+      icon: "send",
+      color: "#0284c7",
       url: undefined,
     },
   ] satisfies SocialLinkItem[],

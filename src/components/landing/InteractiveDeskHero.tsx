@@ -516,10 +516,10 @@ export function InteractiveDeskHero() {
 
           {/* Subtle Bottom Scroll Cue Anchored Cleanly to Viewport Bottom */}
           <a
-            href="#courses-picker"
+            href="#interactive-showcase"
             className="anim-scroll-cue inline-flex flex-col items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-white transition-colors"
           >
-            <span>اسحب لتصفح المقررات</span>
+            <span>اسحب لاستكشاف المنصة</span>
             <ArrowDown className="w-4 h-4 text-[#66c7a6]" />
           </a>
         </div>

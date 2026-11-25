@@ -16,9 +16,9 @@ const COURSE_SHORTCUTS = [
 
 const QUICK_LINKS = [
   { label: "مكتبة المقررات", href: "/courses" },
-  { label: "المقررات المتاحة", href: "/#courses-picker" },
   { label: "الأركان الـ 4", href: "/#interactive-showcase" },
   { label: "الأسئلة الشائعة", href: "/#faq" },
+  { label: "التواصل", href: "/#community" },
 ] as const;
 
 export function Footer({ variant = "default", className = "" }: FooterProps) {

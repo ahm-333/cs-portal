@@ -10,7 +10,7 @@ import { SITE_CONFIG } from "@/lib/config";
 
 const NAV_LINKS = [
   { id: "interactive-showcase", href: "#interactive-showcase", label: "الأركان" },
-  { id: "courses-picker", href: "#courses-picker", label: "المقررات" },
+  { id: "courses", href: "/courses", label: "المقررات" },
   { id: "faq", href: "#faq", label: "الأسئلة" },
   { id: "community", href: "#community", label: "التواصل" },
 ] as const;
@@ -171,38 +171,37 @@ export function LandingTopbar() {
           >
             {NAV_LINKS.map((item) => {
               const isActive = activeId === item.id;
-              return (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className={`relative px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all ${
-                    isOverHero
-                      ? "hover:text-white"
-                      : "hover:text-[var(--text-primary)]"
-                  }`}
-                  style={
-                    isOverHero
-                      ? {
-                          color: isActive
-                            ? "#ffffff"
-                            : "rgba(226, 232, 240, 0.78)",
-                          background: isActive
-                            ? "rgba(255, 255, 255, 0.14)"
-                            : "transparent",
-                        }
-                      : {
-                          color: isActive
-                            ? "var(--text-primary)"
-                            : "var(--text-secondary)",
-                          background: isActive
-                            ? "var(--bg-surface)"
-                            : "transparent",
-                          boxShadow: isActive
-                            ? "0 1px 4px rgba(0,0,0,0.08)"
-                            : "none",
-                        }
+              const cls = `relative px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all ${
+                isOverHero
+                  ? "hover:text-white"
+                  : "hover:text-[var(--text-primary)]"
+              }`;
+              const st = isOverHero
+                ? {
+                    color: isActive ? "#ffffff" : "rgba(226, 232, 240, 0.78)",
+                    background: isActive
+                      ? "rgba(255, 255, 255, 0.14)"
+                      : "transparent",
                   }
-                >
+                : {
+                    color: isActive
+                      ? "var(--text-primary)"
+                      : "var(--text-secondary)",
+                    background: isActive ? "var(--bg-surface)" : "transparent",
+                    boxShadow: isActive
+                      ? "0 1px 4px rgba(0,0,0,0.08)"
+                      : "none",
+                  };
+
+              if (item.href.startsWith("/")) {
+                return (
+                  <Link key={item.href} href={item.href} className={cls} style={st}>
+                    {item.label}
+                  </Link>
+                );
+              }
+              return (
+                <a key={item.href} href={item.href} className={cls} style={st}>
                   {item.label}
                 </a>
               );
@@ -282,23 +281,41 @@ export function LandingTopbar() {
                   }
             }
           >
-            {NAV_LINKS.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2.5 rounded-xl text-[13.5px] font-bold transition-colors ${
-                  isOverHero
-                    ? "text-white hover:bg-white/10"
-                    : "hover:bg-[var(--bg-subtle)]"
-                }`}
-                style={
-                  isOverHero ? undefined : { color: "var(--text-primary)" }
-                }
-              >
-                {item.label}
-              </a>
-            ))}
+            {NAV_LINKS.map((item) => {
+              const cls = `block px-3 py-2.5 rounded-xl text-[13.5px] font-bold transition-colors ${
+                isOverHero
+                  ? "text-white hover:bg-white/10"
+                  : "hover:bg-[var(--bg-subtle)]"
+              }`;
+              const st = isOverHero
+                ? undefined
+                : { color: "var(--text-primary)" };
+
+              if (item.href.startsWith("/")) {
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cls}
+                    style={st}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              }
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cls}
+                  style={st}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
             <div
               className="pt-2 mt-1 border-t"
               style={{
