@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowDown,
   ArrowLeft,
@@ -10,91 +11,85 @@ import {
   CheckSquare,
   FileText,
   Globe,
+  Play,
   PlayCircle,
-  Sparkles,
 } from "lucide-react";
-import { BrandName } from "@/components/layout/BrandName";
-import { BlurText, ShinyText } from "@/components/ui/ReactBits";
 import { usePortalState } from "@/lib/stores/portalStore";
 
 interface StageCopyItem {
-  tag: string;
   title: string;
+  gradientLine?: string;
   sub: string;
   ariaLabel: string;
 }
 
 const STAGE_COPY: readonly StageCopyItem[] = [
   {
-    tag: "المرحلة 1 من 5 · الفوضى قبل المنصة",
     title: "بدل ما كل حاجة في حتة وتلف وتدوّر عشان تذاكر...",
-    sub: "انسى تشتيت تليجرام وروابط Drive المقفولة — اسكرول وشوف مكتب مذاكرتك الكامل بيتبني قدام عينك!",
-    ariaLabel: "المرحلة 1: الفوضى",
+    sub: "اسكرول بهدوء وشوف مكتب مذاكرتك الكامل بيتبني قدام عينك.",
+    ariaLabel: "المرحلة 1: الفوضى قبل المنصة",
   },
   {
-    tag: "المرحلة 2 من 5 · ظهور اللابتوب",
-    title: "كل فيديوهات الشرح مترتّبة ومستنياك في مكان واحد!",
-    sub: "شابترز دقيقة تدخلك على الفكرة اللي واقفة معاك في ثانية — صفر تشتيت، صفر تدوير.",
+    title: "كل فيديوهات الشرح مترتّبة في مكان واحد",
+    sub: "فصول زمنية واضحة تدخلك على الجزئية اللي واقفة معاك في ثانية بدون تشتيت.",
     ariaLabel: "المرحلة 2: فيديوهات الشرح",
   },
   {
-    tag: "المرحلة 3 من 5 · ظهور التابلت",
-    title: "ملخصات تخلّصك وأكواد واضحة تتقري من أول نظرة!",
-    sub: "وداعاً لصور السبورة المهزوزة — كشكول ملخص بالعامية ومعادلات جاهزة لليلة الامتحان.",
-    ariaLabel: "المرحلة 3: الملخصات",
+    title: "كشكول ملخصات بالعامية وأكواد واضحة",
+    sub: "كل سطر إنجليزي وتحته شرحه بالقلم الأزرق + تريكات الامتحان جاهزة للطباعة.",
+    ariaLabel: "المرحلة 3: كشكول الملخصات",
   },
   {
-    tag: "المرحلة 4 من 5 · الشبكة المضيئة",
-    title: "افهم بجد وطبّق بإيدك داخل شرح تفاعلي حي!",
-    sub: "ما تحفظش خوارزميات على الورق — شغّلها قدام عينك خطوة بخطوة وامتلك المادة.",
-    ariaLabel: "المرحلة 4: الشرح التفاعلي والموقع",
+    title: "شرح تفاعلي حيّ وكويزات بتصحيح فوري",
+    sub: "سلايدات ملونة + تغبيش للحفظ + أسئلة شيتات وميدتيرم وبنك أخطاء ذكي.",
+    ariaLabel: "المرحلة 4: الشرح التفاعلي والكويزات",
   },
   {
-    tag: "المرحلة 5 من 5 · مكتب مذاكرتك اكتمل",
-    title: "هنا هتلاقي كل حاجة... ادخل الامتحان وإنت ضامنها!",
-    sub: "كويزات فورية، بنك أخطاء ذكي، ومؤقت تركيز — مكتب مذاكرتك اكتمل 100% وجاهز تنطلق!",
-    ariaLabel: "المرحلة 5: الكويزات واكتمال المكتب",
+    title: "بدل تشتيت الملفات..",
+    gradientLine: "كل حاجة تخص المادة في مكان واحد",
+    sub: "فيديو، شرح تفاعلي، كشكول ملخص، وكويزات لكل فصل — جاهز تبدأ دلوقتي.",
+    ariaLabel: "المرحلة 5: اكتمال مكتب المذاكرة",
   },
 ] as const;
 
-const STAGE_TARGETS = [0.0, 0.24, 0.42, 0.58, 0.76] as const;
+const STAGE_TARGETS = [0.0, 0.26, 0.48, 0.69, 0.9] as const;
 
 const CHAOS_CONFIG = [
   {
     id: "chaos1",
     label: "📄 Lecture_final_v4_OLD.pdf",
     className:
-      "chaos-chip absolute top-[12%] right-[14%] px-3.5 py-2 rounded-xl bg-[#2a1d24]/92 border border-[#e58a62]/55 text-[12px] font-bold text-[#fed7aa] shadow-xl",
-    rx: 9,
-    dx: -160,
-    dy: 90,
+      "chaos-chip absolute top-[12%] right-[13%] px-3.5 py-2 rounded-xl bg-[#2a1d24]/92 border border-[#e58a62]/55 text-[12px] font-bold text-[#fed7aa] shadow-xl",
+    rx: 8,
+    dx: -155,
+    dy: 85,
   },
   {
     id: "chaos2",
     label: "▶ رابط يوتيوب ناقص (جزء 3)",
     className:
-      "chaos-chip absolute top-[18%] left-[14%] px-3.5 py-2 rounded-xl bg-[#2a1d24]/92 border border-rose-400/50 text-[12px] font-bold text-rose-200 shadow-xl",
-    rx: -10,
-    dx: 160,
-    dy: 80,
+      "chaos-chip absolute top-[18%] left-[13%] px-3.5 py-2 rounded-xl bg-[#2a1d24]/92 border border-rose-400/50 text-[12px] font-bold text-rose-200 shadow-xl",
+    rx: -9,
+    dx: 155,
+    dy: 75,
   },
   {
     id: "chaos3",
     label: "🖼 IMG_code_blurry.jpg",
     className:
-      "chaos-chip absolute bottom-[18%] right-[16%] px-3.5 py-2 rounded-xl bg-[#1e2638]/92 border border-amber-400/45 text-[12px] font-bold text-amber-200 shadow-xl",
-    rx: -7,
-    dx: -150,
-    dy: -80,
+      "chaos-chip absolute bottom-[18%] right-[15%] px-3.5 py-2 rounded-xl bg-[#1e2638]/92 border border-amber-400/45 text-[12px] font-bold text-amber-200 shadow-xl",
+    rx: -6,
+    dx: -145,
+    dy: -75,
   },
   {
     id: "chaos4",
     label: "💬 رسالة تليجرام ضايعة...",
     className:
-      "chaos-chip absolute bottom-[14%] left-[16%] px-3.5 py-2 rounded-xl bg-[#1e2638]/92 border border-slate-400/40 text-[12px] font-bold text-slate-200 shadow-xl",
-    rx: 11,
-    dx: 150,
-    dy: -75,
+      "chaos-chip absolute bottom-[14%] left-[15%] px-3.5 py-2 rounded-xl bg-[#1e2638]/92 border border-slate-400/40 text-[12px] font-bold text-slate-200 shadow-xl",
+    rx: 10,
+    dx: 145,
+    dy: -70,
   },
 ] as const;
 
@@ -102,13 +97,30 @@ function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v));
 }
 
+function smoothstep(edge0: number, edge1: number, x: number): number {
+  const t = clamp01((x - edge0) / (edge1 - edge0));
+  return t * t * (3 - 2 * t);
+}
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
 export function InteractiveDeskHero() {
+  const router = useRouter();
   const portal = usePortalState();
   const lastVisited = portal.lastVisited;
 
-  // Desktop scroll-assembled 3D desk cinema state & refs
+  // Desktop scroll-assembled 3D desk cinema state & smooth physics refs
   const [stageIdx, setStageIdx] = useState(0);
+  const [isAutoTouring, setIsAutoTouring] = useState(false);
+
   const stageIdxRef = useRef(0);
+  const targetPRef = useRef(0);
+  const smoothPRef = useRef(0);
+  const autoTourActiveRef = useRef(false);
+  const autoTourRafRef = useRef<number | null>(null);
+  const autoTourNavTimerRef = useRef<number | null>(null);
 
   const trackRef = useRef<HTMLDivElement | null>(null);
   const deskWrapRef = useRef<HTMLDivElement | null>(null);
@@ -133,42 +145,58 @@ export function InteractiveDeskHero() {
     null,
   ]);
 
-  const applyScrollyProgress = useCallback((rawP: number) => {
-    const p = clamp01(rawP);
-    const a = clamp01(p / 0.72);
-    const exitT = clamp01((p - 0.88) / 0.12);
+  const stopAutoTour = useCallback(() => {
+    if (!autoTourActiveRef.current) return;
+    autoTourActiveRef.current = false;
+    setIsAutoTouring(false);
+    if (autoTourRafRef.current !== null) {
+      cancelAnimationFrame(autoTourRafRef.current);
+      autoTourRafRef.current = null;
+    }
+    if (autoTourNavTimerRef.current !== null) {
+      window.clearTimeout(autoTourNavTimerRef.current);
+      autoTourNavTimerRef.current = null;
+    }
+  }, []);
 
-    const pct = Math.round(a * 100);
+  const renderScrollyVisuals = useCallback((p: number) => {
+    // Map assembly smoothly across 0..0.82, leaving 0.82..1.00 as a calm finale hold
+    const assemblyPct = Math.round(clamp01(p / 0.8) * 100);
     if (pctLabelRef.current) {
-      pctLabelRef.current.textContent = `${pct}%`;
+      pctLabelRef.current.textContent = `${assemblyPct}%`;
     }
 
+    // Calm, spacious stage thresholds so every headline stays readable & organized
     const nextStageIdx =
-      a < 0.16 ? 0 : a < 0.4 ? 1 : a < 0.64 ? 2 : a < 0.86 ? 3 : 4;
+      p < 0.16 ? 0 : p < 0.37 ? 1 : p < 0.58 ? 2 : p < 0.78 ? 3 : 4;
     if (nextStageIdx !== stageIdxRef.current) {
       stageIdxRef.current = nextStageIdx;
       setStageIdx(nextStageIdx);
     }
 
+    const exitT = smoothstep(0.92, 1.0, p);
     const deskWrap = deskWrapRef.current;
     if (deskWrap) {
-      const sc = 0.9 + a * 0.14 - exitT * 0.05;
-      const ty = (1 - a) * 14 - exitT * 18;
-      deskWrap.style.transform = `translateY(${ty.toFixed(1)}px) scale(${sc.toFixed(3)})`;
-      deskWrap.style.opacity = String(1 - exitT * 0.25);
+      const grow = smoothstep(0.0, 0.8, p);
+      const sc = 0.91 + grow * 0.12 - exitT * 0.04;
+      const ty = (1 - grow) * 12 - exitT * 14;
+      deskWrap.style.transform = `translate3d(0, ${ty.toFixed(1)}px, 0) scale(${sc.toFixed(4)})`;
+      deskWrap.style.opacity = String(1 - exitT * 0.18);
     }
 
-    const chaosFade = clamp01((a - 0.03) / 0.22);
+    // Chaos chips smoothly pull inward and fade out cleanly during 0.03..0.22
+    const chaosFade = smoothstep(0.03, 0.22, p);
     CHAOS_CONFIG.forEach((item, idx) => {
       const el = chaosRefs.current[idx];
       if (!el) return;
       el.style.opacity = String(1 - chaosFade);
-      el.style.transform = `translate(${(item.dx * chaosFade).toFixed(1)}px, ${(item.dy * chaosFade).toFixed(1)}px) rotate(${(item.rx * (1 - chaosFade)).toFixed(1)}deg) scale(${(1 - chaosFade * 0.35).toFixed(3)})`;
+      el.style.transform = `translate3d(${(item.dx * chaosFade).toFixed(1)}px, ${(item.dy * chaosFade).toFixed(1)}px, 0) rotate(${(item.rx * (1 - chaosFade)).toFixed(1)}deg) scale(${(1 - chaosFade * 0.32).toFixed(3)})`;
     });
 
-    const op1 = clamp01((a - 0.16) / 0.16);
-    const op2 = clamp01((a - 0.4) / 0.16);
-    const op3 = clamp01((a - 0.66) / 0.18);
+    // Silky smoothstep frame crossfades
+    const op1 = smoothstep(0.15, 0.3, p);
+    const op2 = smoothstep(0.36, 0.52, p);
+    const op3 = smoothstep(0.57, 0.74, p);
 
     const f0 = frameRefs.current[0];
     const f1 = frameRefs.current[1];
@@ -180,62 +208,181 @@ export function InteractiveDeskHero() {
     if (f2) f2.style.opacity = String(op2);
     if (f3) f3.style.opacity = String(op3);
 
-    const exitScale = 1 - exitT * 0.45;
-    const safeDenom = Math.max(0.01, exitScale);
-
+    // Staggered, calm feature pop-up cards aligned with each desk item
+    const exitScale = 1 - exitT * 0.35;
     const pops = [
-      { val: clamp01((a - 0.2) / 0.14) * exitScale, dir: 30 },
-      { val: clamp01((a - 0.44) / 0.14) * exitScale, dir: -30 },
-      { val: clamp01((a - 0.66) / 0.14) * exitScale, dir: 30 },
-      { val: clamp01((a - 0.82) / 0.14) * exitScale, dir: -30 },
+      { val: smoothstep(0.18, 0.31, p) * exitScale, dir: 26 },
+      { val: smoothstep(0.39, 0.52, p) * exitScale, dir: -26 },
+      { val: smoothstep(0.58, 0.7, p) * exitScale, dir: 26 },
+      { val: smoothstep(0.68, 0.8, p) * exitScale, dir: -26 },
     ];
 
     pops.forEach((pop, idx) => {
       const el = featPopRefs.current[idx];
       if (!el) return;
       el.style.opacity = String(pop.val);
-      const tx = (1 - Math.min(1, pop.val / safeDenom)) * pop.dir;
-      el.style.transform = `translateX(${tx.toFixed(1)}px) scale(${(0.92 + pop.val * 0.08).toFixed(3)})`;
+      const tx = (1 - Math.min(1, pop.val / Math.max(0.01, exitScale))) * pop.dir;
+      el.style.transform = `translate3d(${tx.toFixed(1)}px, 0, 0) scale(${(0.94 + pop.val * 0.06).toFixed(4)})`;
     });
   }, []);
 
+  // Continuous butter-smooth physics lerp loop (Desktop >= 1024px)
   useEffect(() => {
-    let scrollyRaf: number | null = null;
+    let rafId = 0;
+    const reducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const computeScrollProgress = () => {
+    const readTargetProgress = () => {
       const track = trackRef.current;
       if (!track || track.offsetHeight === 0) return;
       const rect = track.getBoundingClientRect();
       const scrollable = track.offsetHeight - window.innerHeight;
       if (scrollable <= 0) {
-        applyScrollyProgress(0);
+        targetPRef.current = 0;
         return;
       }
-      const p = clamp01(-rect.top / scrollable);
-      applyScrollyProgress(p);
+      targetPRef.current = clamp01(-rect.top / scrollable);
     };
 
-    const onScroll = () => {
-      if (!trackRef.current) return;
-      if (scrollyRaf !== null) return;
-      scrollyRaf = requestAnimationFrame(() => {
-        scrollyRaf = null;
-        computeScrollProgress();
-      });
+    const tick = () => {
+      readTargetProgress();
+      const target = targetPRef.current;
+      const current = smoothPRef.current;
+
+      if (reducedMotion) {
+        smoothPRef.current = target;
+      } else {
+        const diff = target - current;
+        // Liquid-smooth damping factor (faster when close so it never stalls)
+        smoothPRef.current =
+          Math.abs(diff) < 0.0004 ? target : current + diff * 0.095;
+      }
+
+      renderScrollyVisuals(smoothPRef.current);
+      rafId = requestAnimationFrame(tick);
     };
 
-    computeScrollProgress();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
+    readTargetProgress();
+    smoothPRef.current = targetPRef.current;
+    renderScrollyVisuals(smoothPRef.current);
+    rafId = requestAnimationFrame(tick);
 
     return () => {
-      if (scrollyRaf !== null) cancelAnimationFrame(scrollyRaf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      cancelAnimationFrame(rafId);
     };
-  }, [applyScrollyProgress]);
+  }, [renderScrollyVisuals]);
+
+  // Automated cinematic scroll tour when clicking "ابدأ المذاكرة" on Desktop
+  const startAutoTour = useCallback(() => {
+    const track = trackRef.current;
+    if (typeof window === "undefined" || !track || window.innerWidth < 1024) {
+      router.push("/courses");
+      return;
+    }
+
+    // If user clicks a second time while already touring, jump straight to /courses
+    if (autoTourActiveRef.current) {
+      stopAutoTour();
+      router.push("/courses");
+      return;
+    }
+
+    const topAbs = track.getBoundingClientRect().top + window.scrollY;
+    const scrollable = track.offsetHeight - window.innerHeight;
+    if (scrollable <= 0) {
+      router.push("/courses");
+      return;
+    }
+
+    autoTourActiveRef.current = true;
+    setIsAutoTouring(true);
+
+    // Piecewise timeline with calm, cinematic pauses at each desk milestone
+    const startP = clamp01((window.scrollY - topAbs) / scrollable);
+    const endP = 0.91;
+
+    if (startP >= 0.84) {
+      // Already assembled — briefly show finale then open courses
+      autoTourNavTimerRef.current = window.setTimeout(() => {
+        stopAutoTour();
+        router.push("/courses");
+      }, 650);
+      return;
+    }
+
+    const totalDurationMs = Math.max(3600, Math.round((endP - startP) * 7600));
+    const startTime = performance.now();
+
+    const stepTour = (now: number) => {
+      if (!autoTourActiveRef.current) return;
+      const elapsed = now - startTime;
+      const t = clamp01(elapsed / totalDurationMs);
+
+      // Gentle breathing cadence: smooth glide with slight slowdowns around feature stages
+      const baseEase = easeInOutCubic(t);
+      const subtleCadence =
+        baseEase + Math.sin(baseEase * Math.PI * 6) * 0.014 * (1 - t);
+      const nextP = clamp01(startP + (endP - startP) * clamp01(subtleCadence));
+
+      const targetY = topAbs + nextP * scrollable;
+      if (window.__lenis) {
+        window.__lenis.scrollTo(targetY, { immediate: true, force: true });
+      } else {
+        window.scrollTo({
+          top: targetY,
+          behavior: "auto",
+        });
+      }
+
+      if (t < 1) {
+        autoTourRafRef.current = requestAnimationFrame(stepTour);
+      } else {
+        // Hold briefly on the complete desk + signature headline, then navigate to /courses
+        autoTourNavTimerRef.current = window.setTimeout(() => {
+          stopAutoTour();
+          router.push("/courses");
+        }, 1250);
+      }
+    };
+
+    autoTourRafRef.current = requestAnimationFrame(stepTour);
+  }, [router, stopAutoTour]);
+
+  // Listen for Topbar "ابدأ المذاكرة" event & yield instantly if user scrolls manually
+  useEffect(() => {
+    const onStartTour = () => startAutoTour();
+    const onUserInterrupt = () => {
+      if (autoTourActiveRef.current) stopAutoTour();
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (
+        autoTourActiveRef.current &&
+        (e.key === "Escape" ||
+          e.key === "ArrowDown" ||
+          e.key === "ArrowUp" ||
+          e.key === " ")
+      ) {
+        stopAutoTour();
+      }
+    };
+
+    window.addEventListener("cs-portal:start-desk-tour", onStartTour);
+    window.addEventListener("wheel", onUserInterrupt, { passive: true });
+    window.addEventListener("touchstart", onUserInterrupt, { passive: true });
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("cs-portal:start-desk-tour", onStartTour);
+      window.removeEventListener("wheel", onUserInterrupt);
+      window.removeEventListener("touchstart", onUserInterrupt);
+      window.removeEventListener("keydown", onKeyDown);
+      stopAutoTour();
+    };
+  }, [startAutoTour, stopAutoTour]);
 
   const handleStageSelect = (idx: number) => {
+    stopAutoTour();
     const targetP = STAGE_TARGETS[idx] ?? 0;
     const track = trackRef.current;
     if (typeof window !== "undefined" && track) {
@@ -244,17 +391,13 @@ export function InteractiveDeskHero() {
       if (scrollable > 0) {
         const destY = topAbs + targetP * scrollable;
         if (window.__lenis) {
-          window.__lenis.scrollTo(destY, { duration: 1.05 });
+          window.__lenis.scrollTo(destY, { duration: 1.15 });
         } else {
           window.scrollTo({ top: destY, behavior: "smooth" });
         }
-        return;
       }
     }
-    applyScrollyProgress(targetP);
   };
-
-  const currentCopy = STAGE_COPY[stageIdx] ?? STAGE_COPY[0];
 
   return (
     <section
@@ -382,7 +525,7 @@ export function InteractiveDeskHero() {
         </div>
       </div>
 
-      {/* ==================== DESKTOP HERO (>= lg): ORIGINAL SCROLL-ASSEMBLED 3D DESK CINEMA ==================== */}
+      {/* ==================== DESKTOP HERO (>= lg): BUTTER-SMOOTH SCROLL-ASSEMBLED 3D DESK CINEMA ==================== */}
       <div
         id="scrollyTrack"
         ref={trackRef}
@@ -399,53 +542,41 @@ export function InteractiveDeskHero() {
             aria-hidden="true"
           />
 
-          {/* Top Minimal Header Overlay (Padded safely below Fixed Topbar) */}
-          <div className="relative z-20 max-w-[1220px] w-full mx-auto px-6 pt-[68px] flex flex-col items-center text-center">
-            <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
-              <div className="inline-flex items-center gap-2 pl-3 pr-1 py-1 rounded-full bg-white/[0.08] border border-white/15 backdrop-blur-md">
-                <div className="relative w-6 h-6 rounded-full overflow-hidden ring-[1.5px] ring-[#e58a62] shrink-0">
-                  <Image
-                    src="/images/founder.jpg"
-                    alt="ENG. AHMED AMIR"
-                    fill
-                    sizes="24px"
-                    className="object-cover object-[50%_15%]"
-                    priority
-                  />
-                </div>
-                <BrandName inverted size="sm" />
-              </div>
-
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11.5px] font-bold text-[#f0a786]">
-                <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                <ShinyText id-tag="cinemaStageTag">
-                  <span id="cinemaStageTag">{currentCopy.tag}</span>
-                </ShinyText>
-              </div>
+          {/* Top Clean Crossfading Headline Stage (Zero pill clutter, zero jitter) */}
+          <div className="relative z-20 max-w-[960px] w-full mx-auto px-6 pt-[76px]">
+            <div className="relative h-[108px] xl:h-[118px] w-full">
+              {STAGE_COPY.map((stage, idx) => {
+                const isActive = stageIdx === idx;
+                return (
+                  <div
+                    key={stage.ariaLabel}
+                    aria-hidden={!isActive}
+                    className={`absolute inset-0 flex flex-col items-center justify-center text-center transition-all duration-500 ease-out ${
+                      isActive
+                        ? "opacity-100 translate-y-0"
+                        : "opacity-0 translate-y-2.5 pointer-events-none"
+                    }`}
+                  >
+                    <h1 className="text-3xl xl:text-[38px] font-black tracking-tight leading-[1.28] text-white">
+                      {stage.title}
+                      {stage.gradientLine && (
+                        <span className="block mt-1 bg-gradient-to-l from-[#f0a786] via-[#f6c4a8] to-[#66c7a6] bg-clip-text text-transparent">
+                          {stage.gradientLine}
+                        </span>
+                      )}
+                    </h1>
+                    <p className="text-[14.5px] text-slate-300/90 mt-2 max-w-2xl leading-relaxed">
+                      {stage.sub}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
-
-            <h1
-              id="cinemaHeadline"
-              className="text-3xl xl:text-4xl font-black tracking-tight leading-snug transition-all"
-            >
-              <BlurText
-                key={currentCopy.title}
-                text={currentCopy.title}
-                stagger={0.035}
-                duration={0.5}
-              />
-            </h1>
-            <p
-              id="cinemaSubline"
-              className="text-[14.5px] text-slate-300 mt-1.5 max-w-2xl leading-relaxed"
-            >
-              {currentCopy.sub}
-            </p>
           </div>
 
           {/* CENTER FULL-SCREEN 3D STAGE */}
           <div className="relative z-10 flex-1 w-full max-w-[1280px] mx-auto px-4 flex items-center justify-center my-1 min-h-0">
-            {/* CHAOS LAYER (Morphs inward & dissolves as Stage 1 begins) */}
+            {/* CHAOS LAYER (Smoothly glides inward & dissolves) */}
             <div
               id="chaosOverlay"
               className="absolute inset-0 z-30 pointer-events-none"
@@ -459,21 +590,28 @@ export function InteractiveDeskHero() {
                     chaosRefs.current[idx] = el;
                   }}
                   className={chip.className}
-                  style={{ transform: `rotate(${chip.rx}deg)` }}
+                  style={{
+                    transform: `rotate(${chip.rx}deg)`,
+                    willChange: "transform, opacity",
+                  }}
                 >
                   {chip.label}
                 </div>
               ))}
             </div>
 
-            {/* FLOATING FEATURE POP-UP CARDS */}
+            {/* FLOATING FEATURE POP-UP CARDS (Calmed spacing + GPU-accelerated) */}
             <div
               id="featPop1"
               ref={(el) => {
                 featPopRefs.current[0] = el;
               }}
-              className="feature-pop-card absolute top-[14%] right-8 z-30 w-64 p-4 rounded-2xl bg-[#0e1726]/88 border border-[#e58a62]/45 backdrop-blur-md shadow-2xl"
-              style={{ opacity: 0, transform: "translateX(30px) scale(0.92)" }}
+              className="feature-pop-card absolute top-[12%] right-8 z-30 w-64 p-4 rounded-2xl bg-[#0e1726]/88 border border-[#e58a62]/45 backdrop-blur-md shadow-2xl"
+              style={{
+                opacity: 0,
+                transform: "translate3d(26px, 0, 0) scale(0.94)",
+                willChange: "transform, opacity",
+              }}
             >
               <div className="flex items-center gap-2 text-[#f0a786] text-[11px] font-extrabold mb-1">
                 <PlayCircle className="w-4 h-4" />
@@ -492,8 +630,12 @@ export function InteractiveDeskHero() {
               ref={(el) => {
                 featPopRefs.current[1] = el;
               }}
-              className="feature-pop-card absolute top-[18%] left-8 z-30 w-64 p-4 rounded-2xl bg-[#0e1726]/88 border border-[#7ca7f0]/45 backdrop-blur-md shadow-2xl"
-              style={{ opacity: 0, transform: "translateX(-30px) scale(0.92)" }}
+              className="feature-pop-card absolute top-[16%] left-8 z-30 w-64 p-4 rounded-2xl bg-[#0e1726]/88 border border-[#7ca7f0]/45 backdrop-blur-md shadow-2xl"
+              style={{
+                opacity: 0,
+                transform: "translate3d(-26px, 0, 0) scale(0.94)",
+                willChange: "transform, opacity",
+              }}
             >
               <div className="flex items-center gap-2 text-[#9dc0f7] text-[11px] font-extrabold mb-1">
                 <FileText className="w-4 h-4" />
@@ -512,8 +654,12 @@ export function InteractiveDeskHero() {
               ref={(el) => {
                 featPopRefs.current[2] = el;
               }}
-              className="feature-pop-card absolute bottom-[14%] right-8 z-30 w-64 p-4 rounded-2xl bg-[#0e1726]/88 border border-[#66c7a6]/50 backdrop-blur-md shadow-2xl"
-              style={{ opacity: 0, transform: "translateX(30px) scale(0.92)" }}
+              className="feature-pop-card absolute bottom-[12%] right-8 z-30 w-64 p-4 rounded-2xl bg-[#0e1726]/88 border border-[#66c7a6]/50 backdrop-blur-md shadow-2xl"
+              style={{
+                opacity: 0,
+                transform: "translate3d(26px, 0, 0) scale(0.94)",
+                willChange: "transform, opacity",
+              }}
             >
               <div className="flex items-center gap-2 text-[#66c7a6] text-[11px] font-extrabold mb-1">
                 <Globe className="w-4 h-4" />
@@ -532,8 +678,12 @@ export function InteractiveDeskHero() {
               ref={(el) => {
                 featPopRefs.current[3] = el;
               }}
-              className="feature-pop-card absolute bottom-[12%] left-8 z-30 w-64 p-4 rounded-2xl bg-[#0e1726]/88 border border-[#e58a62]/55 backdrop-blur-md shadow-2xl"
-              style={{ opacity: 0, transform: "translateX(-30px) scale(0.92)" }}
+              className="feature-pop-card absolute bottom-[10%] left-8 z-30 w-64 p-4 rounded-2xl bg-[#0e1726]/88 border border-[#e58a62]/55 backdrop-blur-md shadow-2xl"
+              style={{
+                opacity: 0,
+                transform: "translate3d(-26px, 0, 0) scale(0.94)",
+                willChange: "transform, opacity",
+              }}
             >
               <div className="flex items-center gap-2 text-[#f0a786] text-[11px] font-extrabold mb-1">
                 <CheckSquare className="w-4 h-4" />
@@ -551,8 +701,11 @@ export function InteractiveDeskHero() {
             <div
               id="deskCinemaWrap"
               ref={deskWrapRef}
-              className="desk-cinema-wrap relative w-[450px] h-[450px] xl:w-[490px] xl:h-[490px] flex items-center justify-center"
-              style={{ transform: "translateY(14px) scale(0.9)" }}
+              className="desk-cinema-wrap relative w-[440px] h-[440px] xl:w-[485px] xl:h-[485px] flex items-center justify-center"
+              style={{
+                transform: "translate3d(0, 12px, 0) scale(0.91)",
+                willChange: "transform, opacity",
+              }}
             >
               <Image
                 id="frame3d0"
@@ -563,7 +716,7 @@ export function InteractiveDeskHero() {
                 alt="المرحلة الأولى: المكتب فارغ جاهز للترتيب"
                 width={900}
                 height={900}
-                sizes="490px"
+                sizes="485px"
                 className="frame-3d"
                 style={{ opacity: 1 }}
                 priority
@@ -579,7 +732,7 @@ export function InteractiveDeskHero() {
                 alt="المرحلة الثانية: ظهور اللابتوب بفيديوهات الشرح"
                 width={900}
                 height={900}
-                sizes="490px"
+                sizes="485px"
                 className="frame-3d"
                 style={{ opacity: 0 }}
                 loading="eager"
@@ -595,7 +748,7 @@ export function InteractiveDeskHero() {
                 alt="المرحلة الثالثة: انضمام التابلت والملخصات"
                 width={900}
                 height={900}
-                sizes="490px"
+                sizes="485px"
                 className="frame-3d"
                 style={{ opacity: 0 }}
                 loading="eager"
@@ -611,7 +764,7 @@ export function InteractiveDeskHero() {
                 alt="المرحلة النهائية: اكتمال مكتب المذاكرة التفاعلي"
                 width={900}
                 height={900}
-                sizes="490px"
+                sizes="485px"
                 className="frame-3d"
                 style={{ opacity: 0 }}
                 loading="eager"
@@ -621,15 +774,15 @@ export function InteractiveDeskHero() {
             </div>
           </div>
 
-          {/* Bottom Stage Progress Dots & Percentage */}
-          <div className="relative z-20 max-w-2xl w-full mx-auto px-4 pb-5 flex items-center justify-center">
-            <div className="flex items-center gap-1 px-3.5 py-1 rounded-full bg-white/[0.07] border border-white/12">
+          {/* Bottom Stage Progress Dots + Interactive Auto-Tour / Enter Courses Control */}
+          <div className="relative z-20 max-w-2xl w-full mx-auto px-4 pb-5 flex items-center justify-center gap-3">
+            <div className="flex items-center gap-1 px-3.5 py-1 rounded-full bg-white/[0.07] border border-white/12 backdrop-blur-md">
               {STAGE_COPY.map((stage, idx) => (
                 <button
                   key={stage.ariaLabel}
                   type="button"
                   onClick={() => handleStageSelect(idx)}
-                  className="stage-step-btn min-h-[36px] px-1 flex items-center justify-center cursor-pointer"
+                  className="stage-step-btn min-h-[34px] px-1 flex items-center justify-center cursor-pointer"
                   aria-label={stage.ariaLabel}
                   aria-pressed={stageIdx === idx}
                 >
@@ -646,6 +799,36 @@ export function InteractiveDeskHero() {
                 0%
               </span>
             </div>
+
+            {isAutoTouring ? (
+              <Link
+                href="/courses"
+                onClick={stopAutoTour}
+                className="h-[42px] px-4 rounded-full bg-white/[0.10] hover:bg-white/[0.16] border border-white/20 text-[12px] font-extrabold text-white inline-flex items-center gap-2 backdrop-blur-md transition-colors"
+              >
+                <span className="w-2 h-2 rounded-full bg-[#66c7a6] animate-pulse" />
+                <span>تخطي للمواد</span>
+                <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+              </Link>
+            ) : stageIdx === 4 ? (
+              <Link
+                href="/courses"
+                className="cta-shimmer h-[42px] px-5 rounded-full text-[12.5px] font-extrabold text-white inline-flex items-center gap-2 shadow-lg transition-transform hover:-translate-y-0.5"
+                style={{ background: "#c25e33" }}
+              >
+                <span>ادخل على المقررات</span>
+                <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={startAutoTour}
+                className="h-[42px] px-4 rounded-full bg-[#c25e33] hover:bg-[#d16a3e] text-[12px] font-extrabold text-white inline-flex items-center gap-1.5 shadow-lg cursor-pointer transition-transform hover:-translate-y-0.5"
+              >
+                <Play className="w-3.5 h-3.5 fill-current shrink-0" />
+                <span>ابدأ المذاكرة</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

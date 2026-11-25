@@ -214,6 +214,18 @@ export function LandingTopbar() {
 
           <Link
             href="/courses"
+            onClick={(e) => {
+              if (
+                typeof window !== "undefined" &&
+                window.innerWidth >= 1024 &&
+                isOverHero
+              ) {
+                e.preventDefault();
+                window.dispatchEvent(
+                  new CustomEvent("cs-portal:start-desk-tour")
+                );
+              }
+            }}
             className={`h-8 sm:h-9 px-3 sm:px-3.5 rounded-lg text-[11.5px] sm:text-[12px] font-extrabold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-transform hover:-translate-y-0.5 ${
               isOverHero
                 ? "bg-white/10 border border-white/15 text-white sm:border-transparent sm:bg-[#c25e33] sm:shadow-sm"
