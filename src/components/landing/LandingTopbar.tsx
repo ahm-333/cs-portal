@@ -236,18 +236,6 @@ export function LandingTopbar() {
 
             <Link
               href="/courses"
-              onClick={(e) => {
-                if (
-                  typeof window !== "undefined" &&
-                  window.innerWidth >= 1024 &&
-                  isOverHero
-                ) {
-                  e.preventDefault();
-                  window.dispatchEvent(
-                    new CustomEvent("cs-portal:start-desk-tour")
-                  );
-                }
-              }}
               className="h-9 px-3.5 sm:px-4 rounded-full text-[11.5px] sm:text-[12px] font-extrabold text-white inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
               style={{
                 background: "linear-gradient(135deg, #cf6739 0%, #b5532a 100%)",
