@@ -567,9 +567,11 @@ export default function CourseWorkspaceClient({
     (tab: WorkspaceTab) => {
       setExamNight(false);
       setActiveTab(tab);
-      if (tab === "lab") {
-        setHasOpenedLab(true);
-        // Automatically open Focus / Full-Width mode when entering Interactive Explanation
+      if (tab === "lab" || tab === "summary") {
+        if (tab === "lab") {
+          setHasOpenedLab(true);
+        }
+        // Automatically open Full-Width Focus Mode for Interactive Explanation & Summary
         if (!focusMode) {
           autoFocusByLabRef.current = true;
           setFocusMode(true);
