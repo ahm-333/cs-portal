@@ -417,19 +417,13 @@ export function InteractiveDeskHero() {
               AI · Zagazig University
             </span>
 
-            <h1 className="text-[24px] sm:text-[30px] font-black tracking-tight leading-[1.34] text-white text-balance">
-              <span className="block overflow-hidden">
-                <span data-hero-line className="block">
-                  بدل تشتيت الملفات..
-                </span>
-              </span>
-              <span className="block overflow-hidden mt-0.5">
-                <span
-                  data-hero-line
-                  className="block bg-gradient-to-l from-[#f0a786] via-[#f6c4a8] to-[#66c7a6] bg-clip-text text-transparent"
-                >
-                  كل حاجة تخص المادة في مكان واحد
-                </span>
+            <h1
+              data-hero-fade
+              className="text-[24px] sm:text-[30px] font-black tracking-tight leading-[1.38] text-white text-balance"
+            >
+              <span className="block">بدل تشتيت الملفات..</span>
+              <span className="block mt-1 pb-1 bg-gradient-to-l from-[#f0a786] via-[#f6c4a8] to-[#66c7a6] bg-clip-text text-transparent">
+                كل حاجة تخص المادة في مكان واحد
               </span>
             </h1>
 

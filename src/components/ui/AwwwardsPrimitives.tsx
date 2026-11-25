@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { animate, motion, useMotionValue, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { animate, motion, useInView, useMotionValue, useReducedMotion } from "motion/react";
 
 export const EDITORIAL_EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -11,26 +11,35 @@ interface MaskedLineRevealProps {
   className?: string;
 }
 
+/**
+ * MaskedLineReveal — Arabic-RTL ligature-safe editorial mask reveal.
+ * Observes the stationary outer wrapper with `amount: "some"` so headings
+ * inside overflow-hidden clip boxes ALWAYS reveal reliably and never clip Arabic descenders.
+ */
 export function MaskedLineReveal({
   children,
   delay = 0,
   className = "",
 }: MaskedLineRevealProps) {
+  const outerRef = useRef<HTMLSpanElement | null>(null);
+  const isInView = useInView(outerRef, { once: true, amount: "some" });
   const prefersReducedMotion = useReducedMotion();
 
   if (prefersReducedMotion) {
-    return <span className={`block ${className}`}>{children}</span>;
+    return <span className={`block pt-0.5 pb-2 ${className}`}>{children}</span>;
   }
 
   return (
-    <span className={`block overflow-hidden ${className}`}>
+    <span
+      ref={outerRef}
+      className={`block overflow-hidden pt-0.5 pb-2 ${className}`}
+    >
       <motion.span
         className="block will-change-transform"
-        initial={{ y: "100%", opacity: 0 }}
-        whileInView={{ y: "0%", opacity: 1 }}
-        viewport={{ once: true, amount: 0.35 }}
+        initial={{ y: "88%", opacity: 0 }}
+        animate={isInView ? { y: "0%", opacity: 1 } : { y: "88%", opacity: 0 }}
         transition={{
-          duration: 0.65,
+          duration: 0.68,
           delay,
           ease: EDITORIAL_EASE,
         }}
@@ -82,7 +91,7 @@ export function SpringNumber({
   const rendered = prefersReducedMotion ? Math.round(value) : display;
 
   return (
-    <span className={className}>
+    <span className={`tabular-nums ${className}`}>
       {prefix}
       {rendered}
       {suffix}
