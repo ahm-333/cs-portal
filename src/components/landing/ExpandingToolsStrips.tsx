@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -9,54 +9,78 @@ import {
   Cpu,
   Eye,
   EyeOff,
+  Pause,
   PenLine,
+  Play,
   PlayCircle,
   Sparkles,
+  Volume2,
 } from "lucide-react";
 
 const VIDEO_CHAPTERS = [
   {
-    btnLabel: "00:00 · الفكرة الأساسية",
-    title: "CS-311 · مقدمة نظم التشغيل والـ Kernel (00:00)",
-    progress: "26%",
+    id: "intro",
+    time: "00:00",
+    sec: 0,
+    label: "المقدمة",
+    title: "مقدمة نظم التشغيل ودور الـ Kernel",
+    progress: 18,
   },
   {
-    btnLabel: "08:20 · الشرح العملي",
-    title: "CS-311 · الـ Interrupts والـ DMA بالتفصيل (08:20)",
-    progress: "62%",
+    id: "core",
+    time: "08:20",
+    sec: 500,
+    label: "الشرح العملي",
+    title: "الـ Interrupts والـ DMA بالتفصيل",
+    progress: 56,
   },
   {
-    btnLabel: "15:10 · تريكات الميدتيرم",
-    title: "CS-311 · أسئلة Dual-Mode و Timer في الامتحان (15:10)",
-    progress: "92%",
+    id: "exam",
+    time: "15:10",
+    sec: 910,
+    label: "تريكات الميدتيرم",
+    title: "أهم أسئلة Dual-Mode و Timer",
+    progress: 86,
   },
 ] as const;
 
 const SPEED_OPTIONS = ["1.0x", "1.5x", "2.0x"] as const;
 
+function formatMmSs(totalSec: number): string {
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
 export function ExpandingToolsStrips() {
   const [activeStrip, setActiveStrip] = useState(0);
 
-  // Strip 01: Video chapters & playback speed
-  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+  // Strip 01: Live Interactive Mini Video Player
+  const [selectedChapter, setSelectedChapter] = useState(1);
   const [speedIdx, setSpeedIdx] = useState(1);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [elapsedOffset, setElapsedOffset] = useState(0);
 
-  // Strip 02: Real Interactive Slide active-recall blur demo
+  // Strip 02: Interactive Slide Active-Recall Demo
   const [recallBlur, setRecallBlur] = useState(false);
 
-  // Strip 03: Real Student Notebook hide/show Arabic pen notes demo
+  // Strip 03: Student Notebook Pen Notes Demo
   const [showPenNotes, setShowPenNotes] = useState(true);
 
-  // Strip 04: Real CG / OS Exam Quiz demo
+  // Strip 04: Real Exam Quiz Demo
   const [quizAnswer, setQuizAnswer] = useState<"ok" | "no" | null>(null);
 
-  const activeChapterIdx = selectedChapter ?? 0;
-  const videoTitle =
-    selectedChapter === null
-      ? "CS-311 · Chapter 1: Operating Systems (18:40)"
-      : VIDEO_CHAPTERS[selectedChapter].title;
-  const videoBarWidth =
-    selectedChapter === null ? "38%" : VIDEO_CHAPTERS[selectedChapter].progress;
+  useEffect(() => {
+    if (!isPlaying || activeStrip !== 0) return;
+    const timer = window.setInterval(() => {
+      setElapsedOffset((prev) => (prev < 60 ? prev + 1 : 0));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [isPlaying, activeStrip]);
+
+  const currentChapter = VIDEO_CHAPTERS[selectedChapter] ?? VIDEO_CHAPTERS[1];
+  const liveTime = formatMmSs(currentChapter.sec + elapsedOffset);
+  const livePct = Math.min(97, currentChapter.progress + elapsedOffset * 0.18);
 
   const handleStripClick = (
     idx: number,
@@ -75,6 +99,11 @@ export function ExpandingToolsStrips() {
       e.preventDefault();
       setActiveStrip(idx);
     }
+  };
+
+  const handleSelectChapter = (idx: number) => {
+    setSelectedChapter(idx);
+    setElapsedOffset(0);
   };
 
   const handleQuizAnswer = async (choice: "ok" | "no") => {
@@ -123,8 +152,8 @@ export function ExpandingToolsStrips() {
             className="text-[14px] leading-relaxed"
             style={{ color: "var(--text-secondary)" }}
           >
-            اضغط على أي ركن عشان يتمدّد وتجرّب مميزات المنصة الحقيقية بنفسك —
-            بدون أي زحمة.
+            اضغط على أي ركن عشان يتمدّد وتجرّب مميزات المنصة بنفسك — بدون أي
+            زحمة.
           </p>
         </div>
 
@@ -182,7 +211,7 @@ export function ExpandingToolsStrips() {
                   className="text-xl sm:text-2xl font-black"
                   style={{ color: "var(--text-primary)" }}
                 >
-                  فيديو شرح صافٍ ومقسّم لفصول
+                  فيديو شرح صافي ومنظم
                 </h3>
               </div>
               <span
@@ -194,78 +223,126 @@ export function ExpandingToolsStrips() {
               </span>
             </div>
 
-            <div
-              className="p-4 rounded-2xl border space-y-3 my-2"
-              style={{
-                background: "var(--bg-canvas)",
-                borderColor: "var(--border-soft)",
-              }}
-            >
-              <div className="flex items-center justify-between gap-2 text-[12px]">
-                <span
-                  id="stripVidTitle"
-                  className="font-extrabold truncate"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {videoTitle}
-                </span>
-                <button
-                  id="stripSpeedBtn"
-                  type="button"
-                  onClick={() =>
-                    setSpeedIdx((prev) => (prev + 1) % SPEED_OPTIONS.length)
-                  }
-                  className="font-mono-code text-[11px] font-bold px-2.5 py-1 rounded-lg border shrink-0 cursor-pointer"
-                  style={{
-                    background: "var(--bg-surface)",
-                    borderColor: "var(--border-soft)",
-                    color: "var(--text-primary)",
-                  }}
-                >
-                  {SPEED_OPTIONS[speedIdx]}
-                </button>
-              </div>
-
+            {/* Sleek Interactive Mini Cinema Player */}
+            <div className="rounded-2xl overflow-hidden border border-white/10 bg-[#0d1626] text-white my-2 shadow-inner">
+              {/* Top Video Preview Stage */}
               <div
-                className="h-2 rounded-full overflow-hidden"
-                style={{ background: "var(--bg-subtle)" }}
+                className="relative px-4 py-3.5 flex items-center justify-between gap-3"
+                style={{
+                  background:
+                    "radial-gradient(circle at 20% 20%, rgba(194, 94, 51, 0.22), transparent 55%), radial-gradient(circle at 85% 80%, rgba(102, 199, 166, 0.16), transparent 50%), #0d1626",
+                }}
               >
-                <div
-                  id="stripVidBar"
-                  className="h-full rounded-full transition-all duration-300"
-                  style={{
-                    width: videoBarWidth,
-                    background:
-                      "linear-gradient(270deg, var(--success-fg), var(--accent-warm))",
-                  }}
-                />
+                <div className="flex items-center gap-3 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsPlaying((prev) => !prev)}
+                    aria-label={isPlaying ? "إيقاف المعاينة" : "تشغيل المعاينة"}
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg shrink-0 cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                    style={{ background: "#c25e33" }}
+                  >
+                    {isPlaying ? (
+                      <Pause className="w-4 h-4 fill-current" />
+                    ) : (
+                      <Play className="w-4 h-4 fill-current -mr-0.5" />
+                    )}
+                  </button>
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span
+                        dir="ltr"
+                        className="font-mono-code text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-[#66c7a6]"
+                      >
+                        CS-311 · 1080p
+                      </span>
+                      <span className="text-[10.5px] text-slate-400 font-semibold">
+                        {isPlaying ? "قيد التشغيل" : "جاهز للشرح"}
+                      </span>
+                    </div>
+                    <div className="text-[13px] font-extrabold text-white truncate mt-0.5">
+                      {currentChapter.title}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Volume2 className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
+                  <button
+                    id="stripSpeedBtn"
+                    type="button"
+                    onClick={() =>
+                      setSpeedIdx((prev) => (prev + 1) % SPEED_OPTIONS.length)
+                    }
+                    className="font-mono-code text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white cursor-pointer transition-colors"
+                  >
+                    {SPEED_OPTIONS[speedIdx]}
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
-                {VIDEO_CHAPTERS.map((chap, idx) => {
-                  const isActive = activeChapterIdx === idx;
-                  return (
-                    <button
-                      key={chap.btnLabel}
-                      type="button"
-                      onClick={() => setSelectedChapter(idx)}
-                      className="sv-btn p-2 rounded-xl border text-right text-[11px] font-bold transition-all cursor-pointer truncate"
+              {/* Scrubber & Chapter Jump Strip */}
+              <div className="px-4 pb-3.5 pt-1 space-y-2.5 bg-[#0a1220]/80 border-t border-white/[0.06]">
+                <div className="flex items-center gap-2.5">
+                  <span
+                    dir="ltr"
+                    className="font-mono-code text-[10.5px] font-bold text-slate-300 tabular-nums shrink-0"
+                  >
+                    {liveTime}
+                  </span>
+                  <div className="relative flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                    <div
+                      id="stripVidBar"
+                      className="h-full rounded-full transition-all duration-300"
                       style={{
-                        background: isActive
-                          ? "var(--accent-warm-soft)"
-                          : "var(--bg-surface)",
-                        borderColor: isActive
-                          ? "var(--accent-warm)"
-                          : "var(--border-soft)",
-                        color: isActive
-                          ? "var(--accent-warm-text)"
-                          : "var(--text-secondary)",
+                        width: `${livePct}%`,
+                        background:
+                          "linear-gradient(270deg, #66c7a6 0%, #e58a62 100%)",
                       }}
-                    >
-                      {chap.btnLabel}
-                    </button>
-                  );
-                })}
+                    />
+                  </div>
+                  <span
+                    dir="ltr"
+                    className="font-mono-code text-[10.5px] font-semibold text-slate-500 tabular-nums shrink-0"
+                  >
+                    18:40
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {VIDEO_CHAPTERS.map((chap, idx) => {
+                    const isActive = selectedChapter === idx;
+                    return (
+                      <button
+                        key={chap.id}
+                        type="button"
+                        onClick={() => handleSelectChapter(idx)}
+                        className="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1.5"
+                        style={
+                          isActive
+                            ? {
+                                background: "rgba(229, 138, 98, 0.2)",
+                                border: "1px solid rgba(229, 138, 98, 0.55)",
+                                color: "#f6c4a8",
+                              }
+                            : {
+                                background: "rgba(255, 255, 255, 0.05)",
+                                border: "1px solid rgba(255, 255, 255, 0.08)",
+                                color: "rgba(203, 213, 225, 0.85)",
+                              }
+                        }
+                      >
+                        <span
+                          dir="ltr"
+                          className="font-mono-code text-[10px] opacity-80"
+                        >
+                          {chap.time}
+                        </span>
+                        <span>{chap.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -273,13 +350,13 @@ export function ExpandingToolsStrips() {
               className="text-[13px] leading-relaxed"
               style={{ color: "var(--text-secondary)" }}
             >
-              مساحة عرض هادية مع مؤقت بومودورو وملاحظات خاصة بكل شابتر عشان
-              تركز في الشرح بدون إعلانات أو تشتيت.
+              شاشة عرض مريحة مع مؤقت بومودورو وملاحظات خاصة بكل شابتر عشان تركز
+              في الشرح بدون إعلانات أو تشتيت.
             </p>
           </div>
         </article>
 
-        {/* STRIP 02: Interactive Slides + Active-Recall Blur */}
+        {/* STRIP 02: Interactive Slides */}
         <article
           data-strip="1"
           role="region"
@@ -321,7 +398,7 @@ export function ExpandingToolsStrips() {
                   className="text-xl sm:text-2xl font-black"
                   style={{ color: "var(--text-primary)" }}
                 >
-                  سلايدات ملونة + تغبيش للحفظ + مسائل محلولة
+                  شرح تفاعلي تفهمه من أول مرة
                 </h3>
               </div>
               <span
@@ -377,7 +454,7 @@ export function ExpandingToolsStrips() {
                   ) : (
                     <>
                       <EyeOff className="w-3.5 h-3.5" />
-                      <span>جرّب تغبيش الحفظ</span>
+                      <span>اختبر حفظك</span>
                     </>
                   )}
                 </button>
@@ -402,7 +479,7 @@ export function ExpandingToolsStrips() {
               style={{ color: "var(--text-secondary)" }}
             >
               تفتح بوضع التركيز الكامل تلقائياً مع هايلايت ملوّن لكل فكرة مهمة،
-              وتغبيش للحفظ، وحاسبة تفاعلية لمسائل الرسوميات خطوة بخطوة.
+              ومراجعة ذكية للمصطلحات، وحاسبة تفاعلية للمسائل خطوة بخطوة.
             </p>
           </div>
         </article>
@@ -449,7 +526,7 @@ export function ExpandingToolsStrips() {
                   className="text-xl sm:text-2xl font-black"
                   style={{ color: "var(--text-primary)" }}
                 >
-                  كشكول مذاكرة مسطّر بالعامية
+                  كشكول ملخص لليلة الامتحان
                 </h3>
               </div>
               <span
@@ -514,7 +591,7 @@ export function ExpandingToolsStrips() {
               style={{ color: "var(--text-secondary)" }}
             >
               كل سطر إنجليزي مهم معمول عليه ماركر وتحته شرحه بالقلم الأزرق
-              بالعامية + Sticky Note بتريكات الامتحان + طباعة PDF بضغطة زر.
+              بالعامية مع تريكات الامتحان وإمكانية طباعته PDF بضغطة زر.
             </p>
           </div>
         </article>
@@ -561,7 +638,7 @@ export function ExpandingToolsStrips() {
                   className="text-xl sm:text-2xl font-black"
                   style={{ color: "var(--text-primary)" }}
                 >
-                  أسئلة شيتات وميدتيرم + بنك أخطاء ذكي
+                  كويزات فورية وبنك أخطاء
                 </h3>
               </div>
               <span
