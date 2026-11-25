@@ -151,7 +151,7 @@ export function InteractiveDeskHero() {
     <>
       <section
         id="top"
-        className="relative w-full overflow-x-clip text-white lg:min-h-[100svh] flex flex-col justify-between"
+        className="relative w-full overflow-x-clip text-white border-b border-white/[0.08] lg:min-h-[100svh] flex flex-col justify-between"
         style={{
           background:
             "linear-gradient(180deg, #0b1322 0%, #13213a 62%, #0f1b30 100%)",
@@ -177,23 +177,23 @@ export function InteractiveDeskHero() {
 
         {/* ==================== MOBILE & TABLET HERO (< lg): BALANCED, CALM, SINGLE-SCREEN ==================== */}
         <div className="lg:hidden relative z-10 w-full max-w-[400px] mx-auto px-4 pt-[72px] pb-6 flex flex-col items-center gap-4">
-          {/* 1. Compact Grounded 3D Desk Visual (No dead void, clean top anchor) */}
-          <div className="relative w-[225px] h-[175px] sm:w-[270px] sm:h-[210px] flex items-center justify-center select-none pointer-events-none">
+          {/* 1. Seamless 3D Desk Visual (Radial mask melts edges 100% cleanly) */}
+          <div className="relative w-[240px] h-[185px] sm:w-[280px] sm:h-[215px] flex items-center justify-center select-none pointer-events-none">
             <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-2 rounded-full blur-2xl opacity-75"
+              className="relative w-full h-full scale-[1.12]"
               style={{
-                background:
-                  "radial-gradient(circle, rgba(102, 199, 166, 0.20) 0%, rgba(194, 94, 51, 0.14) 55%, transparent 75%)",
+                maskImage:
+                  "radial-gradient(closest-side, #000 64%, transparent 100%)",
+                WebkitMaskImage:
+                  "radial-gradient(closest-side, #000 64%, transparent 100%)",
               }}
-            />
-            <div className="relative w-full h-full scale-[1.08]">
+            >
               <Image
                 src="/images/desk/frame-3.jpg"
                 alt="مكتب المذاكرة المنظم"
                 width={900}
                 height={900}
-                sizes="(max-width: 640px) 225px, 270px"
+                sizes="(max-width: 640px) 240px, 280px"
                 className="frame-3d object-contain"
                 priority
                 draggable={false}
@@ -443,16 +443,6 @@ export function InteractiveDeskHero() {
           </div>
         </div>
       </section>
-
-      {/* Smooth Transition Bridge BELOW the Hero — Tight on mobile, airy on desktop */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none w-full h-8 sm:h-20"
-        style={{
-          background:
-            "linear-gradient(to bottom, #0f1b30 0%, color-mix(in srgb, #0f1b30 45%, var(--bg-canvas)) 55%, var(--bg-canvas) 100%)",
-        }}
-      />
     </>
   );
 }
