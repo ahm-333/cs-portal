@@ -1,68 +1,111 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
   BookOpen,
   CheckSquare,
+  Clock,
   Cpu,
-  Eye,
-  EyeOff,
-  Pause,
+  Gauge,
   PenLine,
-  Play,
   PlayCircle,
+  RefreshCw,
   Sparkles,
-  Volume2,
+  StickyNote,
 } from "lucide-react";
 
-const VIDEO_CHAPTERS = [
+interface LineDemo {
+  label: string;
+  p0: string;
+  from: [number, number];
+  to: [number, number];
+  pixels: readonly [number, number][];
+}
+
+const BRESENHAM_DEMOS: readonly LineDemo[] = [
   {
-    id: "intro",
-    time: "00:00",
-    sec: 0,
-    label: "المقدمة",
-    title: "مقدمة نظم التشغيل ودور الـ Kernel",
-    progress: 18,
+    label: "(0,0) → (7,4)",
+    p0: "p₀ = 2(4) − 7 = +1",
+    from: [0, 0],
+    to: [7, 4],
+    pixels: [
+      [0, 0],
+      [1, 1],
+      [2, 1],
+      [3, 2],
+      [4, 2],
+      [5, 3],
+      [6, 3],
+      [7, 4],
+    ],
   },
   {
-    id: "core",
-    time: "08:20",
-    sec: 500,
-    label: "الشرح العملي",
-    title: "الـ Interrupts والـ DMA بالتفصيل",
-    progress: 56,
+    label: "(0,0) → (7,2)",
+    p0: "p₀ = 2(2) − 7 = −3",
+    from: [0, 0],
+    to: [7, 2],
+    pixels: [
+      [0, 0],
+      [1, 0],
+      [2, 1],
+      [3, 1],
+      [4, 1],
+      [5, 1],
+      [6, 2],
+      [7, 2],
+    ],
   },
   {
-    id: "exam",
-    time: "15:10",
-    sec: 910,
-    label: "تريكات الميدتيرم",
-    title: "أهم أسئلة Dual-Mode و Timer",
-    progress: 86,
+    label: "(0,1) → (7,4)",
+    p0: "p₀ = 2(3) − 7 = −1",
+    from: [0, 1],
+    to: [7, 4],
+    pixels: [
+      [0, 1],
+      [1, 1],
+      [2, 2],
+      [3, 2],
+      [4, 3],
+      [5, 3],
+      [6, 4],
+      [7, 4],
+    ],
   },
 ] as const;
 
-const SPEED_OPTIONS = ["1.0x", "1.5x", "2.0x"] as const;
-
-function formatMmSs(totalSec: number): string {
-  const m = Math.floor(totalSec / 60);
-  const s = totalSec % 60;
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
+const VIDEO_HIGHLIGHTS = [
+  {
+    Icon: Clock,
+    title: "فصول زمنية دقيقة",
+    desc: "تنط للجزئية اللي واقفة معاك في ثانية بدون لف.",
+    accent: "var(--accent-warm)",
+    softBg: "var(--accent-warm-soft)",
+  },
+  {
+    Icon: Gauge,
+    title: "تحكم كامل بدون إعلانات",
+    desc: "سرعات 1.0x لـ 2.0x وشاشة هادية مريحة للعين.",
+    accent: "var(--success-fg)",
+    softBg: "var(--success-soft)",
+  },
+  {
+    Icon: StickyNote,
+    title: "بومودورو ونوتس جنبك",
+    desc: "اكتب ملاحظاتك واحفظها على جهازك وأنت بتسمع.",
+    accent: "var(--brand-primary)",
+    softBg: "var(--brand-soft)",
+  },
+] as const;
 
 export function ExpandingToolsStrips() {
   const [activeStrip, setActiveStrip] = useState(0);
 
-  // Strip 01: Live Interactive Mini Video Player
-  const [selectedChapter, setSelectedChapter] = useState(1);
-  const [speedIdx, setSpeedIdx] = useState(1);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [elapsedOffset, setElapsedOffset] = useState(0);
-
-  // Strip 02: Interactive Slide Active-Recall Demo
-  const [recallBlur, setRecallBlur] = useState(false);
+  // Strip 02: Live Interactive Bresenham Pixel Grid Demo
+  const [lineDemoIdx, setLineDemoIdx] = useState(0);
+  const currentDemo = BRESENHAM_DEMOS[lineDemoIdx] ?? BRESENHAM_DEMOS[0];
+  const pixelSet = new Set(currentDemo.pixels.map(([x, y]) => `${x},${y}`));
 
   // Strip 03: Student Notebook Pen Notes Demo
   const [showPenNotes, setShowPenNotes] = useState(true);
@@ -70,23 +113,11 @@ export function ExpandingToolsStrips() {
   // Strip 04: Real Exam Quiz Demo
   const [quizAnswer, setQuizAnswer] = useState<"ok" | "no" | null>(null);
 
-  useEffect(() => {
-    if (!isPlaying || activeStrip !== 0) return;
-    const timer = window.setInterval(() => {
-      setElapsedOffset((prev) => (prev < 60 ? prev + 1 : 0));
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [isPlaying, activeStrip]);
-
-  const currentChapter = VIDEO_CHAPTERS[selectedChapter] ?? VIDEO_CHAPTERS[1];
-  const liveTime = formatMmSs(currentChapter.sec + elapsedOffset);
-  const livePct = Math.min(97, currentChapter.progress + elapsedOffset * 0.18);
-
   const handleStripClick = (
     idx: number,
     e: React.MouseEvent<HTMLElement>
   ) => {
-    if ((e.target as HTMLElement).closest("button")) return;
+    if ((e.target as HTMLElement).closest("button, a")) return;
     setActiveStrip(idx);
   };
 
@@ -99,11 +130,6 @@ export function ExpandingToolsStrips() {
       e.preventDefault();
       setActiveStrip(idx);
     }
-  };
-
-  const handleSelectChapter = (idx: number) => {
-    setSelectedChapter(idx);
-    setElapsedOffset(0);
   };
 
   const handleQuizAnswer = async (choice: "ok" | "no") => {
@@ -169,7 +195,7 @@ export function ExpandingToolsStrips() {
 
       {/* 4 Horizontal Expanding Strips Matching Our Real 4 Portal Pillars */}
       <div id="expGallery" className="exp-gallery">
-        {/* STRIP 01: Video Lectures */}
+        {/* STRIP 01: Video Lectures — Clean 3-Card Bento Highlights */}
         <article
           data-strip="0"
           role="region"
@@ -223,140 +249,65 @@ export function ExpandingToolsStrips() {
               </span>
             </div>
 
-            {/* Sleek Interactive Mini Cinema Player */}
-            <div className="rounded-2xl overflow-hidden border border-white/10 bg-[#0d1626] text-white my-2 shadow-inner">
-              {/* Top Video Preview Stage */}
-              <div
-                className="relative px-4 py-3.5 flex items-center justify-between gap-3"
-                style={{
-                  background:
-                    "radial-gradient(circle at 20% 20%, rgba(194, 94, 51, 0.22), transparent 55%), radial-gradient(circle at 85% 80%, rgba(102, 199, 166, 0.16), transparent 50%), #0d1626",
-                }}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <button
-                    type="button"
-                    onClick={() => setIsPlaying((prev) => !prev)}
-                    aria-label={isPlaying ? "إيقاف المعاينة" : "تشغيل المعاينة"}
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg shrink-0 cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                    style={{ background: "#c25e33" }}
+            {/* Clean 3-Column Feature Cards (Zero fake player chrome) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 my-2">
+              {VIDEO_HIGHLIGHTS.map((item) => {
+                const Icon = item.Icon;
+                return (
+                  <div
+                    key={item.title}
+                    className="p-3.5 rounded-2xl border space-y-2 transition-colors"
+                    style={{
+                      background: "var(--bg-canvas)",
+                      borderColor: "var(--border-soft)",
+                    }}
                   >
-                    {isPlaying ? (
-                      <Pause className="w-4 h-4 fill-current" />
-                    ) : (
-                      <Play className="w-4 h-4 fill-current -mr-0.5" />
-                    )}
-                  </button>
-
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span
-                        dir="ltr"
-                        className="font-mono-code text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-[#66c7a6]"
-                      >
-                        CS-311 · 1080p
-                      </span>
-                      <span className="text-[10.5px] text-slate-400 font-semibold">
-                        {isPlaying ? "قيد التشغيل" : "جاهز للشرح"}
-                      </span>
-                    </div>
-                    <div className="text-[13px] font-extrabold text-white truncate mt-0.5">
-                      {currentChapter.title}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <Volume2 className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
-                  <button
-                    id="stripSpeedBtn"
-                    type="button"
-                    onClick={() =>
-                      setSpeedIdx((prev) => (prev + 1) % SPEED_OPTIONS.length)
-                    }
-                    className="font-mono-code text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white cursor-pointer transition-colors"
-                  >
-                    {SPEED_OPTIONS[speedIdx]}
-                  </button>
-                </div>
-              </div>
-
-              {/* Scrubber & Chapter Jump Strip */}
-              <div className="px-4 pb-3.5 pt-1 space-y-2.5 bg-[#0a1220]/80 border-t border-white/[0.06]">
-                <div className="flex items-center gap-2.5">
-                  <span
-                    dir="ltr"
-                    className="font-mono-code text-[10.5px] font-bold text-slate-300 tabular-nums shrink-0"
-                  >
-                    {liveTime}
-                  </span>
-                  <div className="relative flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
                     <div
-                      id="stripVidBar"
-                      className="h-full rounded-full transition-all duration-300"
+                      className="w-8 h-8 rounded-xl flex items-center justify-center"
                       style={{
-                        width: `${livePct}%`,
-                        background:
-                          "linear-gradient(270deg, #66c7a6 0%, #e58a62 100%)",
+                        background: item.softBg,
+                        color: item.accent,
                       }}
-                    />
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div
+                      className="text-[13px] font-extrabold leading-snug"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      {item.title}
+                    </div>
+                    <p
+                      className="text-[11.5px] leading-relaxed"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      {item.desc}
+                    </p>
                   </div>
-                  <span
-                    dir="ltr"
-                    className="font-mono-code text-[10.5px] font-semibold text-slate-500 tabular-nums shrink-0"
-                  >
-                    18:40
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {VIDEO_CHAPTERS.map((chap, idx) => {
-                    const isActive = selectedChapter === idx;
-                    return (
-                      <button
-                        key={chap.id}
-                        type="button"
-                        onClick={() => handleSelectChapter(idx)}
-                        className="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1.5"
-                        style={
-                          isActive
-                            ? {
-                                background: "rgba(229, 138, 98, 0.2)",
-                                border: "1px solid rgba(229, 138, 98, 0.55)",
-                                color: "#f6c4a8",
-                              }
-                            : {
-                                background: "rgba(255, 255, 255, 0.05)",
-                                border: "1px solid rgba(255, 255, 255, 0.08)",
-                                color: "rgba(203, 213, 225, 0.85)",
-                              }
-                        }
-                      >
-                        <span
-                          dir="ltr"
-                          className="font-mono-code text-[10px] opacity-80"
-                        >
-                          {chap.time}
-                        </span>
-                        <span>{chap.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+                );
+              })}
             </div>
 
-            <p
-              className="text-[13px] leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              شاشة عرض مريحة مع مؤقت بومودورو وملاحظات خاصة بكل شابتر عشان تركز
-              في الشرح بدون إعلانات أو تشتيت.
-            </p>
+            <div className="flex items-center justify-between gap-3 pt-1">
+              <p
+                className="text-[12.5px] leading-relaxed"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                مساحة هادية تذاكر فيها المحاضرة كاملة من غير ما تتشتت في يوتيوب.
+              </p>
+              <Link
+                href="/courses/operating-systems"
+                className="hidden sm:inline-flex items-center gap-1.5 text-[12px] font-extrabold whitespace-nowrap shrink-0 hover:underline"
+                style={{ color: "var(--accent-warm)" }}
+              >
+                <span>جرّبها الآن</span>
+                <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+              </Link>
+            </div>
           </div>
         </article>
 
-        {/* STRIP 02: Interactive Slides */}
+        {/* STRIP 02: Interactive Explanation — Live Bresenham Pixel Grid Visualizer */}
         <article
           data-strip="1"
           role="region"
@@ -392,7 +343,7 @@ export function ExpandingToolsStrips() {
                   className="font-en text-[11px] font-extrabold tracking-widest uppercase"
                   style={{ color: "var(--success-fg)" }}
                 >
-                  02 · INTERACTIVE SLIDES
+                  02 · INTERACTIVE LABS
                 </span>
                 <h3
                   className="text-xl sm:text-2xl font-black"
@@ -410,76 +361,110 @@ export function ExpandingToolsStrips() {
               </span>
             </div>
 
+            {/* Live Interactive Bresenham Pixel Grid (CS-321 Real Concept!) */}
             <div
-              className={`p-4 rounded-2xl border space-y-3 my-2 ${
-                recallBlur ? "recall-blur" : ""
-              }`}
+              className="p-4 rounded-2xl border my-2 flex flex-col sm:flex-row items-center justify-between gap-4"
               style={{
                 background: "var(--bg-canvas)",
                 borderColor: "var(--border-soft)",
               }}
             >
-              <div className="flex items-center justify-between gap-2">
-                <span
+              <div className="space-y-2.5 text-right flex-1 min-w-0 w-full">
+                <div className="flex items-center justify-between sm:justify-start gap-2">
+                  <span
+                    dir="ltr"
+                    className="font-mono-code text-[10.5px] font-extrabold px-2.5 py-0.5 rounded-full"
+                    style={{
+                      background: "var(--success-soft)",
+                      color: "var(--success-fg)",
+                    }}
+                  >
+                    CS-321 · Bresenham Live
+                  </span>
+                  <span
+                    dir="ltr"
+                    className="font-mono-code text-[11px] font-bold"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    {currentDemo.label}
+                  </span>
+                </div>
+
+                <div
                   dir="ltr"
-                  className="font-mono-code text-[11px] font-extrabold px-2.5 py-0.5 rounded-full"
+                  className="font-mono-code inline-block text-[12px] font-extrabold px-3 py-1 rounded-xl border"
                   style={{
-                    background: "var(--brand-soft)",
-                    color: "var(--brand-soft-text)",
+                    background: "var(--bg-surface)",
+                    borderColor: "var(--border-soft)",
+                    color: "var(--text-primary)",
                   }}
                 >
-                  CS-321 · Bresenham&apos;s Algorithm
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setRecallBlur((prev) => !prev)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl border text-[11.5px] font-extrabold cursor-pointer transition-colors"
-                  style={{
-                    background: recallBlur
-                      ? "var(--success-soft)"
-                      : "var(--bg-surface)",
-                    borderColor: recallBlur
-                      ? "var(--success-fg)"
-                      : "var(--border-soft)",
-                    color: recallBlur
-                      ? "var(--success-fg)"
-                      : "var(--text-primary)",
-                  }}
-                >
-                  {recallBlur ? (
-                    <>
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>إظهار المصطلحات</span>
-                    </>
-                  ) : (
-                    <>
-                      <EyeOff className="w-3.5 h-3.5" />
-                      <span>اختبر حفظك</span>
-                    </>
-                  )}
-                </button>
+                  {currentDemo.p0}
+                </div>
+
+                <div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLineDemoIdx((i) => (i + 1) % BRESENHAM_DEMOS.length)
+                    }
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11.5px] font-extrabold text-white cursor-pointer transition-transform active:scale-95"
+                    style={{ background: "var(--success-fg)" }}
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>جرّب ميل خط تاني</span>
+                  </button>
+                </div>
               </div>
 
-              <p
-                className="text-[13px] leading-[1.95]"
-                style={{ color: "var(--text-primary)" }}
+              {/* Crisp 8x5 Pixel Grid */}
+              <div
+                dir="ltr"
+                className="grid grid-cols-8 gap-1 p-2.5 rounded-xl border shrink-0"
+                style={{
+                  background: "var(--bg-surface)",
+                  borderColor: "var(--border-soft)",
+                }}
+                aria-label="شبكة رسم خط Bresenham"
               >
-                خوارزمية <span className="en-term">Bresenham</span> بترسم الخط
-                باستخدام <span className="hl-yellow">أعداد صحيحة فقط</span> بدون
-                تقريب: بنبدأ بـ <span className="math-pill">p₀ = 2Δy − Δx</span>
-                ، ولو طلع <span className="hl-cyan">سالب</span> بنثبّت الـ{" "}
-                <span className="en-term">y</span>، ولو طلع{" "}
-                <span className="hl-emerald">صفر أو موجب</span> بنزوّد{" "}
-                <span className="math-pill">y + 1</span>.
-              </p>
+                {[4, 3, 2, 1, 0].map((y) =>
+                  [0, 1, 2, 3, 4, 5, 6, 7].map((x) => {
+                    const isLit = pixelSet.has(`${x},${y}`);
+                    const isEndpoint =
+                      (x === currentDemo.from[0] && y === currentDemo.from[1]) ||
+                      (x === currentDemo.to[0] && y === currentDemo.to[1]);
+                    return (
+                      <span
+                        key={`${x}-${y}`}
+                        className="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-[5px] transition-all duration-300"
+                        style={
+                          isEndpoint
+                            ? {
+                                background: "var(--accent-warm)",
+                                boxShadow: "0 0 10px rgba(194,94,51,0.45)",
+                              }
+                            : isLit
+                              ? {
+                                  background: "var(--success-fg)",
+                                  boxShadow: "0 0 8px rgba(102,199,166,0.35)",
+                                }
+                              : {
+                                  background: "var(--bg-subtle)",
+                                }
+                        }
+                      />
+                    );
+                  })
+                )}
+              </div>
             </div>
 
             <p
               className="text-[13px] leading-relaxed"
               style={{ color: "var(--text-secondary)" }}
             >
-              تفتح بوضع التركيز الكامل تلقائياً مع هايلايت ملوّن لكل فكرة مهمة،
-              ومراجعة ذكية للمصطلحات، وحاسبة تفاعلية للمسائل خطوة بخطوة.
+              تفتح بوضع التركيز الكامل تلقائياً مع سلايدات منظمة، مراجعة ذكية
+              للمصطلحات، وحاسبة تفاعلية لمسائل الامتحان خطوة بخطوة.
             </p>
           </div>
         </article>
