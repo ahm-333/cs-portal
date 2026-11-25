@@ -4,7 +4,6 @@ import { InteractiveDeskHero } from "@/components/landing/InteractiveDeskHero";
 import { LandingCoursesShelf } from "@/components/landing/LandingCoursesShelf";
 import { LandingFaqSection } from "@/components/landing/LandingFaqSection";
 import { LandingTopbar } from "@/components/landing/LandingTopbar";
-import { LiveChapterPreview } from "@/components/landing/LiveChapterPreview";
 import { WithWithoutCompare } from "@/components/landing/WithWithoutCompare";
 import { Footer } from "@/components/layout/Footer";
 import { getCourseDetailBySlug, getPublishedCourses } from "@/lib/data";
@@ -27,12 +26,11 @@ export default async function HomePage() {
 
       <main className="flex-1 w-full">
         <InteractiveDeskHero />
-        <LiveChapterPreview />
-        <WithWithoutCompare />
         <LandingCoursesShelf
           courses={courses}
           courseLessonIdsMap={courseLessonIdsMap}
         />
+        <WithWithoutCompare />
         <LandingFaqSection />
         <CompactContactStrip />
         <FinalCtaSection />

@@ -128,18 +128,13 @@ export function InteractiveDeskHero() {
       "perspective(1000px) rotateX(0deg) rotateY(0deg) translate3d(0px, 0px, 0)";
   }, []);
 
-  const handleJumpToPillar = useCallback((id: PillarId) => {
+  const handleJumpToPillar = useCallback(() => {
     if (typeof window === "undefined") return;
-    window.dispatchEvent(
-      new CustomEvent<PillarId>("cs-portal-select-preview-tab", {
-        detail: id,
-      })
-    );
-    const target = document.getElementById("chapter-preview");
+    const target = document.getElementById("courses-picker");
     if (!target) return;
 
     if (window.__lenis) {
-      window.__lenis.scrollTo(target, { offset: -64, duration: 1.0 });
+      window.__lenis.scrollTo(target, { offset: -64, duration: 0.9 });
     } else {
       target.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -402,7 +397,7 @@ export function InteractiveDeskHero() {
                 <button
                   key={pillar.id}
                   type="button"
-                  onClick={() => handleJumpToPillar(pillar.id)}
+                  onClick={() => handleJumpToPillar()}
                   className="group relative text-right px-3 py-2.5 rounded-2xl hover:bg-white/[0.05] transition-all flex items-center gap-3 cursor-pointer"
                 >
                   <span
