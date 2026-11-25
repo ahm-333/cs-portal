@@ -174,24 +174,16 @@ export function InteractiveDeskHero() {
         <div className="lg:hidden relative z-10 flex-1 w-full max-w-[400px] mx-auto px-4 pt-20 pb-6 flex flex-col items-center justify-between">
           {/* Centered Hero Focal Group */}
           <div className="my-auto flex flex-col items-center gap-5 py-4">
-            {/* 1. Seamless 3D Desk Visual (Radial mask melts edges 100% cleanly) */}
-            <div className="relative w-[265px] h-[205px] sm:w-[300px] sm:h-[235px] flex items-center justify-center select-none pointer-events-none">
-              <div
-                className="relative w-full h-full scale-[1.12]"
-                style={{
-                  maskImage:
-                    "radial-gradient(closest-side, #000 64%, transparent 100%)",
-                  WebkitMaskImage:
-                    "radial-gradient(closest-side, #000 64%, transparent 100%)",
-                }}
-              >
+            {/* 1. Seamless 3D Desk Visual (True transparent cutout — zero box/edge artifacts) */}
+            <div className="relative w-[255px] h-[215px] sm:w-[295px] sm:h-[245px] flex items-center justify-center select-none pointer-events-none">
+              <div className="relative w-full h-full scale-[1.12]">
                 <Image
-                  src="/images/desk/frame-3.jpg"
+                  src="/images/desk/frame-3-nobg.png"
                   alt="مكتب المذاكرة المنظم"
                   width={900}
                   height={900}
-                  sizes="(max-width: 640px) 265px, 300px"
-                  className="frame-3d object-contain"
+                  sizes="(max-width: 640px) 255px, 295px"
+                  className="w-full h-full object-contain drop-shadow-[0_18px_32px_rgba(0,0,0,0.42)]"
                   priority
                   draggable={false}
                 />
@@ -375,14 +367,14 @@ export function InteractiveDeskHero() {
                     ref={deskTiltRef}
                     className="relative w-full h-full transition-transform duration-200 ease-out will-change-transform"
                   >
-                    <div className="relative w-full h-full scale-[1.2]">
+                    <div className="relative w-full h-full scale-[1.14]">
                       <Image
-                        src="/images/desk/frame-3.jpg"
+                        src="/images/desk/frame-3-nobg.png"
                         alt="مكتب المذاكرة المنظم"
                         width={900}
                         height={900}
                         sizes="(max-width: 1280px) 475px, 510px"
-                        className="frame-3d"
+                        className="w-full h-full object-contain drop-shadow-[0_24px_45px_rgba(0,0,0,0.45)]"
                         priority
                         draggable={false}
                       />
