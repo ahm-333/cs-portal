@@ -9,31 +9,32 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 declare global {
   interface Window {
     __lenis?: Lenis;
+    __scrollVelocity?: number;
   }
 }
 
 /**
- * Global Motion & Micro-Interaction Controller (GSAP + Lenis + React Bits):
- * 1. Renders and updates `#scrollProgressBar` on scroll.
- * 2. Initializes Lenis smooth scroll synced with GSAP ticker + ScrollTrigger,
- *    exposes `window.__lenis`, and intercepts in-page `#anchor` links for smooth gliding.
- * 3. Runs GSAP ScrollTrigger batch entrance for `.reveal` elements across route changes.
- * 4. Handles delegated mousemove for `.spotlight-card` (`--mx`, `--my`) and GSAP `quickTo` `.magnetic-btn` pull.
+ * Global Motion & Micro-Interaction Controller (GSAP + Lenis + GPU Compositing):
+ * 1. Updates `#scrollProgressBar` via GPU `transform: scaleX(...)` (zero layout thrash).
+ * 2. Initializes Lenis smooth momentum scroll synced 1:1 with GSAP ticker + ScrollTrigger,
+ *    exposes `window.__lenis` and `window.__scrollVelocity`, and intercepts `#anchor` clicks.
+ * 3. Refreshes ScrollTrigger on route/layout shifts and triggers `.reveal` elements cleanly.
+ * 4. Handles delegated cursor spotlight (`.spotlight-card`) and elastic `.magnetic-btn` pull.
  */
 export function MotionEffects() {
   const pathname = usePathname();
   const progressBarRef = useRef<HTMLDivElement | null>(null);
 
-  // 1. Scroll progress bar updater
+  // 1. GPU-composited Scroll Progress Bar updater (fallback when Lenis is disabled)
   useEffect(() => {
     const updateProgress = () => {
       const bar = progressBarRef.current;
       if (!bar) return;
       const docH =
         document.documentElement.scrollHeight - window.innerHeight;
-      const pct =
-        docH > 0 ? Math.min(100, Math.max(0, (window.scrollY / docH) * 100)) : 0;
-      bar.style.width = `${pct}%`;
+      const ratio =
+        docH > 0 ? Math.min(1, Math.max(0, window.scrollY / docH)) : 0;
+      bar.style.transform = `scaleX(${ratio.toFixed(4)})`;
     };
 
     updateProgress();
@@ -46,33 +47,35 @@ export function MotionEffects() {
     };
   }, [pathname]);
 
-  // 2. Lenis smooth scroll synced with GSAP ticker + ScrollTrigger + smooth #anchor clicks
+  // 2. Lenis smooth scroll synced with GSAP ticker + ScrollTrigger + velocity telemetry
   useEffect(() => {
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
-    if (reducedMotion) return;
+    if (reducedMotion) {
+      window.__scrollVelocity = 0;
+      return;
+    }
 
     gsap.registerPlugin(ScrollTrigger);
 
     const lenis = new Lenis({
-      duration: 1.15,
-      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      lerp: 0.088,
+      wheelMultiplier: 0.96,
       smoothWheel: true,
     });
     window.__lenis = lenis;
+    window.__scrollVelocity = 0;
 
-    const onLenisScroll = () => {
+    const onLenisScroll = (e: Lenis) => {
       ScrollTrigger.update();
+      window.__scrollVelocity = e.velocity;
       const bar = progressBarRef.current;
       if (bar) {
-        const docH =
-          document.documentElement.scrollHeight - window.innerHeight;
-        const pct =
-          docH > 0
-            ? Math.min(100, Math.max(0, (window.scrollY / docH) * 100))
-            : 0;
-        bar.style.width = `${pct}%`;
+        const progress = Number.isFinite(e.progress)
+          ? Math.min(1, Math.max(0, e.progress))
+          : 0;
+        bar.style.transform = `scaleX(${progress.toFixed(4)})`;
       }
     };
 
@@ -94,10 +97,21 @@ export function MotionEffects() {
       const dest = document.querySelector<HTMLElement>(hash);
       if (!dest) return;
       event.preventDefault();
-      lenis.scrollTo(dest, { offset: -64, duration: 1.15 });
+      lenis.scrollTo(dest, { offset: -72, duration: 1.1 });
     };
 
     document.addEventListener("click", onAnchorClick);
+
+    // Refresh ScrollTrigger once fonts finish loading to keep pinned geometry exact
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        try {
+          ScrollTrigger.refresh();
+        } catch {
+          // ignore
+        }
+      });
+    }
 
     return () => {
       document.removeEventListener("click", onAnchorClick);
@@ -106,6 +120,7 @@ export function MotionEffects() {
       if (window.__lenis === lenis) {
         delete window.__lenis;
       }
+      window.__scrollVelocity = 0;
       lenis.destroy();
     };
   }, []);
@@ -157,7 +172,7 @@ export function MotionEffects() {
     };
   }, [pathname]);
 
-  // 4. Global delegated cursor spotlight (`.spotlight-card`) & GSAP quickTo magnetic pull (`.magnetic-btn`)
+  // 4. Global delegated cursor spotlight (`.spotlight-card`) & GSAP magnetic pull (`.magnetic-btn`)
   useEffect(() => {
     if (window.matchMedia("(hover: none)").matches) return;
     const reducedMotion = window.matchMedia(
@@ -172,8 +187,8 @@ export function MotionEffects() {
         gsap.to(activeMagnetic, {
           x: 0,
           y: 0,
-          duration: 0.45,
-          ease: "elastic.out(1, 0.5)",
+          duration: 0.5,
+          ease: "elastic.out(1, 0.45)",
           overwrite: "auto",
         });
         activeMagnetic = null;
@@ -206,12 +221,12 @@ export function MotionEffects() {
         if (magBtn) {
           activeMagnetic = magBtn;
           const rect = magBtn.getBoundingClientRect();
-          const dx = (event.clientX - (rect.left + rect.width / 2)) * 0.18;
-          const dy = (event.clientY - (rect.top + rect.height / 2)) * 0.18;
+          const dx = (event.clientX - (rect.left + rect.width / 2)) * 0.2;
+          const dy = (event.clientY - (rect.top + rect.height / 2)) * 0.2;
           gsap.to(magBtn, {
             x: dx,
             y: dy,
-            duration: 0.3,
+            duration: 0.28,
             ease: "power3.out",
             overwrite: "auto",
           });

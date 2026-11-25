@@ -30,6 +30,7 @@ import {
   Moon,
   NotebookPen,
   PlayCircle,
+  Sparkles,
   Sun,
   Table2,
   Upload,
@@ -62,13 +63,14 @@ import type {
   VideoChapter,
 } from "@/types/database";
 import { getStructuredSummaryByLessonId } from "@/lib/chapters";
+import ChapterAiAssistant from "./ChapterAiAssistant";
 import ChapterSummarySheet from "./ChapterSummarySheet";
 import CourseInteractiveLab from "./CourseInteractiveLab";
 import MarkdownViewer from "./MarkdownViewer";
 import QuizEngine from "./QuizEngine";
 import VideoPlayer from "./VideoPlayer";
 
-type WorkspaceTab = "video" | "lab" | "summary" | "quiz";
+type WorkspaceTab = "video" | "lab" | "summary" | "quiz" | "ai";
 
 interface CourseWorkspaceClientProps {
   data: LessonPageData;
@@ -383,6 +385,7 @@ const TOOL_TABS: ReadonlyArray<{
   { id: "lab", label: "الشرح التفاعلي", Icon: Cpu },
   { id: "summary", label: "الملخص والأكواد", Icon: FileCode2 },
   { id: "quiz", label: "الكويزات والأسئلة", Icon: CheckSquare },
+  { id: "ai", label: "المساعد الذكي", Icon: Sparkles },
 ];
 
 export default function CourseWorkspaceClient({
@@ -429,15 +432,26 @@ export default function CourseWorkspaceClient({
     );
   }, [course.is_paid, course.id, course.slug, data.isEnrolled, portal.unlockedCourses]);
 
-  const isLockedView = data.isLocked && !isUnlockedLocally;
+  const isLockedView = data.isLocked || !lesson;
+
+  const [completionOverrides, setCompletionOverrides] = useState<
+    Record<string, boolean>
+  >({});
 
   const completedSet = useMemo(() => {
     const set = new Set<string>(portal.completedLessons);
     for (const [id, entry] of Object.entries(progressMap)) {
       if (entry.is_completed) set.add(id);
     }
+    for (const [id, override] of Object.entries(completionOverrides)) {
+      if (override) {
+        set.add(id);
+      } else {
+        set.delete(id);
+      }
+    }
     return set;
-  }, [portal.completedLessons, progressMap]);
+  }, [portal.completedLessons, progressMap, completionOverrides]);
 
   const doneCount = useMemo(
     () => sortedLessons.filter((l) => completedSet.has(l.id)).length,
@@ -586,7 +600,13 @@ export default function CourseWorkspaceClient({
 
   const handleToggleDone = useCallback(() => {
     if (!currentLessonId) return;
-    const nowDone = toggleLessonComplete(currentLessonId);
+    const currentlyDone = completedSet.has(currentLessonId);
+    const nowDone = !currentlyDone;
+    toggleLessonComplete(currentLessonId, nowDone);
+    setCompletionOverrides((prev) => ({
+      ...prev,
+      [currentLessonId]: nowDone,
+    }));
 
     if (nowDone) {
       emitToast("تم حفظ إنجازك في الدرس ✓");
@@ -1308,11 +1328,11 @@ export default function CourseWorkspaceClient({
               )}
             </div>
 
-            {/* Unified 4-Pillar Tab Bar (Sleek Single-Row Segmented Bar on Mobile & Desktop!) */}
+            {/* Unified 5-Pillar Tab Bar (Sleek Single-Row Segmented Bar on Mobile & Desktop!) */}
             <div
               role="tablist"
-              aria-label="أركان دراسة الفصل الأربعة"
-              className="grid grid-cols-4 gap-1 sm:gap-1.5 rounded-2xl border p-1"
+              aria-label="أركان دراسة الفصل الخمسة"
+              className="grid grid-cols-5 gap-1 sm:gap-1.5 rounded-2xl border p-1"
               style={{
                 background: "var(--bg-canvas)",
                 borderColor: "var(--border-soft)",
@@ -1329,7 +1349,9 @@ export default function CourseWorkspaceClient({
                       ? "تفاعلي"
                       : id === "summary"
                         ? "ملخص"
-                        : "كويز";
+                        : id === "quiz"
+                          ? "كويز"
+                          : "المساعد";
                 const ResolvedIcon =
                   id === "summary" && !hasLessonCode ? FileText : Icon;
                 return (
@@ -1339,15 +1361,35 @@ export default function CourseWorkspaceClient({
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => handleSelectTab(id)}
-                    className={`tool-dock-pill min-h-[44px] sm:min-h-[38px] flex-col sm:flex-row gap-0.5 sm:gap-1.5 px-1 sm:px-3 py-1.5 justify-center whitespace-nowrap ${
+                    className={`tool-dock-pill min-h-[44px] sm:min-h-[38px] flex-col sm:flex-row gap-0.5 sm:gap-1.5 px-1 sm:px-2.5 py-1.5 justify-center whitespace-nowrap ${
                       isActive ? "active" : ""
                     }`}
                   >
                     <ResolvedIcon className="h-4 w-4 shrink-0" />
-                    <span className="sm:hidden text-[10.5px] font-extrabold leading-tight">
+                    <span className="sm:hidden text-[10px] font-extrabold leading-tight">
                       {mobileLabel}
                     </span>
-                    <span className="hidden sm:inline">{resolvedLabel}</span>
+                    <span className="hidden sm:inline text-[12.5px]">
+                      {resolvedLabel}
+                    </span>
+                    {id === "ai" ? (
+                      <span
+                        className="font-mono-code hidden md:inline-flex items-center rounded px-1 py-0.5 text-[9px] font-black leading-none"
+                        style={
+                          isActive
+                            ? {
+                                background: "rgba(255, 255, 255, 0.2)",
+                                color: "#ffffff",
+                              }
+                            : {
+                                background: "var(--accent-warm-soft)",
+                                color: "var(--accent-warm-text)",
+                              }
+                        }
+                      >
+                        AI
+                      </span>
+                    ) : null}
                   </button>
                 );
               })}
@@ -1516,6 +1558,19 @@ export default function CourseWorkspaceClient({
                       activeLessonMeta?.duration_minutes ??
                       null
                     }
+                    lessonId={currentLessonId}
+                    courseId={course.id}
+                    isPaidCourse={course.is_paid}
+                    hasProtectedVideo={Boolean(lesson?.has_protected_video)}
+                    watermarkFallback={{
+                      label:
+                        data.currentUser?.full_name ||
+                        portal.profile.name ||
+                        "CS Portal Student",
+                      sublabel:
+                        data.currentUser?.email ||
+                        `${portal.profile.dept} · Year ${portal.profile.year}`,
+                    }}
                   />
                 </div>
 
@@ -1707,6 +1762,21 @@ export default function CourseWorkspaceClient({
                     questions={effectiveQuestions}
                     bestScore={currentBestScore}
                     onScoreUpdate={handleQuizScoreUpdate}
+                  />
+                </div>
+
+                {/* TAB 5: Chapter AI Assistant ("الركن الخامس — المساعد الذكي") */}
+                <div className={activeTab === "ai" ? "space-y-5" : "hidden"}>
+                  <ChapterAiAssistant
+                    key={currentLessonId}
+                    courseId={course.id}
+                    courseCode={course.code}
+                    courseTitleEn={course.title_en}
+                    lessonId={currentLessonId}
+                    lessonTitle={parsedLessonTitle.primary}
+                    hasStructuredSummary={Boolean(structuredSummary)}
+                    onGoToSummary={() => handleSelectTab("summary")}
+                    onTriggerUnlock={handleTriggerUnlock}
                   />
                 </div>
               </>

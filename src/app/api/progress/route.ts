@@ -1,4 +1,9 @@
+import { sql } from "drizzle-orm";
 import { NextResponse, type NextRequest } from "next/server";
+import { getServerSession } from "@/lib/auth/session";
+import { resolveCourseIdForLesson } from "@/lib/auth/sync";
+import { getDbOrNull } from "@/lib/db";
+import { userProgress } from "@/lib/db/schema";
 
 const NO_STORE_HEADERS = { "Cache-Control": "private, no-store" };
 
@@ -76,9 +81,57 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Standalone local-storage mode: confirm valid payload cleanly so client persists locally.
-  return NextResponse.json(
-    { ok: true, local: true },
-    { status: 200, headers: NO_STORE_HEADERS }
-  );
+  // Graceful guest / Zero-DB standalone fallback
+  const db = getDbOrNull();
+  const user = db ? await getServerSession() : null;
+
+  if (!db || !user) {
+    return NextResponse.json(
+      { ok: true, local: true },
+      { status: 200, headers: NO_STORE_HEADERS }
+    );
+  }
+
+  try {
+    const courseId = resolveCourseIdForLesson(payload.lesson_id);
+    const now = new Date();
+
+    await db
+      .insert(userProgress)
+      .values({
+        userId: user.id,
+        courseId,
+        lessonId: payload.lesson_id,
+        isCompleted: payload.is_completed ?? false,
+        bestQuizScore: payload.best_quiz_score ?? null,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [userProgress.userId, userProgress.lessonId],
+        set: {
+          courseId,
+          ...(payload.is_completed !== undefined
+            ? { isCompleted: payload.is_completed }
+            : {}),
+          ...(payload.best_quiz_score !== undefined
+            ? {
+                bestQuizScore: sql`NULLIF(GREATEST(COALESCE(${userProgress.bestQuizScore}, -1), COALESCE(excluded.best_quiz_score, -1)), -1)`,
+              }
+            : {}),
+          updatedAt: now,
+        },
+      });
+
+    return NextResponse.json(
+      { ok: true, local: false, synced: true },
+      { status: 200, headers: NO_STORE_HEADERS }
+    );
+  } catch (error) {
+    console.error("[api/progress POST] Cloud progress upsert failed:", error);
+    // Keep client progress flow resilient even if DB has a transient hiccup
+    return NextResponse.json(
+      { ok: true, local: true },
+      { status: 200, headers: NO_STORE_HEADERS }
+    );
+  }
 }

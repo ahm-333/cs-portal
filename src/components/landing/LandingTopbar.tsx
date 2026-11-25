@@ -3,13 +3,16 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, Menu, Moon, Sun, X } from "lucide-react";
 import { BrandName } from "@/components/layout/BrandName";
 import { toggleTheme, useTheme } from "@/components/layout/themeStore";
 import { SITE_CONFIG } from "@/lib/config";
+import { EDITORIAL_EASE } from "@/components/ui/AwwwardsPrimitives";
 
 const NAV_LINKS = [
   { id: "interactive-showcase", href: "#interactive-showcase", label: "الأركان" },
+  { id: "compare", href: "#compare", label: "الفرق" },
   { id: "courses", href: "/courses", label: "المقررات" },
   { id: "faq", href: "#faq", label: "الأسئلة" },
   { id: "community", href: "#community", label: "التواصل" },
@@ -29,9 +32,10 @@ export function LandingTopbar() {
         : window.scrollY < 480;
       setIsOverHero(overHero);
 
-      const probeY = window.scrollY + 180;
+      const probeY = window.scrollY + 210;
       let current = "";
       for (const item of NAV_LINKS) {
+        if (item.href.startsWith("/")) continue;
         const el = document.getElementById(item.id);
         if (!el) continue;
         const top = el.getBoundingClientRect().top + window.scrollY;
@@ -64,26 +68,41 @@ export function LandingTopbar() {
   return (
     <header
       id="mainTopbar"
-      className="fixed top-0 inset-x-0 z-40 border-b backdrop-blur-2xl transition-all duration-300"
-      style={
-        isOverHero
-          ? {
-              background: "rgba(10, 17, 30, 0.78)",
-              borderColor: "rgba(255, 255, 255, 0.08)",
-              color: "#ffffff",
-            }
-          : {
-              background: isDark
-                ? "rgba(12, 18, 30, 0.88)"
-                : "rgba(255, 253, 248, 0.90)",
-              borderColor: "var(--border-soft)",
-              boxShadow: isDark
-                ? "0 6px 24px rgba(0, 0, 0, 0.28)"
-                : "0 6px 24px rgba(15, 23, 42, 0.06)",
-            }
-      }
+      className={`fixed top-0 inset-x-0 z-40 transition-all duration-200 ${
+        isOverHero ? "px-0 pt-0" : "px-3 sm:px-5 pt-2.5"
+      }`}
     >
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 h-14 md:h-16 flex items-center justify-between gap-2 sm:gap-4">
+      <div
+        className={`mx-auto backdrop-blur-2xl border transition-all duration-200 ${
+          isOverHero
+            ? "max-w-full rounded-none border-x-0 border-t-0"
+            : "max-w-[1180px] rounded-2xl md:rounded-full"
+        }`}
+        style={
+          isOverHero
+            ? {
+                background: "rgba(7, 13, 25, 0.72)",
+                borderColor: "rgba(255, 255, 255, 0.08)",
+                color: "#ffffff",
+              }
+            : {
+                background: isDark
+                  ? "rgba(12, 18, 30, 0.86)"
+                  : "rgba(255, 253, 248, 0.88)",
+                borderColor: "var(--border-soft)",
+                boxShadow: isDark
+                  ? "0 12px 34px rgba(0, 0, 0, 0.42)"
+                  : "0 12px 34px rgba(15, 23, 42, 0.08)",
+              }
+        }
+      >
+        <div
+          className={`mx-auto flex items-center justify-between gap-2 sm:gap-4 transition-all duration-500 ${
+            isOverHero
+              ? "max-w-[1280px] px-4 sm:px-6 lg:px-8 h-14 md:h-16"
+              : "px-3.5 sm:px-5 h-13 md:h-14"
+          }`}
+        >
           {/* Right (RTL Start): Founder Avatar + Eng. Ahmed Amir */}
           <div className="flex items-center gap-2 min-w-0">
             <button
@@ -149,7 +168,7 @@ export function LandingTopbar() {
             </a>
           </div>
 
-          {/* Center: Sleek Recessed Pill Navigation Capsule */}
+          {/* Center: Sleek Recessed Pill Navigation Capsule with layoutId Spring Indicator */}
           <nav
             className="hidden md:flex items-center gap-0.5 p-1 rounded-full border transition-colors"
             style={
@@ -167,38 +186,57 @@ export function LandingTopbar() {
           >
             {NAV_LINKS.map((item) => {
               const isActive = activeId === item.id;
-              const cls = `relative px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all ${
+              const cls = `relative px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-colors ${
                 isOverHero
                   ? "hover:text-white"
                   : "hover:text-[var(--text-primary)]"
               }`;
-              const st = isOverHero
-                ? {
-                    color: isActive ? "#ffffff" : "rgba(226, 232, 240, 0.78)",
-                    background: isActive
-                      ? "rgba(255, 255, 255, 0.14)"
-                      : "transparent",
+              const textColor = isOverHero
+                ? isActive
+                  ? "#ffffff"
+                  : "rgba(226, 232, 240, 0.78)"
+                : isActive
+                  ? "var(--text-primary)"
+                  : "var(--text-secondary)";
+
+              const activeBg = isActive ? (
+                <motion.span
+                  layoutId="topbarActivePill"
+                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  className="absolute inset-0 rounded-full"
+                  style={
+                    isOverHero
+                      ? { background: "rgba(255, 255, 255, 0.14)" }
+                      : {
+                          background: "var(--bg-surface)",
+                          boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                        }
                   }
-                : {
-                    color: isActive
-                      ? "var(--text-primary)"
-                      : "var(--text-secondary)",
-                    background: isActive ? "var(--bg-surface)" : "transparent",
-                    boxShadow: isActive
-                      ? "0 1px 4px rgba(0,0,0,0.08)"
-                      : "none",
-                  };
+                />
+              ) : null;
 
               if (item.href.startsWith("/")) {
                 return (
-                  <Link key={item.href} href={item.href} className={cls} style={st}>
-                    {item.label}
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cls}
+                    style={{ color: textColor }}
+                  >
+                    {activeBg}
+                    <span className="relative z-10">{item.label}</span>
                   </Link>
                 );
               }
               return (
-                <a key={item.href} href={item.href} className={cls} style={st}>
-                  {item.label}
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={cls}
+                  style={{ color: textColor }}
+                >
+                  {activeBg}
+                  <span className="relative z-10">{item.label}</span>
                 </a>
               );
             })}
@@ -236,7 +274,7 @@ export function LandingTopbar() {
 
             <Link
               href="/courses"
-              className="h-9 px-3.5 sm:px-4 rounded-full text-[11.5px] sm:text-[12px] font-extrabold text-white inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+              className="magnetic-btn h-9 px-3.5 sm:px-4 rounded-full text-[11.5px] sm:text-[12px] font-extrabold text-white inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
               style={{
                 background: "linear-gradient(135deg, #cf6739 0%, #b5532a 100%)",
                 boxShadow: "0 6px 18px rgba(194, 94, 51, 0.34)",
@@ -249,77 +287,86 @@ export function LandingTopbar() {
           </div>
         </div>
 
-        {/* Clean Full-Width Mobile Dropdown */}
-        {mobileMenuOpen && (
-          <div
-            className="md:hidden border-t px-4 py-3 space-y-1 max-h-[calc(100svh-3.5rem)] overflow-y-auto"
-            style={
-              isOverHero
-                ? {
-                    background: "rgba(11, 19, 34, 0.96)",
-                    borderColor: "rgba(255, 255, 255, 0.1)",
-                  }
-                : {
-                    background: "var(--bg-surface)",
-                    borderColor: "var(--border-soft)",
-                  }
-            }
-          >
-            {NAV_LINKS.map((item) => {
-              const cls = `block px-3 py-2.5 rounded-xl text-[13.5px] font-bold transition-colors ${
+        {/* Spring Mobile Dropdown */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.28, ease: EDITORIAL_EASE }}
+              className="md:hidden border-t overflow-hidden rounded-b-2xl"
+              style={
                 isOverHero
-                  ? "text-white hover:bg-white/10"
-                  : "hover:bg-[var(--bg-subtle)]"
-              }`;
-              const st = isOverHero
-                ? undefined
-                : { color: "var(--text-primary)" };
-
-              if (item.href.startsWith("/")) {
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cls}
-                    style={st}
-                  >
-                    {item.label}
-                  </Link>
-                );
+                  ? {
+                      background: "rgba(11, 19, 34, 0.96)",
+                      borderColor: "rgba(255, 255, 255, 0.1)",
+                    }
+                  : {
+                      background: "var(--bg-surface)",
+                      borderColor: "var(--border-soft)",
+                    }
               }
-              return (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cls}
-                  style={st}
-                >
-                  {item.label}
-                </a>
-              );
-            })}
-            <div
-              className="pt-2 mt-1 border-t"
-              style={{
-                borderColor: isOverHero
-                  ? "rgba(255, 255, 255, 0.1)"
-                  : "var(--border-soft)",
-              }}
             >
-              <Link
-                href="/courses"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-extrabold text-white"
-                style={{ background: "#c25e33" }}
-              >
-                <span>مكتبة المقررات</span>
-                <ArrowLeft className="w-4 h-4 shrink-0" />
-              </Link>
-            </div>
-          </div>
-        )}
+              <div className="px-4 py-3 space-y-1 max-h-[calc(100svh-4rem)] overflow-y-auto">
+                {NAV_LINKS.map((item) => {
+                  const cls = `block px-3 py-2.5 rounded-xl text-[13.5px] font-bold transition-colors ${
+                    isOverHero
+                      ? "text-white hover:bg-white/10"
+                      : "hover:bg-[var(--bg-subtle)]"
+                  }`;
+                  const st = isOverHero
+                    ? undefined
+                    : { color: "var(--text-primary)" };
+
+                  if (item.href.startsWith("/")) {
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cls}
+                        style={st}
+                      >
+                        {item.label}
+                      </Link>
+                    );
+                  }
+                  return (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cls}
+                      style={st}
+                    >
+                      {item.label}
+                    </a>
+                  );
+                })}
+                <div
+                  className="pt-2 mt-1 border-t"
+                  style={{
+                    borderColor: isOverHero
+                      ? "rgba(255, 255, 255, 0.1)"
+                      : "var(--border-soft)",
+                  }}
+                >
+                  <Link
+                    href="/courses"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-extrabold text-white"
+                    style={{ background: "#c25e33" }}
+                  >
+                    <span>مكتبة المقررات</span>
+                    <ArrowLeft className="w-4 h-4 shrink-0" />
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </header>
   );
 }

@@ -163,9 +163,25 @@ html.dark,
   }
 
   html {
-    scroll-behavior: smooth;
     background-color: var(--bg-canvas);
     color: var(--text-primary);
+  }
+
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: hidden;
   }
 
   body {
@@ -422,13 +438,108 @@ html.dark,
 #scrollProgressBar {
   position: fixed;
   top: 0;
-  right: 0;
+  inset-inline: 0;
   height: 3px;
-  width: 0%;
+  width: 100%;
   z-index: 60;
-  background: linear-gradient(90deg, #66c7a6, #c25e33, #7ca7f0);
-  transition: width 0.1s linear;
+  background: linear-gradient(90deg, #66c7a6 0%, #c25e33 52%, #7ca7f0 100%);
+  transform: scaleX(0);
+  transform-origin: right center;
+  will-change: transform;
   pointer-events: none;
+  box-shadow: 0 0 12px rgba(194, 94, 51, 0.4);
+}
+
+/* ==========================================================================
+   Awwwards Architectural Textures, Border Beam & CSS Scroll-Driven Animations
+   ========================================================================== */
+
+.hero-blueprint-mesh {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.038) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.038) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 85% 75% at 50% 42%, #000 35%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 42%, #000 35%, transparent 100%);
+}
+
+.editorial-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+@property --beam-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes borderBeamSpin {
+  to {
+    --beam-angle: 360deg;
+  }
+}
+
+.awwwards-beam {
+  position: relative;
+  isolation: isolate;
+}
+
+.awwwards-beam::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0deg,
+    transparent 230deg,
+    rgba(194, 94, 51, 0.85) 285deg,
+    rgba(102, 199, 166, 0.9) 330deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: borderBeamSpin 5.5s linear infinite;
+  z-index: 2;
+}
+
+.awwwards-beam-mint::after {
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0deg,
+    transparent 220deg,
+    rgba(102, 199, 166, 0.9) 285deg,
+    rgba(124, 167, 240, 0.85) 330deg,
+    transparent 360deg
+  );
+}
+
+/* Native CSS Scroll-Driven Animations (Zero-JS progressive enhancement) */
+@keyframes cssScrollRise {
+  from {
+    opacity: 0.45;
+    transform: translateY(22px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .css-scroll-card {
+      animation: cssScrollRise linear both;
+      animation-timeline: view();
+      animation-range: entry 4% cover 28%;
+    }
+  }
 }
 
 @keyframes floatSlow {
@@ -1967,5 +2078,10 @@ table.clean-table tr:last-child td {
   .chaos-chip,
   .feature-pop-card {
     transition: none !important;
+  }
+
+  .awwwards-beam::after,
+  .css-scroll-card {
+    animation: none !important;
   }
 }

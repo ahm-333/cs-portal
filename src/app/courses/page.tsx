@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { CoursesHubClient } from "@/components/course/CoursesHubClient";
+import { getServerSession } from "@/lib/auth/session";
 import { SITE_CONFIG } from "@/lib/config";
-import { getCourseDetailBySlug, getPublishedCourses } from "@/lib/data";
+import { getPublishedCourses } from "@/lib/data";
+import { isDatabaseConfigured } from "@/lib/db";
+import { MOCK_LESSONS } from "@/lib/mock-data";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "مكتبة المقررات",
@@ -9,19 +15,23 @@ export const metadata: Metadata = {
 };
 
 export default async function CoursesPage() {
-  const courses = await getPublishedCourses();
+  if (isDatabaseConfigured()) {
+    const session = await getServerSession();
+    if (!session) {
+      redirect("/login?next=/courses");
+    }
+  }
 
-  const details = await Promise.all(
-    courses.map((course) => getCourseDetailBySlug(course.slug))
-  );
+  const courses = await getPublishedCourses();
 
   const courseLessonIdsMap: Record<string, string[]> = {};
   let totalLessons = 0;
 
-  for (const detail of details) {
-    if (!detail) continue;
-    const ids = detail.lessons.map((lesson) => lesson.id);
-    courseLessonIdsMap[detail.course.id] = ids;
+  for (const course of courses) {
+    const ids = MOCK_LESSONS.filter((l) => l.course_id === course.id)
+      .sort((a, b) => a.order_index - b.order_index)
+      .map((l) => l.id);
+    courseLessonIdsMap[course.id] = ids;
     totalLessons += ids.length;
   }
 

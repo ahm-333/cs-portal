@@ -1,8 +1,9 @@
 export type UserRole = "student" | "admin";
-export type VideoProvider = "youtube" | "bunny";
+export type VideoProvider = "youtube" | "bunny" | "hls";
 export type InteractiveSourceType = "html_code" | "external_url";
 export type EnrollmentStatus = "active" | "expired";
 export type CourseLabType = "linked-list" | "binary-search" | "cpu-scheduling";
+export type ActivationScopeType = "course" | "lesson" | "bundle";
 
 export interface CheatSheet {
   headers: string[];
@@ -85,6 +86,8 @@ export interface LessonSummaryItem {
 export interface Lesson extends LessonSummaryItem {
   video_provider: VideoProvider;
   video_id: string | null;
+  hls_path?: string | null;
+  has_protected_video?: boolean;
   summary_md: string | null;
   resources: LessonResource[];
   created_at: string;
@@ -142,7 +145,43 @@ export interface CurrentUser {
   email: string | null;
   full_name: string | null;
   avatar_url: string | null;
+  year_level?: number | null;
+  department?: string | null;
   role: UserRole;
+}
+
+export interface ActivationCodeRecord {
+  id: string;
+  code: string;
+  scope_type: ActivationScopeType;
+  target_id: string;
+  batch_label: string | null;
+  max_uses: number;
+  used_count: number;
+  is_revoked: boolean;
+  expires_at: string | null;
+  created_at: string;
+}
+
+export interface UserEnrollmentRecord {
+  id: string;
+  scope_type: ActivationScopeType;
+  target_id: string;
+  status: "active" | "revoked" | "expired";
+  enrolled_at: string;
+  expires_at: string | null;
+}
+
+export interface VideoTokenResponse {
+  playbackUrl: string;
+  provider: VideoProvider;
+  /** ISO-8601 expiration timestamp */
+  expiresAt: string;
+  watermark: {
+    label: string;
+    sublabel: string;
+    sessionTag: string;
+  };
 }
 
 export interface CourseWithStats extends Course {

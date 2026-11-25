@@ -75,7 +75,9 @@ export function CourseCard({
       : 0;
 
   const isUnlocked =
-    !course.is_paid || portal.unlockedCourses.includes(course.id);
+    !course.is_paid ||
+    Boolean(course.is_enrolled) ||
+    portal.unlockedCourses.includes(course.id);
 
   const accent = course.accent || "#1e355c";
   const orderNum = String(index + 1).padStart(2, "0");

@@ -5,9 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
+  Cloud,
   Moon,
   Play,
+  RefreshCw,
   Search,
+  Shield,
   Star,
   Sun,
   X,
@@ -17,6 +20,7 @@ import { BrandName } from "@/components/layout/BrandName";
 import { Footer } from "@/components/layout/Footer";
 import { PomodoroTimer } from "@/components/layout/PomodoroTimer";
 import { toggleTheme, useTheme } from "@/components/layout/themeStore";
+import { useAuthState } from "@/lib/stores/authStore";
 import { openFeedbackModal } from "@/lib/stores/events";
 import { usePortalState } from "@/lib/stores/portalStore";
 import type { CourseWithStats } from "@/types/database";
@@ -34,6 +38,7 @@ export function CoursesHubClient({
   courseLessonIdsMap,
 }: CoursesHubClientProps) {
   const portal = usePortalState();
+  const auth = useAuthState();
   const theme = useTheme();
   const isDark = theme === "dark";
 
@@ -149,9 +154,77 @@ export function CoursesHubClient({
             </span>
           </nav>
 
-          {/* Left (RTL End): Pro Pomodoro + Theme Circle */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Left (RTL End): Admin + Account Sync Pill + Pro Pomodoro + Theme Circle */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <PomodoroTimer className="hidden sm:inline-flex" />
+
+            {auth.status === "authenticated" && auth.user?.role === "admin" && (
+              <Link
+                href="/admin"
+                className="h-10 px-2.5 sm:px-3 rounded-full border inline-flex items-center gap-1.5 text-[11.5px] font-extrabold transition-all hover:opacity-90 shrink-0 shadow-xs"
+                style={{
+                  background: "var(--accent-warm-soft)",
+                  borderColor: "transparent",
+                  color: "var(--accent-warm-text)",
+                }}
+                title="لوحة تحكم الأدمن"
+              >
+                <Shield className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">لوحة التحكم</span>
+              </Link>
+            )}
+
+            {auth.status === "authenticated" && auth.user ? (
+              <Link
+                href="/login"
+                className="h-10 px-2.5 sm:px-3.5 rounded-full border inline-flex items-center gap-1.5 text-[11.5px] font-bold transition-all hover:border-[var(--border-strong)] shrink-0 shadow-xs max-w-[140px] sm:max-w-[190px]"
+                style={{
+                  background: "var(--bg-surface)",
+                  borderColor: "var(--border-soft)",
+                  color: "var(--text-primary)",
+                }}
+                title="حسابك السحابي وحالة المزامنة"
+              >
+                {auth.syncing ? (
+                  <RefreshCw
+                    className="w-3.5 h-3.5 animate-spin shrink-0"
+                    style={{ color: "var(--brand-primary)" }}
+                  />
+                ) : (
+                  <span className="relative inline-flex shrink-0">
+                    <Cloud
+                      className="w-3.5 h-3.5"
+                      style={{ color: "var(--success-fg)" }}
+                    />
+                    <span
+                      className="w-1.5 h-1.5 rounded-full absolute -top-0.5 -right-0.5"
+                      style={{ background: "var(--success-fg)" }}
+                    />
+                  </span>
+                )}
+                <span className="truncate">
+                  {auth.user.fullName.split(/\s+/)[0] || auth.user.fullName}
+                </span>
+              </Link>
+            ) : (
+              <Link
+                href="/login?mode=cloud"
+                className="h-10 px-2.5 sm:px-3.5 rounded-full border inline-flex items-center gap-1.5 text-[11.5px] font-bold transition-all hover:border-[var(--border-strong)] shrink-0 shadow-xs"
+                style={{
+                  background: "var(--bg-surface)",
+                  borderColor: "var(--border-soft)",
+                  color: "var(--text-primary)",
+                }}
+                title="حسابي والمزامنة السحابية"
+              >
+                <Cloud
+                  className="w-3.5 h-3.5 shrink-0"
+                  style={{ color: "var(--brand-primary)" }}
+                />
+                <span className="hidden sm:inline">حسابي / مزامنة</span>
+                <span className="sm:hidden">حسابي</span>
+              </Link>
+            )}
 
             <button
               type="button"

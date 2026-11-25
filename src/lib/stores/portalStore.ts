@@ -759,3 +759,15 @@ export function importPortalBackupJson(
     return { ok: false, error: "تعذّر قراءة ملف JSON — تأكد من صحة النص." };
   }
 }
+
+export function clearPortalLocalState(): PortalState {
+  const empty = sanitizePortalState({});
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.removeItem(PORTAL_STORAGE_KEY);
+    } catch {
+      // ignore storage errors
+    }
+  }
+  return persistState(empty);
+}

@@ -1,9 +1,12 @@
 "use client";
 
-import { MessageCircle, Send } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, MessageCircle, Send } from "lucide-react";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { BrandName } from "@/components/layout/BrandName";
 import { SITE_CONFIG, type SocialLinkItem } from "@/lib/config";
 import { emitToast } from "@/lib/stores/events";
+import { MaskedLineReveal } from "@/components/ui/AwwwardsPrimitives";
 
 function SocialIcon({
   icon,
@@ -87,69 +90,113 @@ export function CompactContactStrip() {
   return (
     <section
       id="community"
-      className="reveal max-w-[1060px] mx-auto px-4 sm:px-6 lg:px-8 py-6"
+      className="reveal max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-16"
     >
-      <div className="surface-card rounded-3xl p-5 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="text-center md:text-right space-y-0.5">
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-            <BrandName size="lg" />
-            <span
-              className="font-mono-code text-[10.5px] font-bold px-2 py-0.5 rounded-full"
+      <div
+        className="awwwards-beam relative overflow-hidden rounded-[32px] border border-white/12 p-7 sm:p-10 lg:p-12 text-white shadow-[0_28px_70px_rgba(8,14,26,0.34)]"
+        style={{
+          background:
+            "linear-gradient(155deg, #070e1c 0%, #101f3b 55%, #0c172b 100%)",
+        }}
+      >
+        {/* Architectural Blueprint Grid + Grain + Glows (Bookend Symmetry with Hero) */}
+        <div
+          aria-hidden="true"
+          className="hero-blueprint-mesh pointer-events-none absolute inset-0 opacity-75"
+        />
+        <div
+          aria-hidden="true"
+          className="editorial-grain pointer-events-none absolute inset-0 opacity-[0.045] mix-blend-overlay"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-20 -right-16 w-[320px] h-[320px] rounded-full blur-3xl opacity-[0.22]"
+          style={{
+            background:
+              "radial-gradient(circle, #c25e33 0%, transparent 70%)",
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-24 -left-12 w-[320px] h-[320px] rounded-full blur-3xl opacity-[0.18]"
+          style={{
+            background:
+              "radial-gradient(circle, #66c7a6 0%, transparent 70%)",
+          }}
+        />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+          <div className="space-y-4 text-center lg:text-right max-w-xl mx-auto lg:mx-0">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
+              <BrandLogo size="md" inverted />
+              <BrandName inverted size="lg" />
+              <span
+                dir="ltr"
+                className="font-mono-code text-[10.5px] font-bold px-2.5 py-0.5 rounded-full bg-white/[0.08] border border-white/14 text-slate-200"
+              >
+                {SITE_CONFIG.universityBadge}
+              </span>
+            </div>
+
+            <h2 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight text-white">
+              <MaskedLineReveal>
+                جاهز تبدأ مذاكرة منظمة من غير تشتيت؟
+              </MaskedLineReveal>
+            </h2>
+
+            <p className="text-[13.5px] sm:text-[14.5px] text-slate-300/85 leading-relaxed">
+              ادخل مكتبة المقررات دلوقتي أو تابع القنوات وجروبات المراجعة
+              والتنبيهات قبل الامتحانات.
+            </p>
+          </div>
+
+          <div className="flex flex-col items-center lg:items-end gap-4">
+            <Link
+              href="/courses"
+              className="magnetic-btn cta-shimmer h-12 px-7 rounded-2xl text-[14px] font-extrabold text-white inline-flex items-center justify-center gap-2.5 shadow-[0_14px_34px_rgba(194,94,51,0.38)] transition-transform hover:-translate-y-0.5"
               style={{
-                background: "var(--brand-soft)",
-                color: "var(--brand-soft-text)",
+                background:
+                  "linear-gradient(135deg, #cf6739 0%, #b34f26 100%)",
               }}
             >
-              {SITE_CONFIG.universityBadge}
-            </span>
+              <span>افتح مكتبة المقررات</span>
+              <ArrowLeft className="w-4 h-4 shrink-0" />
+            </Link>
+
+            <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2">
+              {SITE_CONFIG.socialLinks.map((item) => {
+                const cls =
+                  "magnetic-btn min-h-[40px] px-3.5 py-2 rounded-xl border border-white/12 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[#e58a62]/60 text-[12px] font-bold text-slate-100 inline-flex items-center gap-2 transition-all hover:-translate-y-0.5 cursor-pointer backdrop-blur-md";
+
+                if (item.url) {
+                  return (
+                    <a
+                      key={item.id}
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cls}
+                    >
+                      <SocialIcon icon={item.icon} color={item.color} />
+                      <span className="font-en">{item.label}</span>
+                    </a>
+                  );
+                }
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handlePlaceholder(item.label)}
+                    className={cls}
+                  >
+                    <SocialIcon icon={item.icon} color={item.color} />
+                    <span className="font-en">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <p
-            className="text-[12.5px]"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            تابع القنوات وجروبات المراجعة والتنبيهات قبل الامتحانات
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {SITE_CONFIG.socialLinks.map((item) => {
-            const cls =
-              "min-h-[40px] px-3.5 py-2 rounded-xl border text-[12px] font-bold inline-flex items-center gap-2 transition-all hover:-translate-y-0.5 hover:border-[var(--accent-warm)] cursor-pointer";
-            const st = {
-              background: "var(--bg-canvas)",
-              borderColor: "var(--border-soft)",
-              color: "var(--text-primary)",
-            };
-
-            if (item.url) {
-              return (
-                <a
-                  key={item.id}
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cls}
-                  style={st}
-                >
-                  <SocialIcon icon={item.icon} color={item.color} />
-                  <span className="font-en">{item.label}</span>
-                </a>
-              );
-            }
-
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handlePlaceholder(item.label)}
-                className={cls}
-                style={st}
-              >
-                <SocialIcon icon={item.icon} color={item.color} />
-                <span className="font-en">{item.label}</span>
-              </button>
-            );
-          })}
         </div>
       </div>
     </section>

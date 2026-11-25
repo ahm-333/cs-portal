@@ -1,154 +1,169 @@
 # CS Portal — Architecture & Engineering Specification
 
-This document describes the architecture, design system, state management, API contracts, security invariants, and multi-agent engineering workflow of **Ahmed Amir Ahmed — CS Portal (بوابة حاسبات)**.
+This document describes the full-stack architecture, database schema, authentication & sync model, activation code concurrency design, Chapter AI tutor, protected HLS video pipeline, design system, and security invariants of **Ahmed Amir Ahmed — CS Portal (بوابة حاسبات)**.
 
 ---
 
-## 1. System Philosophy & Tech Stack
+## 1. System Philosophy & Dual-Mode Architecture
 
 - **Framework:** Next.js `16.4` (App Router + Turbopack) + React `19.3` + TypeScript `5` (strict) + Tailwind CSS `v4`.
-- **Standalone Zero-DB Model:** Runs 100% standalone on **GitHub + Vercel** with zero external database, zero backend auth service, and zero required environment variables.
-- **Database Drop-In Boundary:** All Server Components and API routes read content exclusively through `src/lib/data.ts`. Swapping in PostgreSQL, Neon, Turso, or Supabase later requires updating only `src/lib/data.ts` and API route handlers without touching UI components.
-- **Next.js 16 Convention:** Dynamic route `params` and `searchParams` are async Promises and must always be awaited (`const { slug } = await params`).
+- **Dual-Mode Operation (Zero-DB Standalone ↔ Full Cloud Production):**
+  - **Standalone Zero-DB Mode (Default when `DATABASE_URL` is unset):** Builds and runs 100% cleanly on Vercel or locally with ZERO environment variables. Curriculum renders from static TypeScript data, progress/notes/mistakes persist in browser `localStorage` (`cs_portal_state_v3`), `/admin` displays a Neon setup checklist, and protected cloud/admin APIs return `503` cleanly without crashing.
+  - **Full Cloud Production Mode (When `DATABASE_URL` is set):** Enables **Neon Serverless PostgreSQL + Drizzle ORM** (`src/lib/db/`), optional student accounts with cross-device cloud sync, race-condition-proof activation codes, strict server-side paid-content authorization, private `/admin` control center, Gemini 2.5 Flash Chapter AI Tutor, and short-lived token-signed Bunny Stream HLS playback.
+- **Data Access Boundary:** All Server Components read content and server-verified enrollments through `src/lib/data.ts`.
+- **Next.js 16 Convention:** Dynamic route `params` and `searchParams` are async Promises and are always awaited (`const { slug } = await params`).
 
 ---
 
-## 2. Warm Editorial Navy Design System
+## 2. Database Layer — Neon PostgreSQL + Drizzle ORM
 
-Defined in `src/app/globals.css`, `src/app/layout.tsx`, and `src/components/layout/themeStore.ts`:
+Defined in `src/lib/db/index.ts`, `src/lib/db/schema.ts`, `drizzle.config.ts`, and `src/lib/db/seed-admin.ts`:
 
-### Palette & Theme Tokens
-- **Light Mode (`:root` / `[data-theme="light"]`):**
-  - Surfaces: `--bg-canvas: #f6f5f1`, `--bg-surface: #ffffff`, `--bg-subtle: #eeece5`, `--bg-hover: #f2f0ea`
-  - Borders: `--border-soft: #e5e2d9`, `--border-strong: #d2cec2`
-  - Ink: `--text-primary: #171c26`, `--text-secondary: #535c6b`, `--text-muted: #7f8896`
-  - Brand & Accents: `--brand-primary: #1e355c`, `--accent-warm: #c25e33`, `--success-fg: #1d6b52`, `--hero-bg: #182947 → #0f1c32`
-- **Dark Mode (`html.dark` / `[data-theme="dark"]` + Tailwind v4 `@custom-variant dark`):**
-  - Surfaces: `--bg-canvas: #0f1319`, `--bg-surface: #161c24`, `--bg-subtle: #1e2631`, `--bg-hover: #232c38`
-  - Brand & Accents: `--brand-primary: #7ca7f0`, `--accent-warm: #e58a62`, `--success-fg: #66c7a6`, `--hero-bg: #152238 → #0c1524`
-- **Anti-Flash Bootstrap:** `src/app/layout.tsx` executes an inline pre-hydration script reading `localStorage.getItem("cs_portal_theme")` (default `"light"`) and syncing `html.classList` (`dark`) and `html.dataset.theme` before first paint.
-- **Backward-Compatibility Aliases:** Legacy token aliases (`--bg`, `--paper`, `--ink`, `--muted`, `--line`, `--accent`, `--signal`, etc.) map directly onto the Warm Editorial tokens so older helper components remain consistent.
+### Connection Topology
+- **Runtime (`DATABASE_URL`):** Uses `@neondatabase/serverless` WebSocket `Pool` + `drizzle-orm/neon-serverless` with Neon's **pooled** connection string (`-pooler` hostname) so ACID `db.transaction()` calls work seamlessly in serverless functions.
+- **Migrations (`DATABASE_URL_UNPOOLED`):** `drizzle.config.ts` prefers `DATABASE_URL_UNPOOLED` (direct Neon connection) for `npm run db:push`, `npm run db:generate`, and `npm run db:migrate`.
+- **Zero-DB Safety:** `isDatabaseConfigured()` and `getDbOrNull()` guard all DB callers so missing env vars never throw at import time or during `next build`.
 
-### Typography & Strict RTL/LTR Isolation
-- Root `<html lang="ar" dir="rtl">` using `next/font/google`:
-  - `--font-cairo` (`Cairo`, weights 400–900) for Arabic editorial UI.
-  - `--font-inter` (`Inter`, weights 400–800) for English technical labels (`.font-en`).
-  - `--font-jetbrains-mono` (`JetBrains_Mono`, weights 400–600) for code, indices, and badges (`.font-mono-code`).
-- **Strict LTR Rule:** All `pre`, `code`, `kbd`, `samp`, `.code-ltr`, `.katex`, and `.katex-display` elements enforce `direction: ltr; unicode-bidi: isolate;` so code and math never break inside RTL paragraphs.
+### Schema (9 Tables in `src/lib/db/schema.ts`)
 
-### Motion Architecture (`src/components/layout/MotionEffects.tsx`)
-- Renders `#scrollProgressBar` at the top viewport edge.
-- Syncs `Lenis` smooth scrolling with `gsap` + `ScrollTrigger` (completely skipped when `prefers-reduced-motion: reduce` is active) and tears down listeners cleanly on unmount.
-- Delegates pointer tracking for `.spotlight-card` (`--mx`, `--my`) and subtle `.magnetic-btn` pull effects.
-- Per-view layout ownership: `layout.tsx` mounts `<MotionEffects />` and `<ToastProvider>{children}<GlobalModalsHost /></ToastProvider>`, while each view (`/`, `/courses`, `/courses/[slug]`) renders its own tailored `.topbar-shell` and `<Footer />`.
+| Table | Purpose & Key Constraints |
+| --- | --- |
+| `users` | Accounts (`id`, unique `email`, `password_hash`, `full_name`, `year_level`, `department`, `role: "student" \| "admin"`, `exam_date`, `last_active_at`) |
+| `sessions` | Opaque session store (`token_hash` SHA-256 unique, `user_id` FK cascade, `user_agent`, `expires_at`) |
+| `user_progress` | Per-lesson completion & highest quiz score (`unique(user_id, lesson_id)`, `course_id`, `is_completed`, `best_quiz_score`) |
+| `user_notes` | Auto-saved per-lesson student notes (`unique(user_id, lesson_id)`) |
+| `user_mistakes` | Mistake Bank items (`unique(user_id, course_id, question_text)`) |
+| `activation_codes` | Admin-generated codes (`unique(code)`, `scope_type: "course" \| "lesson" \| "bundle"`, `target_id`, `batch_label`, `max_uses`, `used_count`, `is_revoked`, `expires_at`, `created_by`) |
+| `enrollments` | Active student entitlements (`unique(user_id, scope_type, target_id)`, `code_id`, `status: "active" \| "revoked" \| "expired"`, `expires_at`) |
+| `code_redemptions` | Immutable redemption audit log (`code_id`, `user_id`, salted SHA-256 `ip_hash`, `redeemed_at`) |
+| `ai_chat_usage` | Daily AI quota tracking (`unique(actor_key, date_key)`, `request_count`) |
 
----
-
-## 3. Unified Client Store & Event Bus
-
-### `src/lib/stores/portalStore.ts`
-A single SSR-safe `useSyncExternalStore` store backed by `localStorage["cs_portal_state_v3"]`:
-
-```ts
-export interface PortalState {
-  profile: { name: string; year: number; dept: "CS" | "AI" | "IS" | "IT"; saved: boolean };
-  completedLessons: string[];
-  quizScores: Record<string, number>;
-  notes: Record<string, string>;
-  mistakes: Array<{ courseId: string; courseCode: string; lessonId?: string; q: string; ansText: string }>;
-  unlockedCourses: string[];
-  examDate: string; // YYYY-MM-DD (defaults to today + 5 days)
-}
+### Database Scripts
+```bash
+npm run db:push        # Push Drizzle schema directly to Neon PostgreSQL
+npm run db:generate    # Generate SQL migration files into ./drizzle
+npm run db:migrate     # Run generated migrations
+npm run db:studio      # Open Drizzle Studio locally
+npm run db:seed-admin  # Upsert initial admin account from ADMIN_EMAIL / ADMIN_PASSWORD / ADMIN_NAME
 ```
 
-- **Zero-Hydration-Mismatch SSR:** Uses an immutable frozen `SERVER_SNAPSHOT` on the server and memoized raw-string parsing on the client.
-- **Automatic Legacy Migration & Mirroring:** Transparently migrates legacy keys (`cs_portal_progress`, `cs_portal_profile`, `cs_portal_progress_v2`, `cs_portal_extras_v2`) into `cs_portal_state_v3` on first read and mirrors profile/progress back to legacy keys for backward compatibility.
-- **Live Cross-Tab & Same-Tab Sync:** Synchronizes via `window` event `cs-portal-state-v3-updated` within the active tab and native `storage` events across tabs.
-- **Portable Backup:** Exposes `exportPortalBackupJson()` and `importPortalBackupJson(rawJson)` with full schema sanitization.
+---
 
-### `src/lib/stores/events.ts`
-Typed `CustomEvent` bus decoupling trigger buttons across pages from `ToastProvider` and `GlobalModalsHost`:
-- `PORTAL_EVENTS.TOAST` (`cs-portal-toast`) → `emitToast(message)`
-- `PORTAL_EVENTS.OPEN_CMDK` (`cs-portal-open-cmdk`) → `openCommandPalette()`
-- `PORTAL_EVENTS.OPEN_PROFILE` (`cs-portal-open-profile`) → `openProfileModal()`
-- `PORTAL_EVENTS.OPEN_MISTAKES` (`cs-portal-open-mistakes`) → `openMistakeBankModal()`
-- `PORTAL_EVENTS.OPEN_FEEDBACK` (`cs-portal-open-feedback`) → `openFeedbackModal()`
-- `PORTAL_EVENTS.OPEN_UNLOCK` (`cs-portal-open-unlock`) → `openUnlockModal({ courseId, courseTitle, courseCode, unlockCode })`
+## 3. Optional Auth & Local-First Cloud Sync
+
+Students can study immediately as guests (zero login friction) and optionally create a cloud account at `/login` to sync progress across devices and redeem paid activation codes.
+
+### Security & Session Mechanics
+- **Password Hashing (`src/lib/auth/password.ts`):** Uses Node's built-in `crypto.scryptSync` with a random 16-byte salt (`scrypt:<hex-salt>:<hex-hash>`) and constant-time verification via `crypto.timingSafeEqual`. Matches `src/lib/db/seed-admin.ts`.
+- **Sessions (`src/lib/auth/session.ts`):** 32-byte cryptographically random token stored in an `HttpOnly`, `SameSite=Lax`, `Secure` (in production) cookie (`cs_portal_session`, 30-day TTL). Only the **SHA-256 hash** of the token is persisted in `sessions.token_hash`.
+- **Guards:** `getServerSession()`, `requireUser()`, and `requireAdmin()` (`user.role === "admin"`).
+
+### Local-First Bidirectional Sync
+- **Client Stores:** `src/lib/stores/portalStore.ts` (`localStorage["cs_portal_state_v3"]`, SSR-safe `useSyncExternalStore`) + `src/lib/stores/authStore.ts`.
+- **Sync Bridge (`src/components/auth/CloudSyncBridge.tsx`):** Mounted globally in `src/app/layout.tsx`. On sign-in or page load, hydrates from `/api/auth/me` and `/api/sync`, merges guest local state into Neon PostgreSQL without losing progress (`GREATEST` for quiz scores, union for completions/mistakes), and debounces subsequent local mutations to `POST /api/sync`.
+- **Auth & Sync Endpoints (all return `Cache-Control: private, no-store`):**
+  - `POST /api/auth/register` — Creates student account, merges optional `localState`, sets session cookie.
+  - `POST /api/auth/login` — Verifies credentials, merges optional `localState`, sets session cookie.
+  - `POST /api/auth/logout` — Deletes DB session row and clears cookie.
+  - `GET /api/auth/me` — Returns `{ ok: true, dbConfigured, user }`.
+  - `GET /api/sync` & `POST /api/sync` — Bidirectional cloud state snapshot & merge.
+  - `POST /api/progress` — Upserts per-lesson completion/quiz score to Neon when signed in, or returns `{ ok: true, local: true }` cleanly in guest/Zero-DB mode.
 
 ---
 
-## 4. Application Views & Module Map
+## 4. Atomic Activation Codes & Server-Side Paid Gating
 
-### Landing & Scrollytelling (`src/app/page.tsx` + `src/components/landing/*`)
-- `LandingTopbar.tsx` — Auto-hides (`.topbar-hidden`) while inside `#desk-assembly`, reveals smoothly once past the 3D cinema.
-- `DeskScrollytellingCinema.tsx` — `480vh` sticky desktop cinema (`requestAnimationFrame` cross-fade across `/images/desk/frame-0.jpg`..`frame-3.jpg`, 5 stages, 4 chaos chips, 4 floating feature pop cards) + responsive mobile stepper.
-- `ExpandingToolsStrips.tsx` — 5 horizontal expanding editorial strips with live mini-demos (video chapters, `dir="ltr"` Linked List toy, course map preview, C++ copyable snippet, instant quiz + `canvas-confetti`).
-- `CsMarqueeStrip.tsx`, `RealitySwitchSection.tsx`, `InstructorBrandCard.tsx`, `FinalCtaSection.tsx`.
+Implemented in `src/lib/activation/codes.ts`, `src/app/api/codes/redeem/route.ts`, and `src/app/api/enrollments/route.ts`.
 
-### Courses Hub & Global Modals (`src/app/courses/page.tsx`, `src/components/course/*`, `src/components/modals/*`)
-- `CoursesHubClient.tsx` — Sticky `.topbar-shell` with `Ctrl+K`, compact `PomodoroTimer.tsx`, theme toggle, and profile chip; `.hero-shell` personalized welcome + overall progress bar + JSON export/import; Productivity Strip (Exam Countdown & Daily Target Planner + Mistake Bank summary); Smart RTL search & year/price filters.
-- `CourseCard.tsx` — Style C Corner-Fold Editorial Blueprint card (`.bp-course-card`, `.bp-fold-corner`, `.bp-course-icon`, live progress bar, free/paid/unlocked pills).
-- `GlobalModalsHost.tsx` — Centralized listener for `PORTAL_EVENTS` + `Ctrl/Cmd+K` and `Escape`, hosting 5 modals: Command Palette (lazy `/api/search-index`), Profile Setup, Mistake Bank, Feedback/Suggest Course, and Paid Course Unlock (case-insensitive code verification + `canvas-confetti`).
-- `/login` (`src/app/login/page.tsx`) — Dedicated 5-second local student profile setup page redirecting to `/courses`.
-- `/dashboard` (`src/app/dashboard/page.tsx`) — Clean server redirect to `/courses`.
+### Race-Condition-Proof Redemption (`POST /api/codes/redeem`)
+Runs inside a Neon PostgreSQL ACID `db.transaction()` with double defense-in-depth:
+1. Acquires a row-level exclusive lock (`SELECT ... FROM activation_codes WHERE code = $1 FOR UPDATE`) so concurrent attempts serialize cleanly.
+2. Validates `is_revoked = false`, `expires_at`, and `used_count < max_uses`.
+3. Checks existing active enrollments (`bundle('all')`, `course`, or `lesson`) **before** consuming the code so an already-enrolled student never wastes a code.
+4. Executes an atomic conditional update:
+   ```sql
+   UPDATE activation_codes
+   SET used_count = used_count + 1
+   WHERE id = $1 AND is_revoked = false
+     AND (expires_at IS NULL OR expires_at > NOW())
+     AND used_count < max_uses
+   RETURNING *
+   ```
+5. Upserts the `enrollments` row and inserts an audit entry in `code_redemptions` with a salted IP hash.
 
-### 5-Tool Study Workspace (`src/app/courses/[slug]/page.tsx`, `src/app/courses/[slug]/[lessonId]/page.tsx`, `src/components/lesson/*`)
-- `CourseWorkspaceClient.tsx` — Full workspace shell:
-  - Sticky `.topbar-shell` with live course completion pill, `Ctrl+K`, **Exam-Night Cram Mode** toggle, **Auto-Saved Lesson Notes** drawer toggle, desktop **Focus Mode** toggle (`lg:col-span-12`), and theme switcher.
-  - Course Hero Strip + lesson completion toggle (fires `canvas-confetti` at 100%) + 5-Tool Switcher Dock (`.tool-dock-pill`):
-    1. **Video (`VideoPlayer.tsx`)** — Validated YouTube/Bunny embeds + interactive `lesson.chapters` markers, speed selector (`1.0x`/`1.5x`/`2.0x`), and visual board toggle.
-    2. **Interactive Lab (`CourseInteractiveLab.tsx`)** — Built-in course simulators (`linked-list`, `binary-search`, `cpu-scheduling`) + lazy-loaded single-file HTML labs via `GET /api/interactives/[id]`.
-    3. **Course Website Map** — Module breakdown (`course.site_url`, lesson tags, validated `http:`/`https:` external resources).
-    4. **Summaries & Cheat Sheets (`MarkdownViewer.tsx`)** — Markdown + KaTeX + Prism LTR code blocks with copy buttons + Key Code + Exam Tip + `course.cheat_sheet` reference table.
-    5. **Instant Quizzes (`QuizEngine.tsx`)** — Progress tracking, explanations, `saveQuizScore`, confetti celebration, automatic Mistake Bank capture (`addMistake`), and manual bookmarking.
-  - Paid course lock card with seamless unlock modal flow (`openUnlockModal`) and immediate client-side unlock state.
-
----
-
-## 5. Data Layer & API Contracts
-
-All shared domain interfaces live in `src/types/database.ts`.
-
-### Data Access Boundary (`src/lib/data.ts`)
-```ts
-export async function getCurrentUser(): Promise<CurrentUser | null>;
-export async function getPublishedCourses(): Promise<CourseWithStats[]>;
-export async function getCourseDetailBySlug(slug: string): Promise<CourseDetailData | null>;
-export async function getLessonPageData(slug: string, lessonId: string): Promise<LessonPageData | null>;
-export async function getDashboardData(): Promise<DashboardData>;
-export async function getInteractiveById(id: string): Promise<LessonInteractive | null>;
-export async function getSearchIndex(): Promise<SearchIndexItem[]>;
-```
-
-### API Routes
-- `GET /api/search-index` — Returns `SearchIndexItem[]` (`{ type, title, sub, courseSlug, lessonId? }`) for the `Ctrl+K` Command Palette with `Cache-Control: public, s-maxage=3600`.
-- `GET /api/interactives/[id]` — Lazy-loads a `LessonInteractive` (`html_content` or `external_url`) on demand when the student opens the Lab tab, respecting `is_paid && !is_free_preview` locks. Sets `Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400` only for free courses, and `private, no-store` for paid courses.
-- `POST /api/progress` — Validates `{ lesson_id, is_completed?, best_quiz_score? }` and returns `{ ok: true, local: true }` cleanly for local-first persistence.
+### Server-Side Authorization Enforcement
+For any lesson where `course.is_paid && !lesson.is_free_preview`, `hasUserAccessToLesson()` (admin bypass or active non-expired `bundle`/`course`/`lesson` enrollment) is enforced **server-side** across EVERY delivery surface:
+- `getLessonPageData()` in `src/lib/data.ts` (returns `lesson: null, isLocked: true, interactives: [], questions: []`)
+- `GET /api/interactives/[id]` (returns `403` + `private, no-store`)
+- `POST /api/ai/chat` (fail-closed `403 LESSON_LOCKED`)
+- `POST /api/video/token` (fail-closed `401` / `403`)
 
 ---
 
-## 6. Security & Performance Invariants
+## 5. Private Admin Control Center (`/admin`)
 
-1. **Strict Interactive Lab Isolation:** Never inline `html_content` in course or lesson page payloads; always lazy-load via `GET /api/interactives/[id]` when the Lab tab is opened.
-2. **Sandboxed Iframes Only:** Render HTML lab code strictly inside `<iframe srcDoc={html} sandbox="allow-scripts" />`. **NEVER** add `allow-same-origin` to `srcDoc` lab iframes and **NEVER** use `dangerouslySetInnerHTML` for lab content.
-3. **URL Sanitization:** Validate all external lesson resources, video embeds, and external lab URLs to allow only `http:` and `https:` protocols before rendering links or iframes.
-4. **Standalone HTML Lab Budget:** Each file in `content/labs/*.html` must be self-contained (zero external CDNs), mobile responsive, and `< 150KB`.
-5. **Security & Caching Headers:** `next.config.ts` and `vercel.json` enforce `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, `X-Frame-Options: SAMEORIGIN` (protecting against clickjacking while keeping sandboxed `srcDoc` iframes functional), and 1-year immutable caching for `/images/*`.
-6. **Secrets & Repo Hygiene:** Never commit `.env.local`, build caches (`.next/`, `*.tsbuildinfo`), or scratch local PDFs (`.gitignore` excludes `*.pdf`).
+Implemented in `src/app/admin/page.tsx`, `src/components/admin/*`, and `src/app/api/admin/*`:
+
+- **Strict Server-Side Access Control:**
+  - When `DATABASE_URL` is unset, `/admin` renders a clean Neon PostgreSQL setup checklist (`200 OK`, no server errors) while `/api/admin/*` returns `503`.
+  - When `DATABASE_URL` is set, `/admin` and EVERY `/api/admin/*` route strictly enforce `requireAdmin()` (`role === "admin"`). Non-admins receive `403` on API routes and a locked access screen on `/admin`.
+  - `/admin` sets `robots: { index: false, follow: false }` and `dynamic = "force-dynamic"`.
+- **Admin API Endpoints (all `dynamic = "force-dynamic"` + `Cache-Control: no-store`):**
+  - `GET /api/admin/overview` — KPI summary (total students, 7-day active students, active enrollments & per-course breakdown, code inventory, completed lessons, average quiz score).
+  - `GET /api/admin/codes` & `POST /api/admin/codes` — Filterable code table + bulk cryptographically unbiased generator (up to 500 codes/batch, unambiguous alphabet omitting `0/O/1/I/L`).
+  - `PATCH /api/admin/codes/[id]` — Revoke or restore an activation code.
+  - `GET /api/admin/codes/export` — Exports filtered codes to Excel-ready UTF-8 CSV (with `\uFEFF` BOM for Arabic support and formula-injection sanitization escaping leading `= + - @ \t \r`).
+  - `GET /api/admin/students` & `POST /api/admin/students` — Searchable student analytics table (completion %, average quiz score, mistakes, notes, enrollments) + manual `grant` / `revoke` enrollment actions.
 
 ---
 
-## 7. Multi-Agent Engineering Workflow (8-Agent Swarm)
+## 6. The 5th Corner — Chapter AI Assistant
 
-This redesign and production hardening was executed using a clean, file-isolated **8-Agent Swarm** architecture to avoid merge conflicts and guarantee end-to-end verification:
+Implemented in `src/app/api/ai/chat/route.ts`, `src/lib/ai/provider.ts`, `src/lib/ai/chapterContext.ts`, `src/lib/ai/quickPrompts.ts`, and `src/components/lesson/ChapterAiAssistant.tsx`:
 
-| Agent | Role | Exclusive Ownership |
-| --- | --- | --- |
-| **Agent 1 (`design-system`)** | Design System & Motion Architect | `globals.css`, `layout.tsx`, `themeStore.ts`, `MotionEffects.tsx`, `Footer.tsx`, `ToastProvider.tsx` |
-| **Agent 2 (`data-stores`)** | Data, Stores & Contracts Engineer | `types/database.ts`, `lib/config.ts`, `lib/mock-data.ts`, `lib/data.ts`, `lib/stores/events.ts`, `lib/stores/portalStore.ts` |
-| **Agent 3 (`landing-agent`)** | Landing & Scrollytelling Specialist | `app/page.tsx`, `components/landing/*` |
-| **Agent 4 (`courses-agent`)** | Courses Hub, Productivity & Modals | `app/courses/page.tsx`, `app/dashboard/page.tsx`, `app/login/page.tsx`, `app/api/search-index/route.ts`, `CoursesHubClient.tsx`, `CourseCard.tsx`, `PomodoroTimer.tsx`, `ThemeSwitcher.tsx`, `GlobalModalsHost.tsx` |
-| **Agent 5 (`workspace-agent`)** | Study Workspace & Interactive Labs | `app/courses/[slug]/*`, `CourseWorkspaceClient.tsx`, `CourseInteractiveLab.tsx`, `MarkdownViewer.tsx`, `VideoPlayer.tsx`, `QuizEngine.tsx`, `ReadingComfortBar.tsx` |
-| **Agent 6 (`vercel-ops`)** | Vercel & Next.js Deployment Engineer | `next.config.ts`, `vercel.json`, `.env.example` |
-| **Agent 7 (`github-ops`)** | GitHub Ops & Repo Commander | `.gitignore`, `README.md`, `ARCHITECTURE.md`, `.github/workflows/ci.yml` |
-| **Agent 8 (`qa-verifier`)** | Build, Lint, Runtime & Security QA | Full `tsc`, `eslint`, `next build`, security/sandbox audit, and route smoke verification before commit & push |
+- **Model & Streaming:** Uses official `@google/genai` SDK targeting `GEMINI_MODEL` (default `gemini-2.5-flash`) with streaming `ReadableStream` responses (`text/plain; charset=utf-8`).
+- **Chapter-Scoped Grounding:** `buildChapterAiContext(courseId, lessonId)` compiles the active chapter's structured summary, Markdown notes, key code, and exam tips into the system prompt so answers stay grounded in the student's current chapter.
+- **Daily Rate Limiting:** Controlled by `AI_DAILY_LIMIT` (default `25` requests/day per `user:<id>` or `guest:<sha256-ip>`). Persisted in `ai_chat_usage` when Neon is configured, with automatic in-memory fallback when running without a database. Returns `X-AI-Remaining`, `X-AI-Limit`, and `X-AI-Reset-At` headers.
+- **Graceful Unconfigured State:** If `GEMINI_API_KEY` is unset, returns `503 AI_NOT_CONFIGURED` cleanly without crashing.
+
+---
+
+## 7. Protected HLS Video Streaming & Anti-Leak Watermark
+
+Implemented in `src/lib/video/signer.ts`, `src/app/api/video/token/route.ts`, `src/components/lesson/ProtectedHlsPlayer.tsx`, and `src/components/lesson/VideoPlayer.tsx`:
+
+- **Zero Raw URL Leakage in SSR:** `sanitizeLessonForClient()` in `src/lib/data.ts` strips `hls_path` (and `video_id` when `video_provider === "hls"`) before passing lesson props to the browser, setting `has_protected_video: true`.
+- **Short-Lived Signed Playback (`POST /api/video/token`):**
+  - Verifies session + server-side enrollment before minting a short-lived playback URL (default 15-minute TTL).
+  - Supports **Bunny Stream Directory Token Authentication** (`BUNNY_STREAM_CDN_HOST` + `BUNNY_STREAM_TOKEN_KEY`) using path-embedded tokens (`/bcdn_token=...&expires=...&token_path=.../`) so nested `.m3u8` variants and `.ts`/`.m4s` segments inherit authorization automatically.
+  - Supports generic HTTPS HLS HMAC-SHA256 signing (`HLS_SIGNING_SECRET`) as a fallback.
+- **Custom Protected Player (`ProtectedHlsPlayer.tsx`):**
+  - Uses `hls.js` (with native HLS fallback for Safari/iOS), custom quality/speed/seek controls, automatic token refresh before expiration, `controlsList="nodownload noplaybackrate"`, `disablePictureInPicture`, and context-menu suppression.
+  - **Fullscreen-Persistent Dynamic Watermark + Tamper Guard (`DynamicStudentWatermark`):** Renders the student's name, email/ID, live clock, and unique session tag inside the fullscreen container so the watermark stays visible in fullscreen. Repositions across safe zones every ~10 seconds and monitors DOM removal, `display: none`, `visibility: hidden`, or opacity reduction via `MutationObserver` + computed-style checks, automatically pausing/remounting on tampering.
+
+---
+
+## 8. Warm Editorial Navy Design System & Workspace
+
+- **Palette (`src/app/globals.css`):** Light (`#f6f5f1` canvas, `#1e355c` navy brand, `#c25e33` terracotta warm accent, `#1d6b52` emerald) and Dark (`#0f1319` canvas, `#7ca7f0`, `#e58a62`, `#66c7a6`) with anti-flash pre-hydration script in `src/app/layout.tsx`.
+- **Typography & Strict RTL/LTR Isolation:** `<html lang="ar" dir="rtl">` with `Cairo`, `Inter`, and `JetBrains Mono`. All `pre`, `code`, `.code-ltr`, and `.katex` elements enforce `direction: ltr; unicode-bidi: isolate;`.
+- **Motion (`MotionEffects.tsx`):** Scroll progress bar, `Lenis` + `gsap` / `ScrollTrigger` (fully disabled under `prefers-reduced-motion: reduce`), spotlight cards, and magnetic buttons.
+- **Workspace 5 Corners (`CourseWorkspaceClient.tsx`):**
+  1. Video Lectures (`VideoPlayer.tsx` → YouTube / Protected Bunny Embed / `ProtectedHlsPlayer.tsx`)
+  2. Interactive Labs (`CourseInteractiveLab.tsx` + lazy `/api/interactives/[id]` in `<iframe srcDoc={...} sandbox="allow-scripts" />`)
+  3. Structured Summary & Cheat Sheet (`ChapterSummarySheet.tsx`, `MarkdownViewer.tsx`)
+  4. Instant Quizzes & Mistake Bank (`QuizEngine.tsx`)
+  5. Chapter AI Tutor (`ChapterAiAssistant.tsx`)
+
+---
+
+## 9. Security Invariants Checklist
+
+1. **Zero Server Secrets in Client Bundles:** `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `GEMINI_API_KEY`, `BUNNY_STREAM_TOKEN_KEY`, `HLS_SIGNING_SECRET`, and `ADMIN_PASSWORD` are NEVER imported or referenced inside any `"use client"` file.
+2. **Strict Admin Isolation:** `/admin` and every `/api/admin/*` endpoint enforce `requireAdmin()` (`role === "admin"`) and return `503` when DB is unconfigured.
+3. **Fail-Closed Paid Content Gating:** Paid non-preview lessons enforce server-side enrollment in `getLessonPageData()`, `/api/interactives/[id]`, `/api/ai/chat`, and `/api/video/token`.
+4. **Atomic Code Redemption:** `POST /api/codes/redeem` executes inside `db.transaction()` with `FOR UPDATE` row locking and conditional `WHERE used_count < max_uses`.
+5. **No Raw Paid Video Paths in SSR HTML:** `sanitizeLessonForClient()` redacts `hls_path` (and `video_id` for HLS lessons) before rendering.
+6. **Strict Lab Iframe Sandboxing:** Every `srcDoc` lab iframe uses `sandbox="allow-scripts"` ONLY — **NEVER** `allow-same-origin` and **NEVER** `dangerouslySetInnerHTML`.
+7. **No Edge Caching of Private APIs:** `vercel.json` and `next.config.ts` cache only `/images/*` (immutable) and `/api/search-index` (public catalog). All auth, sync, admin, codes, enrollments, AI, and video token routes return `Cache-Control: private, no-store` / `no-store`.
+8. **Zero-Env Build & Boot Guarantee:** `npm run build` and runtime routes (`/`, `/courses`, `/login`, `/admin`, `/api/auth/me`) work cleanly with zero environment variables set.

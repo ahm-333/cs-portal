@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   ArrowRight,
   BookmarkCheck,
@@ -15,8 +15,11 @@ import {
 import { BrandName } from "@/components/layout/BrandName";
 import { Footer } from "@/components/layout/Footer";
 import CourseWorkspaceClient from "@/components/lesson/CourseWorkspaceClient";
+import { getServerSession } from "@/lib/auth/session";
 import { SITE_CONFIG } from "@/lib/config";
 import { getCourseDetailBySlug, getLessonPageData } from "@/lib/data";
+
+export const dynamic = "force-dynamic";
 
 type CoursePageProps = {
   params: Promise<{ slug: string }>;
@@ -78,6 +81,11 @@ export async function generateMetadata({
 
 export default async function CourseDetailPage({ params }: CoursePageProps) {
   const { slug } = await params;
+  const session = await getServerSession();
+  if (!session) {
+    redirect(`/login?next=${encodeURIComponent(`/courses/${slug}`)}`);
+  }
+
   const courseDetail = await getCourseDetailBySlug(slug);
 
   if (!courseDetail) {

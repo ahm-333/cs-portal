@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "motion/react";
 import {
   ArrowLeft,
   BookOpen,
@@ -15,6 +16,7 @@ import {
   Sparkles,
   StickyNote,
 } from "lucide-react";
+import { EDITORIAL_EASE, MaskedLineReveal } from "@/components/ui/AwwwardsPrimitives";
 
 interface LineDemo {
   label: string;
@@ -99,8 +101,16 @@ const VIDEO_HIGHLIGHTS = [
   },
 ] as const;
 
+const PILLAR_STEPS = [
+  { idx: 0, num: "01", label: "فيديو الشرح", accent: "var(--accent-warm)" },
+  { idx: 1, num: "02", label: "الشرح التفاعلي", accent: "var(--success-fg)" },
+  { idx: 2, num: "03", label: "كشكول الملخص", accent: "var(--brand-primary)" },
+  { idx: 3, num: "04", label: "الكويزات والأخطاء", accent: "var(--success-fg)" },
+] as const;
+
 export function ExpandingToolsStrips() {
   const [activeStrip, setActiveStrip] = useState(0);
+  const sectionRef = useRef<HTMLElement | null>(null);
 
   // Strip 02: Live Interactive Bresenham Pixel Grid Demo
   const [lineDemoIdx, setLineDemoIdx] = useState(0);
@@ -113,12 +123,38 @@ export function ExpandingToolsStrips() {
   // Strip 04: Real Exam Quiz Demo
   const [quizAnswer, setQuizAnswer] = useState<"ok" | "no" | null>(null);
 
+  const selectPillar = useCallback((idx: number) => {
+    setActiveStrip(idx);
+  }, []);
+
+  // Listen to Hero Bottom Dock pillar clicks
+  useEffect(() => {
+    const onJumpPillar = (event: Event) => {
+      const custom = event as CustomEvent<{ index?: number }>;
+      const idx = Math.min(3, Math.max(0, custom.detail?.index ?? 0));
+      setActiveStrip(idx);
+      const section = sectionRef.current;
+      if (section) {
+        if (window.__lenis) {
+          window.__lenis.scrollTo(section, { offset: -72, duration: 0.95 });
+        } else {
+          section.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    };
+
+    window.addEventListener("cs-portal:jump-pillar", onJumpPillar);
+    return () => {
+      window.removeEventListener("cs-portal:jump-pillar", onJumpPillar);
+    };
+  }, []);
+
   const handleStripClick = (
     idx: number,
     e: React.MouseEvent<HTMLElement>
   ) => {
     if ((e.target as HTMLElement).closest("button, a")) return;
-    setActiveStrip(idx);
+    selectPillar(idx);
   };
 
   const handleStripKeyDown = (
@@ -128,7 +164,7 @@ export function ExpandingToolsStrips() {
     if (activeStrip === idx) return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      setActiveStrip(idx);
+      selectPillar(idx);
     }
   };
 
@@ -143,8 +179,8 @@ export function ExpandingToolsStrips() {
           const confettiModule = await import("canvas-confetti");
           const confetti = confettiModule.default;
           confetti({
-            particleCount: 42,
-            spread: 58,
+            particleCount: 44,
+            spread: 60,
             origin: { y: 0.72 },
             colors: ["#c25e33", "#66c7a6", "#7ca7f0"],
           });
@@ -158,28 +194,34 @@ export function ExpandingToolsStrips() {
   return (
     <section
       id="interactive-showcase"
-      className="reveal max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6 space-y-7"
+      ref={sectionRef}
+      className="relative max-w-[1220px] mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8 space-y-6"
     >
+      {/* Architectural Header + Primary Link */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="max-w-2xl space-y-1.5">
-          <span
-            className="text-[12px] font-extrabold tracking-wide"
-            style={{ color: "var(--accent-warm)" }}
-          >
-            داخل كل فصل
-          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className="text-[12px] font-extrabold tracking-wide"
+              style={{ color: "var(--accent-warm)" }}
+            >
+              داخل كل فصل
+            </span>
+          </div>
+
           <h2
             className="text-2xl sm:text-4xl font-black tracking-tight leading-tight"
             style={{ color: "var(--text-primary)" }}
           >
-            4 أركان تفتحلك مع كل خطوة مذاكرة
+            <MaskedLineReveal>
+              4 أركان تفتحلك مع كل خطوة مذاكرة
+            </MaskedLineReveal>
           </h2>
           <p
             className="text-[14px] leading-relaxed"
             style={{ color: "var(--text-secondary)" }}
           >
-            اضغط على أي ركن عشان يتمدّد وتجرّب مميزات المنصة بنفسك — بدون أي
-            زحمة.
+            تجربة مذاكرة متكاملة — جرّب كل ركن بنفسك هنا قبل ما تدخل المقررات.
           </p>
         </div>
 
@@ -193,9 +235,60 @@ export function ExpandingToolsStrips() {
         </Link>
       </div>
 
-      {/* 4 Horizontal Expanding Strips Matching Our Real 4 Portal Pillars */}
+      {/* Pillar Step Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {PILLAR_STEPS.map((step) => {
+            const isActive = activeStrip === step.idx;
+            return (
+              <button
+                key={step.num}
+                type="button"
+                onClick={() => selectPillar(step.idx)}
+                className="relative px-3.5 py-1.5 rounded-full text-[12px] font-extrabold transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                style={{
+                  color: isActive ? "#ffffff" : "var(--text-secondary)",
+                }}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="activePillarPill"
+                    transition={{
+                      type: "spring",
+                      stiffness: 360,
+                      damping: 30,
+                    }}
+                    className="absolute inset-0 rounded-full"
+                    style={{ background: "var(--hero-bg)" }}
+                  />
+                )}
+                <span
+                  dir="ltr"
+                  className="relative z-10 font-mono-code text-[10.5px] opacity-85"
+                  style={{
+                    color: isActive ? "#f0a786" : step.accent,
+                  }}
+                >
+                  {step.num}
+                </span>
+                <span className="relative z-10">{step.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <span
+          dir="ltr"
+          className="hidden lg:inline-block font-mono-code text-[11px] font-bold"
+          style={{ color: "var(--text-muted)" }}
+        >
+          0{activeStrip + 1} / 04
+        </span>
+      </div>
+
+      {/* 4 Horizontal Expanding Architectural Strips */}
       <div id="expGallery" className="exp-gallery">
-        {/* STRIP 01: Video Lectures — Clean 3-Card Bento Highlights */}
+        {/* STRIP 01: Video Lectures */}
         <article
           data-strip="0"
           role="region"
@@ -203,7 +296,9 @@ export function ExpandingToolsStrips() {
           tabIndex={activeStrip === 0 ? -1 : 0}
           onClick={(e) => handleStripClick(0, e)}
           onKeyDown={(e) => handleStripKeyDown(0, e)}
-          className={`exp-strip ${activeStrip === 0 ? "active" : ""}`}
+          className={`exp-strip spotlight-card ${
+            activeStrip === 0 ? "active awwwards-beam" : ""
+          }`}
         >
           <div className="exp-collapsed">
             <span
@@ -249,14 +344,24 @@ export function ExpandingToolsStrips() {
               </span>
             </div>
 
-            {/* Clean 3-Column Feature Cards (Zero fake player chrome) */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 my-2">
-              {VIDEO_HIGHLIGHTS.map((item) => {
+              {VIDEO_HIGHLIGHTS.map((item, cardIdx) => {
                 const Icon = item.Icon;
                 return (
-                  <div
+                  <motion.div
                     key={item.title}
-                    className="p-3.5 rounded-2xl border space-y-2 transition-colors"
+                    initial={false}
+                    animate={
+                      activeStrip === 0
+                        ? { opacity: 1, y: 0 }
+                        : { opacity: 0.5, y: 8 }
+                    }
+                    transition={{
+                      duration: 0.45,
+                      delay: activeStrip === 0 ? cardIdx * 0.06 : 0,
+                      ease: EDITORIAL_EASE,
+                    }}
+                    className="p-3.5 rounded-2xl border space-y-2 transition-colors hover:border-[var(--border-strong)]"
                     style={{
                       background: "var(--bg-canvas)",
                       borderColor: "var(--border-soft)",
@@ -283,7 +388,7 @@ export function ExpandingToolsStrips() {
                     >
                       {item.desc}
                     </p>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
@@ -315,7 +420,9 @@ export function ExpandingToolsStrips() {
           tabIndex={activeStrip === 1 ? -1 : 0}
           onClick={(e) => handleStripClick(1, e)}
           onKeyDown={(e) => handleStripKeyDown(1, e)}
-          className={`exp-strip ${activeStrip === 1 ? "active" : ""}`}
+          className={`exp-strip spotlight-card ${
+            activeStrip === 1 ? "active awwwards-beam awwwards-beam-mint" : ""
+          }`}
         >
           <div className="exp-collapsed">
             <span
@@ -361,7 +468,6 @@ export function ExpandingToolsStrips() {
               </span>
             </div>
 
-            {/* Live Interactive Bresenham Pixel Grid (CS-321 Real Concept!) */}
             <div
               className="p-4 rounded-2xl border my-2 flex flex-col sm:flex-row items-center justify-between gap-4"
               style={{
@@ -390,7 +496,11 @@ export function ExpandingToolsStrips() {
                   </span>
                 </div>
 
-                <div
+                <motion.div
+                  key={currentDemo.p0}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, ease: EDITORIAL_EASE }}
                   dir="ltr"
                   className="font-mono-code inline-block text-[12px] font-extrabold px-3 py-1 rounded-xl border"
                   style={{
@@ -400,7 +510,7 @@ export function ExpandingToolsStrips() {
                   }}
                 >
                   {currentDemo.p0}
-                </div>
+                </motion.div>
 
                 <div>
                   <button
@@ -408,7 +518,7 @@ export function ExpandingToolsStrips() {
                     onClick={() =>
                       setLineDemoIdx((i) => (i + 1) % BRESENHAM_DEMOS.length)
                     }
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11.5px] font-extrabold text-white cursor-pointer transition-transform active:scale-95"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11.5px] font-extrabold text-white cursor-pointer transition-transform active:scale-95 hover:brightness-110"
                     style={{ background: "var(--success-fg)" }}
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
@@ -417,7 +527,7 @@ export function ExpandingToolsStrips() {
                 </div>
               </div>
 
-              {/* Crisp 8x5 Pixel Grid */}
+              {/* Spring-Animated 8x5 Pixel Grid */}
               <div
                 dir="ltr"
                 className="grid grid-cols-8 gap-1 p-2.5 rounded-xl border shrink-0"
@@ -434,9 +544,18 @@ export function ExpandingToolsStrips() {
                       (x === currentDemo.from[0] && y === currentDemo.from[1]) ||
                       (x === currentDemo.to[0] && y === currentDemo.to[1]);
                     return (
-                      <span
+                      <motion.span
                         key={`${x}-${y}`}
-                        className="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-[5px] transition-all duration-300"
+                        animate={{
+                          scale: isEndpoint ? 1.08 : isLit ? 1 : 0.92,
+                        }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 420,
+                          damping: 22,
+                          delay: isLit ? x * 0.025 : 0,
+                        }}
+                        className="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-[5px] transition-colors duration-300"
                         style={
                           isEndpoint
                             ? {
@@ -477,7 +596,9 @@ export function ExpandingToolsStrips() {
           tabIndex={activeStrip === 2 ? -1 : 0}
           onClick={(e) => handleStripClick(2, e)}
           onKeyDown={(e) => handleStripKeyDown(2, e)}
-          className={`exp-strip ${activeStrip === 2 ? "active" : ""}`}
+          className={`exp-strip spotlight-card ${
+            activeStrip === 2 ? "active awwwards-beam" : ""
+          }`}
         >
           <div className="exp-collapsed">
             <span
@@ -523,7 +644,6 @@ export function ExpandingToolsStrips() {
               </span>
             </div>
 
-            {/* Live Ruled Student Notebook Preview */}
             <div className="notebook-paper rounded-2xl border p-4 my-2 space-y-2.5">
               <div className="flex items-center justify-between gap-2 pb-2 border-b border-dashed border-amber-500/30">
                 <span
@@ -536,7 +656,7 @@ export function ExpandingToolsStrips() {
                 <button
                   type="button"
                   onClick={() => setShowPenNotes((prev) => !prev)}
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg border text-[11px] font-extrabold cursor-pointer transition-colors"
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg border text-[11px] font-extrabold cursor-pointer transition-colors hover:border-[var(--brand-primary)]"
                   style={{
                     background: "var(--bg-surface)",
                     borderColor: "var(--border-soft)",
@@ -559,15 +679,24 @@ export function ExpandingToolsStrips() {
                   <span className="nb-marker-yellow font-bold">Kernel:</span>{" "}
                   The one program running at all times on the computer.
                 </p>
-                {showPenNotes && (
-                  <p className="nb-ink-ar text-[12.5px] font-bold leading-relaxed flex items-start gap-1.5">
-                    <span>✏️</span>
-                    <span>
-                      النواة هي «عقل النظام» اللي شغّال طول الوقت في الخلفية
-                      بيدير المعالج والرامات.
-                    </span>
-                  </p>
-                )}
+                <AnimatePresence initial={false}>
+                  {showPenNotes && (
+                    <motion.p
+                      key="pen-note"
+                      initial={{ opacity: 0, height: 0, y: -4 }}
+                      animate={{ opacity: 1, height: "auto", y: 0 }}
+                      exit={{ opacity: 0, height: 0, y: -4 }}
+                      transition={{ duration: 0.32, ease: EDITORIAL_EASE }}
+                      className="nb-ink-ar text-[12.5px] font-bold leading-relaxed flex items-start gap-1.5 overflow-hidden"
+                    >
+                      <span>✏️</span>
+                      <span>
+                        النواة هي «عقل النظام» اللي شغّال طول الوقت في الخلفية
+                        بيدير المعالج والرامات.
+                      </span>
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
@@ -589,7 +718,9 @@ export function ExpandingToolsStrips() {
           tabIndex={activeStrip === 3 ? -1 : 0}
           onClick={(e) => handleStripClick(3, e)}
           onKeyDown={(e) => handleStripKeyDown(3, e)}
-          className={`exp-strip ${activeStrip === 3 ? "active" : ""}`}
+          className={`exp-strip spotlight-card ${
+            activeStrip === 3 ? "active awwwards-beam awwwards-beam-mint" : ""
+          }`}
         >
           <div className="exp-collapsed">
             <span
@@ -653,7 +784,7 @@ export function ExpandingToolsStrips() {
                 <button
                   type="button"
                   onClick={() => void handleQuizAnswer("ok")}
-                  className="strip-q-btn px-3 py-2 rounded-xl border text-[12px] font-mono-code font-bold transition-all cursor-pointer"
+                  className="strip-q-btn px-3 py-2 rounded-xl border text-[12px] font-mono-code font-bold transition-all cursor-pointer active:scale-[0.98]"
                   style={
                     quizAnswer !== null
                       ? {
@@ -673,7 +804,7 @@ export function ExpandingToolsStrips() {
                 <button
                   type="button"
                   onClick={() => void handleQuizAnswer("no")}
-                  className="strip-q-btn px-3 py-2 rounded-xl border text-[12px] font-mono-code font-bold transition-all cursor-pointer"
+                  className="strip-q-btn px-3 py-2 rounded-xl border text-[12px] font-mono-code font-bold transition-all cursor-pointer active:scale-[0.98]"
                   style={
                     quizAnswer === "no"
                       ? {
@@ -691,22 +822,29 @@ export function ExpandingToolsStrips() {
                   B) DDA
                 </button>
               </div>
-              {quizAnswer !== null && (
-                <div
-                  id="stripQuizFb"
-                  className="text-[12px] font-bold"
-                  style={{
-                    color:
-                      quizAnswer === "ok"
-                        ? "var(--success-fg)"
-                        : "var(--accent-warm-text)",
-                  }}
-                >
-                  {quizAnswer === "ok"
-                    ? "عاش! Bresenham بتستخدم جمع وطرح أعداد صحيحة فقط فبتكون أسرع بكتير ✓"
-                    : "الإجابة الصح Bresenham (الـ DDA فيها كسور وتقريب) — والسؤال بيتحفظلك تلقائياً في بنك الأخطاء."}
-                </div>
-              )}
+              <AnimatePresence mode="wait">
+                {quizAnswer !== null && (
+                  <motion.div
+                    key={quizAnswer}
+                    id="stripQuizFb"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.28, ease: EDITORIAL_EASE }}
+                    className="text-[12px] font-bold"
+                    style={{
+                      color:
+                        quizAnswer === "ok"
+                          ? "var(--success-fg)"
+                          : "var(--accent-warm-text)",
+                    }}
+                  >
+                    {quizAnswer === "ok"
+                      ? "عاش! Bresenham بتستخدم جمع وطرح أعداد صحيحة فقط فبتكون أسرع بكتير ✓"
+                      : "الإجابة الصح Bresenham (الـ DDA فيها كسور وتقريب) — والسؤال بيتحفظلك تلقائياً في بنك الأخطاء."}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <p

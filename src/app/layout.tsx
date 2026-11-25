@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Cairo, Dancing_Script, Inter, JetBrains_Mono } from "next/font/google";
-import Script from "next/script";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 import { SITE_CONFIG } from "@/lib/config";
+import { CloudSyncBridge } from "@/components/auth/CloudSyncBridge";
 import { MotionEffects } from "@/components/layout/MotionEffects";
 import { ToastProvider } from "@/components/layout/ToastProvider";
 import { GlobalModalsHost } from "@/components/modals/GlobalModalsHost";
@@ -112,14 +112,16 @@ export default function RootLayout({
     >
       <head>
         {/* Static anti-flash theme bootstrap script — reads user preference before paint */}
-        <Script id="cs-portal-theme-init" strategy="beforeInteractive">
-          {THEME_INIT_SCRIPT}
-        </Script>
+        <script
+          id="cs-portal-theme-init"
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+        />
       </head>
       <body className="min-h-screen flex flex-col bg-[var(--bg-canvas)] text-[var(--text-primary)] font-sans antialiased selection:bg-[var(--brand-soft)] selection:text-[var(--brand-soft-text)]">
         <MotionEffects />
         <ToastProvider>
           {children}
+          <CloudSyncBridge />
           <GlobalModalsHost />
         </ToastProvider>
       </body>

@@ -4,43 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, Compass } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/config";
+import { BrandLogo } from "./BrandLogo";
 import { PomodoroTimer } from "./PomodoroTimer";
 import { ThemeSwitcher } from "./ThemeSwitcher";
-
-function BrandChipIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 28 28"
-      fill="none"
-      className="h-5 w-5"
-    >
-      <rect
-        x="7"
-        y="7"
-        width="14"
-        height="14"
-        rx="3.5"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <rect
-        x="11"
-        y="11"
-        width="6"
-        height="6"
-        rx="1.5"
-        fill="currentColor"
-      />
-      <path
-        d="M11 3.5V7M17 3.5V7M11 21V24.5M17 21V24.5M3.5 11H7M3.5 17H7M21 11H24.5M21 17H24.5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
 
 const NAV_LINKS = [
   { href: "/", label: "المواد", icon: BookOpen },
@@ -66,13 +32,7 @@ export function NavbarClient() {
             href="/"
             className="group flex shrink-0 items-center gap-2.5 focus:outline-none"
           >
-            <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--hero)] text-[var(--hero-ink)] shadow-[var(--shadow-pill)] transition-transform group-hover:scale-[1.03]">
-              <BrandChipIcon />
-              <span
-                aria-hidden="true"
-                className="absolute -left-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[var(--signal)] ring-2 ring-[var(--paper)]"
-              />
-            </span>
+            <BrandLogo size="md" className="group-hover:scale-[1.04]" />
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-bold tracking-tight text-[var(--ink)] sm:text-base">
                 {SITE_CONFIG.arabicName}

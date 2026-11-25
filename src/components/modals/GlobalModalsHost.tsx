@@ -9,8 +9,19 @@ import {
   type FormEvent,
 } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Copy, Mail, Search, X } from "lucide-react";
+import {
+  CheckCircle2,
+  Copy,
+  KeyRound,
+  Loader2,
+  LogIn,
+  Mail,
+  Search,
+  ShieldCheck,
+  X,
+} from "lucide-react";
 import { SITE_CONFIG } from "@/lib/config";
+import { useAuthState } from "@/lib/stores/authStore";
 import {
   PORTAL_EVENTS,
   emitToast,
@@ -75,7 +86,7 @@ const YEARS = [1, 2, 3, 4] as const;
 const DEPARTMENTS: ReadonlyArray<PortalDepartment> = ["CS", "AI", "IS", "IT"];
 
 const DEFAULT_UNLOCK_DETAIL: UnlockModalEventDetail = {
-  courseId: "33333333-3333-4333-8333-333333333333",
+  courseId: "11111111-1111-4111-8111-111111111103",
   courseTitle: "نظم التشغيل",
   courseCode: "CS-311",
   unlockCode: "AI2026",
@@ -84,6 +95,7 @@ const DEFAULT_UNLOCK_DETAIL: UnlockModalEventDetail = {
 export function GlobalModalsHost() {
   const router = useRouter();
   const portal = usePortalState();
+  const auth = useAuthState();
 
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
 
@@ -114,6 +126,7 @@ export function GlobalModalsHost() {
     useState<UnlockModalEventDetail>(DEFAULT_UNLOCK_DETAIL);
   const [unlockInput, setUnlockInput] = useState("");
   const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [unlockLoading, setUnlockLoading] = useState(false);
   const unlockInputRef = useRef<HTMLInputElement | null>(null);
 
   const ensureSearchIndex = useCallback(async () => {
@@ -167,6 +180,7 @@ export function GlobalModalsHost() {
     setUnlockDetail(detail ?? DEFAULT_UNLOCK_DETAIL);
     setUnlockInput("");
     setUnlockError(null);
+    setUnlockLoading(false);
     setActiveModal("unlock");
     window.setTimeout(() => unlockInputRef.current?.focus(), 40);
   }, []);
@@ -189,14 +203,11 @@ export function GlobalModalsHost() {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        setActiveModal((prev) => {
-          if (prev === "cmdk") return null;
-          setCmdkQuery("");
-          setCmdkSelectedIndex(0);
-          void ensureSearchIndex();
-          window.setTimeout(() => cmdkInputRef.current?.focus(), 40);
-          return "cmdk";
-        });
+        if (activeModal === "cmdk") {
+          setActiveModal(null);
+        } else {
+          openCmdk();
+        }
       } else if (event.key === "Escape") {
         setActiveModal((prev) => (prev !== null ? null : prev));
       }
@@ -218,6 +229,7 @@ export function GlobalModalsHost() {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [
+    activeModal,
     ensureSearchIndex,
     openCmdk,
     openProfile,
@@ -334,8 +346,98 @@ export function GlobalModalsHost() {
     }
   }
 
+  async function fireUnlockConfetti() {
+    try {
+      const confettiModule = await import("canvas-confetti");
+      const confetti = confettiModule.default;
+      confetti({
+        particleCount: 55,
+        spread: 70,
+        origin: { y: 0.7 },
+        colors: ["#c25e33", "#66c7a6", "#7ca7f0"],
+      });
+    } catch {
+      // ignore confetti load errors
+    }
+  }
+
   async function handleUnlockSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (unlockLoading) return;
+
+    // Cloud DB mode: verify and redeem atomically on the server
+    if (auth.dbConfigured) {
+      if (auth.status !== "authenticated") {
+        setUnlockError(
+          "سجّل دخولك بحساب سحابي أولاً علشان التفعيل يتحفظ لحسابك وما يضيعش."
+        );
+        return;
+      }
+
+      const trimmedCode = unlockInput.trim();
+      if (!trimmedCode) {
+        setUnlockError("أدخل كود التفعيل أولاً.");
+        return;
+      }
+
+      setUnlockLoading(true);
+      setUnlockError(null);
+
+      try {
+        const res = await fetch("/api/codes/redeem", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code: trimmedCode,
+            courseId: unlockDetail.courseId,
+          }),
+        });
+
+        const payload = (await res.json().catch(() => null)) as
+          | {
+              ok?: boolean;
+              scopeType?: "course" | "lesson" | "bundle";
+              targetId?: string;
+              message?: string;
+              error?: string;
+            }
+          | null;
+
+        if (!res.ok || !payload?.ok) {
+          const errMsg =
+            payload?.error ||
+            "الكود غير صحيح — تأكد من كتابة الكود بشكل صحيح أو تواصل مع م. أحمد أمير.";
+          setUnlockError(errMsg);
+          emitToast(errMsg);
+          return;
+        }
+
+        if (payload.scopeType === "course" && payload.targetId) {
+          unlockCourse(payload.targetId);
+        } else if (payload.scopeType === "bundle") {
+          unlockCourse(unlockDetail.courseId);
+        }
+
+        setUnlockInput("");
+        setUnlockError(null);
+        closeModal();
+        emitToast(
+          payload.message || "تم تفعيل المحتوى بنجاح وربطه بحسابك السحابي ✓"
+        );
+        router.refresh();
+        await fireUnlockConfetti();
+      } catch {
+        const errMsg =
+          "تعذّر الاتصال بالخادم — تحقق من اتصال الإنترنت وحاول مرة أخرى.";
+        setUnlockError(errMsg);
+        emitToast(errMsg);
+      } finally {
+        setUnlockLoading(false);
+      }
+      return;
+    }
+
+    // Standalone Zero-DB fallback mode (local preview without DATABASE_URL)
     const expectedCode = (unlockDetail.unlockCode || "AI2026")
       .trim()
       .toUpperCase();
@@ -347,18 +449,7 @@ export function GlobalModalsHost() {
       setUnlockError(null);
       closeModal();
       emitToast("تم تفعيل المقرر بالكامل بنجاح! 🎉");
-      try {
-        const confettiModule = await import("canvas-confetti");
-        const confetti = confettiModule.default;
-        confetti({
-          particleCount: 55,
-          spread: 70,
-          origin: { y: 0.7 },
-          colors: ["#c25e33", "#66c7a6", "#7ca7f0"],
-        });
-      } catch {
-        // ignore confetti load errors
-      }
+      await fireUnlockConfetti();
     } else {
       const errMsg =
         "الكود غير صحيح — تأكد من كتابة الكود بشكل صحيح أو تواصل مع م. أحمد أمير.";
@@ -1048,13 +1139,16 @@ export function GlobalModalsHost() {
   }
 
   // 5. Paid Course Unlock Modal
+  const requiresCloudAuth =
+    auth.dbConfigured && auth.status !== "authenticated";
+
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="تفعيل المقرر بالكامل"
       onClick={(e) => {
-        if (e.target === e.currentTarget) closeModal();
+        if (e.target === e.currentTarget && !unlockLoading) closeModal();
       }}
       className="fixed inset-0 z-[80] modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
     >
@@ -1083,8 +1177,9 @@ export function GlobalModalsHost() {
           <button
             type="button"
             onClick={closeModal}
+            disabled={unlockLoading}
             aria-label="إغلاق"
-            className="w-9 h-9 rounded-xl border flex items-center justify-center font-bold shrink-0 cursor-pointer"
+            className="w-9 h-9 rounded-xl border flex items-center justify-center font-bold shrink-0 cursor-pointer disabled:opacity-50"
             style={{
               background: "var(--bg-subtle)",
               borderColor: "var(--border-soft)",
@@ -1107,42 +1202,148 @@ export function GlobalModalsHost() {
           المقرر.
         </p>
 
-        <form onSubmit={handleUnlockSubmit} className="space-y-3">
-          <input
-            ref={unlockInputRef}
-            type="text"
-            dir="ltr"
-            value={unlockInput}
-            onChange={(e) => {
-              setUnlockInput(e.target.value);
-              if (unlockError) setUnlockError(null);
-            }}
-            placeholder="أدخل كود التفعيل هنا"
-            className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border text-center font-mono-code text-[13px] font-bold outline-none"
+        {auth.dbConfigured && auth.status === "loading" ? (
+          <div
+            className="rounded-2xl border p-4 flex items-center justify-center gap-2.5 text-[13px] font-bold"
             style={{
               background: "var(--bg-canvas)",
-              borderColor: unlockError
-                ? "var(--danger-fg)"
-                : "var(--border-soft)",
-              color: "var(--text-primary)",
+              borderColor: "var(--border-soft)",
+              color: "var(--text-secondary)",
             }}
-          />
-          {unlockError && (
-            <p
-              className="text-[12px] font-bold"
-              style={{ color: "var(--danger-fg)" }}
-            >
-              {unlockError}
-            </p>
-          )}
-          <button
-            type="submit"
-            className="w-full min-h-[44px] py-2.5 rounded-xl text-[13px] font-extrabold text-white cursor-pointer transition-opacity hover:opacity-95"
-            style={{ background: "#c25e33" }}
           >
-            تفعيل المقرر الآن ←
-          </button>
-        </form>
+            <Loader2
+              className="w-4 h-4 animate-spin shrink-0"
+              style={{ color: "var(--accent-warm)" }}
+            />
+            <span>جاري التحقق من حالة حسابك السحابي...</span>
+          </div>
+        ) : requiresCloudAuth ? (
+          <div
+            className="rounded-2xl border p-4 space-y-3.5"
+            style={{
+              background: "var(--brand-soft)",
+              borderColor: "var(--border-soft)",
+            }}
+          >
+            <div className="flex items-start gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{
+                  background: "var(--bg-surface)",
+                  color: "var(--brand-soft-text)",
+                }}
+              >
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h4
+                  className="text-[13.5px] font-black"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  سجّل دخولك أولاً لحفظ تفعيلك للأبد
+                </h4>
+                <p
+                  className="text-[12.5px] leading-relaxed"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  عند تسجيل الدخول أو إنشاء حساب سحابي، يتم ربط كود التفعيل
+                  بحسابك مباشرة لتفتح المقرر من أي جهاز بدون أن يضيع اشتراكك.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                closeModal();
+                router.push("/login?mode=cloud");
+              }}
+              className="w-full min-h-[44px] py-2.5 px-4 rounded-xl text-[13px] font-extrabold text-white inline-flex items-center justify-center gap-2 cursor-pointer transition-opacity hover:opacity-95"
+              style={{ background: "#c25e33" }}
+            >
+              <LogIn className="w-4 h-4 shrink-0" />
+              <span>سجّل دخول أو أنشئ حساب للتفعيل ←</span>
+            </button>
+          </div>
+        ) : (
+          <>
+            {auth.dbConfigured && auth.user && (
+              <div
+                className="rounded-xl border px-3.5 py-2.5 flex items-center gap-2.5 text-[12px] font-bold"
+                style={{
+                  background: "var(--success-soft)",
+                  borderColor: "var(--border-soft)",
+                  color: "var(--success-fg)",
+                }}
+              >
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <span className="truncate">
+                  سيتم حفظ التفعيل على حسابك:{" "}
+                  <strong style={{ color: "var(--text-primary)" }}>
+                    {auth.user.fullName || auth.user.email}
+                  </strong>
+                </span>
+              </div>
+            )}
+
+            <form onSubmit={handleUnlockSubmit} className="space-y-3">
+              <input
+                ref={unlockInputRef}
+                type="text"
+                dir="ltr"
+                value={unlockInput}
+                disabled={unlockLoading}
+                autoComplete="off"
+                spellCheck={false}
+                onChange={(e) => {
+                  setUnlockInput(e.target.value);
+                  if (unlockError) setUnlockError(null);
+                }}
+                placeholder={
+                  auth.dbConfigured ? "CS-XXXX-XXXX" : "أدخل كود التفعيل هنا"
+                }
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border text-center font-mono-code text-[13.5px] font-bold tracking-wider uppercase outline-none disabled:opacity-60"
+                style={{
+                  background: "var(--bg-canvas)",
+                  borderColor: unlockError
+                    ? "var(--danger-fg)"
+                    : "var(--border-soft)",
+                  color: "var(--text-primary)",
+                }}
+              />
+              {unlockError && (
+                <div
+                  role="alert"
+                  className="rounded-xl px-3.5 py-2.5 text-[12px] font-bold leading-relaxed"
+                  style={{
+                    background: "var(--danger-soft)",
+                    color: "var(--danger-fg)",
+                  }}
+                >
+                  {unlockError}
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={unlockLoading}
+                className="w-full min-h-[44px] py-2.5 px-4 rounded-xl text-[13px] font-extrabold text-white inline-flex items-center justify-center gap-2 cursor-pointer transition-opacity hover:opacity-95 disabled:opacity-65 disabled:cursor-not-allowed"
+                style={{ background: "#c25e33" }}
+              >
+                {unlockLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                    <span>جاري التحقق وتفعيل الكود...</span>
+                  </>
+                ) : (
+                  <>
+                    <KeyRound className="w-4 h-4 shrink-0" />
+                    <span>تفعيل المقرر الآن ←</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );

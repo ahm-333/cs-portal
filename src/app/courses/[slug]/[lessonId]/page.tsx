@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import CourseWorkspaceClient from "@/components/lesson/CourseWorkspaceClient";
+import { getServerSession } from "@/lib/auth/session";
 import { SITE_CONFIG } from "@/lib/config";
 import { splitBilingualTitle } from "@/lib/courseTheme";
 import { getLessonPageData } from "@/lib/data";
+
+export const dynamic = "force-dynamic";
 
 interface LessonPageProps {
   params: Promise<{ slug: string; lessonId: string }>;
@@ -17,7 +20,7 @@ export async function generateMetadata({
 
   if (!data) {
     return {
-      title: `الدرس غير موجود | ${SITE_CONFIG.arabicName}`,
+      title: "الدرس غير موجود",
       description: SITE_CONFIG.description,
     };
   }
@@ -28,7 +31,7 @@ export async function generateMetadata({
   const rawLessonTitle =
     data.lesson?.title ?? matchedLessonMeta?.title ?? "الدرس";
   const lessonTitle = splitBilingualTitle(rawLessonTitle).primary;
-  const pageTitle = `${lessonTitle} — ${data.course.title} | ${SITE_CONFIG.arabicName}`;
+  const pageTitle = `${lessonTitle} — ${data.course.title}`;
   const pageDescription =
     data.course.description ??
     `ذاكر درس ${lessonTitle} ضمن مادة ${data.course.title} مع الشرح والملخص والأكواد والمعمل التفاعلي والكويز.`;
@@ -53,6 +56,13 @@ export async function generateMetadata({
 
 export default async function LessonPage({ params }: LessonPageProps) {
   const { slug, lessonId } = await params;
+  const session = await getServerSession();
+  if (!session) {
+    redirect(
+      `/login?next=${encodeURIComponent(`/courses/${slug}/${lessonId}`)}`
+    );
+  }
+
   const data = await getLessonPageData(slug, lessonId);
 
   if (!data) {
