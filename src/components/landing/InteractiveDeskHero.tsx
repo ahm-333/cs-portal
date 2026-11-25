@@ -520,10 +520,10 @@ export function InteractiveDeskHero() {
                 <span>03 · الشبكة المضيئة</span>
               </div>
               <div className="text-[14px] font-extrabold text-white">
-                شرح تفاعلي + موقع للمادة
+                شرح تفاعلي وتغبيش للحفظ
               </div>
               <p className="text-[11.5px] text-slate-300 mt-1 leading-relaxed">
-                طبّق الفكرة عملياً خطوة بخطوة مع تغبيش للحفظ داخل كل شابتر.
+                سلايدات ملونة + تغبيش للمصطلحات وحاسبة مسائل خطوة بخطوة.
               </p>
             </div>
 
