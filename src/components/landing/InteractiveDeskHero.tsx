@@ -114,6 +114,7 @@ export function InteractiveDeskHero() {
   // Desktop scroll-assembled 3D desk cinema state & smooth physics refs
   const [stageIdx, setStageIdx] = useState(0);
   const [isAutoTouring, setIsAutoTouring] = useState(false);
+  const [isExitingToCourses, setIsExitingToCourses] = useState(false);
 
   const stageIdxRef = useRef(0);
   const targetPRef = useRef(0);
@@ -121,6 +122,7 @@ export function InteractiveDeskHero() {
   const autoTourActiveRef = useRef(false);
   const autoTourRafRef = useRef<number | null>(null);
   const autoTourNavTimerRef = useRef<number | null>(null);
+  const autoTourFadeTimerRef = useRef<number | null>(null);
 
   const trackRef = useRef<HTMLDivElement | null>(null);
   const deskWrapRef = useRef<HTMLDivElement | null>(null);
@@ -145,10 +147,16 @@ export function InteractiveDeskHero() {
     null,
   ]);
 
+  // Prefetch /courses immediately so entering courses after tour is 0ms instant
+  useEffect(() => {
+    router.prefetch("/courses");
+  }, [router]);
+
   const stopAutoTour = useCallback(() => {
     if (!autoTourActiveRef.current) return;
     autoTourActiveRef.current = false;
     setIsAutoTouring(false);
+    setIsExitingToCourses(false);
     if (autoTourRafRef.current !== null) {
       cancelAnimationFrame(autoTourRafRef.current);
       autoTourRafRef.current = null;
@@ -157,7 +165,20 @@ export function InteractiveDeskHero() {
       window.clearTimeout(autoTourNavTimerRef.current);
       autoTourNavTimerRef.current = null;
     }
+    if (autoTourFadeTimerRef.current !== null) {
+      window.clearTimeout(autoTourFadeTimerRef.current);
+      autoTourFadeTimerRef.current = null;
+    }
   }, []);
+
+  const navigateSmoothlyToCourses = useCallback(() => {
+    setIsExitingToCourses(true);
+    autoTourNavTimerRef.current = window.setTimeout(() => {
+      autoTourActiveRef.current = false;
+      setIsAutoTouring(false);
+      router.push("/courses");
+    }, 300);
+  }, [router]);
 
   const renderScrollyVisuals = useCallback((p: number) => {
     // Map assembly smoothly across 0..0.82, leaving 0.82..1.00 as a calm finale hold
@@ -226,9 +247,10 @@ export function InteractiveDeskHero() {
     });
   }, []);
 
-  // Continuous butter-smooth physics lerp loop (Desktop >= 1024px)
+  // Continuous framerate-independent silky physics loop (Desktop >= 1024px)
   useEffect(() => {
     let rafId = 0;
+    let lastTime = performance.now();
     const reducedMotion =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -245,21 +267,27 @@ export function InteractiveDeskHero() {
       targetPRef.current = clamp01(-rect.top / scrollable);
     };
 
-    const tick = () => {
-      readTargetProgress();
-      const target = targetPRef.current;
-      const current = smoothPRef.current;
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, Math.max(0.001, (now - lastTime) / 1000));
+      lastTime = now;
 
-      if (reducedMotion) {
-        smoothPRef.current = target;
-      } else {
-        const diff = target - current;
-        // Liquid-smooth damping factor (faster when close so it never stalls)
-        smoothPRef.current =
-          Math.abs(diff) < 0.0004 ? target : current + diff * 0.095;
+      // During auto-tour, stepTour drives smoothPRef directly with 0 double-lerp lag!
+      if (!autoTourActiveRef.current) {
+        readTargetProgress();
+        const target = targetPRef.current;
+        const current = smoothPRef.current;
+
+        if (reducedMotion) {
+          smoothPRef.current = target;
+        } else {
+          const diff = target - current;
+          const alpha = 1 - Math.exp(-11 * dt);
+          smoothPRef.current =
+            Math.abs(diff) < 0.0003 ? target : current + diff * alpha;
+        }
+        renderScrollyVisuals(smoothPRef.current);
       }
 
-      renderScrollyVisuals(smoothPRef.current);
       rafId = requestAnimationFrame(tick);
     };
 
@@ -273,7 +301,7 @@ export function InteractiveDeskHero() {
     };
   }, [renderScrollyVisuals]);
 
-  // Automated cinematic scroll tour when clicking "ابدأ المذاكرة" on Desktop
+  // Snappy, butter-smooth automated desk assembly tour -> silky transition into /courses
   const startAutoTour = useCallback(() => {
     const track = trackRef.current;
     if (typeof window === "undefined" || !track || window.innerWidth < 1024) {
@@ -281,73 +309,73 @@ export function InteractiveDeskHero() {
       return;
     }
 
-    // If user clicks a second time while already touring, jump straight to /courses
+    // Second click during tour enters /courses immediately with silky fade
     if (autoTourActiveRef.current) {
       stopAutoTour();
-      router.push("/courses");
+      navigateSmoothlyToCourses();
       return;
     }
 
     const topAbs = track.getBoundingClientRect().top + window.scrollY;
     const scrollable = track.offsetHeight - window.innerHeight;
     if (scrollable <= 0) {
-      router.push("/courses");
+      navigateSmoothlyToCourses();
       return;
     }
 
     autoTourActiveRef.current = true;
     setIsAutoTouring(true);
 
-    // Piecewise timeline with calm, cinematic pauses at each desk milestone
-    const startP = clamp01((window.scrollY - topAbs) / scrollable);
-    const endP = 0.91;
+    const startP = clamp01(smoothPRef.current);
+    const endP = 0.88;
 
-    if (startP >= 0.84) {
-      // Already assembled — briefly show finale then open courses
-      autoTourNavTimerRef.current = window.setTimeout(() => {
-        stopAutoTour();
-        router.push("/courses");
-      }, 650);
+    if (startP >= 0.8) {
+      // Already assembled — quick breath on complete desk, then glide into /courses
+      autoTourFadeTimerRef.current = window.setTimeout(() => {
+        navigateSmoothlyToCourses();
+      }, 220);
       return;
     }
 
-    const totalDurationMs = Math.max(3600, Math.round((endP - startP) * 7600));
+    // Fast yet liquid-smooth (~2.3s full assembly) at locked 60/120fps
+    const totalDurationMs = Math.max(
+      1100,
+      Math.round((endP - startP) * 2650)
+    );
     const startTime = performance.now();
 
     const stepTour = (now: number) => {
       if (!autoTourActiveRef.current) return;
       const elapsed = now - startTime;
       const t = clamp01(elapsed / totalDurationMs);
+      const eased = easeInOutCubic(t);
+      const nextP = startP + (endP - startP) * eased;
 
-      // Gentle breathing cadence: smooth glide with slight slowdowns around feature stages
-      const baseEase = easeInOutCubic(t);
-      const subtleCadence =
-        baseEase + Math.sin(baseEase * Math.PI * 6) * 0.014 * (1 - t);
-      const nextP = clamp01(startP + (endP - startP) * clamp01(subtleCadence));
+      // Update visuals + scroll position directly in lockstep (zero rubbery lag)
+      smoothPRef.current = nextP;
+      targetPRef.current = nextP;
+      renderScrollyVisuals(nextP);
 
       const targetY = topAbs + nextP * scrollable;
       if (window.__lenis) {
         window.__lenis.scrollTo(targetY, { immediate: true, force: true });
       } else {
-        window.scrollTo({
-          top: targetY,
-          behavior: "auto",
-        });
+        window.scrollTo({ top: targetY, behavior: "auto" });
       }
 
       if (t < 1) {
         autoTourRafRef.current = requestAnimationFrame(stepTour);
       } else {
-        // Hold briefly on the complete desk + signature headline, then navigate to /courses
-        autoTourNavTimerRef.current = window.setTimeout(() => {
-          stopAutoTour();
-          router.push("/courses");
-        }, 1250);
+        // Brief 420ms breath on complete desk + finale headline, then silky cross-fade into /courses
+        autoTourFadeTimerRef.current = window.setTimeout(() => {
+          if (!autoTourActiveRef.current) return;
+          navigateSmoothlyToCourses();
+        }, 420);
       }
     };
 
     autoTourRafRef.current = requestAnimationFrame(stepTour);
-  }, [router, stopAutoTour]);
+  }, [navigateSmoothlyToCourses, renderScrollyVisuals, router, stopAutoTour]);
 
   // Listen for Topbar "ابدأ المذاكرة" event & yield instantly if user scrolls manually
   useEffect(() => {
@@ -529,9 +557,13 @@ export function InteractiveDeskHero() {
       <div
         id="scrollyTrack"
         ref={trackRef}
-        className="hidden lg:block scrolly-track"
+        className="hidden lg:block scrolly-track bg-[#0c1628]"
       >
-        <div className="scrolly-sticky text-white border-b border-white/10">
+        <div
+          className={`scrolly-sticky text-white border-b border-white/10 transition-all duration-300 ease-out ${
+            isExitingToCourses ? "opacity-0 scale-[1.03]" : "opacity-100 scale-100"
+          }`}
+        >
           {/* Ambient Cinema Glows */}
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] rounded-full blur-3xl opacity-25 pointer-events-none"
@@ -811,14 +843,15 @@ export function InteractiveDeskHero() {
                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
               </Link>
             ) : stageIdx === 4 ? (
-              <Link
-                href="/courses"
-                className="cta-shimmer h-[42px] px-5 rounded-full text-[12.5px] font-extrabold text-white inline-flex items-center gap-2 shadow-lg transition-transform hover:-translate-y-0.5"
+              <button
+                type="button"
+                onClick={navigateSmoothlyToCourses}
+                className="cta-shimmer h-[42px] px-5 rounded-full text-[12.5px] font-extrabold text-white inline-flex items-center gap-2 shadow-lg cursor-pointer transition-transform hover:-translate-y-0.5"
                 style={{ background: "#c25e33" }}
               >
                 <span>ادخل على المقررات</span>
                 <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-              </Link>
+              </button>
             ) : (
               <button
                 type="button"

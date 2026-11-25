@@ -26,10 +26,12 @@ export default async function CoursesPage() {
   }
 
   return (
-    <CoursesHubClient
-      courses={courses}
-      courseLessonIdsMap={courseLessonIdsMap}
-      totalLessons={totalLessons}
-    />
+    <div className="portal-page-enter flex-1 flex flex-col w-full">
+      <CoursesHubClient
+        courses={courses}
+        courseLessonIdsMap={courseLessonIdsMap}
+        totalLessons={totalLessons}
+      />
+    </div>
   );
 }
