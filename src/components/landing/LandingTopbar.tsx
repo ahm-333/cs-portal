@@ -9,7 +9,7 @@ import { toggleTheme, useTheme } from "@/components/layout/themeStore";
 import { SITE_CONFIG } from "@/lib/config";
 
 const NAV_LINKS = [
-  { id: "chapter-preview", href: "#chapter-preview", label: "شاشة الفصل" },
+  { id: "chapter-preview", href: "#chapter-preview", label: "طريقة المذاكرة" },
   { id: "compare", href: "#compare", label: "بينا ومن غيرنا" },
   { id: "courses-picker", href: "#courses-picker", label: "المقررات" },
   { id: "faq", href: "#faq", label: "الأسئلة" },
