@@ -1,3 +1,4 @@
+import { CinematicUniverseBanner } from "@/components/landing/CinematicUniverseBanner";
 import { CompactContactStrip } from "@/components/landing/CompactContactStrip";
 import { FinalCtaSection } from "@/components/landing/FinalCtaSection";
 import { InteractiveDeskHero } from "@/components/landing/InteractiveDeskHero";
@@ -26,6 +27,7 @@ export default async function HomePage() {
 
       <main className="flex-1 w-full">
         <InteractiveDeskHero />
+        <CinematicUniverseBanner />
         <LandingCoursesShelf
           courses={courses}
           courseLessonIdsMap={courseLessonIdsMap}
