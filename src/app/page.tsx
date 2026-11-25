@@ -32,14 +32,14 @@ export default async function HomePage() {
         <StudentCompareSplit />
         <ExpandingToolsStrips />
         <CsMarqueeStrip />
-        <LandingCoursesShelf
-          courses={courses}
-          courseLessonIdsMap={courseLessonIdsMap}
-        />
         <RealitySwitchSection />
         <LandingFaqSection />
         <CompactContactStrip />
         <FinalCtaSection />
+        <LandingCoursesShelf
+          courses={courses}
+          courseLessonIdsMap={courseLessonIdsMap}
+        />
       </main>
 
       <Footer />
