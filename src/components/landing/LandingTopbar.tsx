@@ -64,30 +64,26 @@ export function LandingTopbar() {
   return (
     <header
       id="mainTopbar"
-      className="fixed top-0 inset-x-0 z-40 md:top-3 md:px-4 pointer-events-none"
+      className="fixed top-0 inset-x-0 z-40 border-b backdrop-blur-2xl transition-all duration-300"
+      style={
+        isOverHero
+          ? {
+              background: "rgba(10, 17, 30, 0.78)",
+              borderColor: "rgba(255, 255, 255, 0.08)",
+              color: "#ffffff",
+            }
+          : {
+              background: isDark
+                ? "rgba(12, 18, 30, 0.88)"
+                : "rgba(255, 253, 248, 0.90)",
+              borderColor: "var(--border-soft)",
+              boxShadow: isDark
+                ? "0 6px 24px rgba(0, 0, 0, 0.28)"
+                : "0 6px 24px rgba(15, 23, 42, 0.06)",
+            }
+      }
     >
-      <div
-        className="pointer-events-auto max-w-[1160px] mx-auto border-b md:border md:rounded-2xl backdrop-blur-2xl transition-all duration-300"
-        style={
-          isOverHero
-            ? {
-                background: "rgba(11, 19, 34, 0.74)",
-                borderColor: "rgba(255, 255, 255, 0.11)",
-                color: "#ffffff",
-                boxShadow: "0 12px 36px rgba(0, 0, 0, 0.28)",
-              }
-            : {
-                background: isDark
-                  ? "rgba(14, 21, 34, 0.86)"
-                  : "rgba(255, 253, 248, 0.88)",
-                borderColor: "var(--border-soft)",
-                boxShadow: isDark
-                  ? "0 10px 30px rgba(0, 0, 0, 0.35)"
-                  : "0 10px 30px rgba(15, 23, 42, 0.08)",
-              }
-        }
-      >
-        <div className="px-3.5 sm:px-5 h-14 flex items-center justify-between gap-2 sm:gap-4">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 h-14 md:h-16 flex items-center justify-between gap-2 sm:gap-4">
           {/* Right (RTL Start): Founder Avatar + Eng. Ahmed Amir */}
           <div className="flex items-center gap-2 min-w-0">
             <button
@@ -336,7 +332,6 @@ export function LandingTopbar() {
             </div>
           </div>
         )}
-      </div>
     </header>
   );
 }
