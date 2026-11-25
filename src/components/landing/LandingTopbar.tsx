@@ -215,8 +215,12 @@ export function LandingTopbar() {
 
           <Link
             href="/courses"
-            className="h-9 px-3 sm:px-3.5 rounded-lg text-[11.5px] sm:text-[12px] font-extrabold text-white inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-transform hover:-translate-y-0.5 shadow-sm"
-            style={{ background: "#c25e33" }}
+            className={`h-8 sm:h-9 px-3 sm:px-3.5 rounded-lg text-[11.5px] sm:text-[12px] font-extrabold inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-transform hover:-translate-y-0.5 ${
+              isOverHero
+                ? "bg-white/10 border border-white/15 text-white sm:border-transparent sm:bg-[#c25e33] sm:shadow-sm"
+                : "text-white shadow-sm"
+            }`}
+            style={isOverHero ? undefined : { background: "#c25e33" }}
           >
             <span>ابدأ</span>
             <span className="hidden sm:inline">المذاكرة</span>

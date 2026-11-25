@@ -175,81 +175,86 @@ export function InteractiveDeskHero() {
           }}
         />
 
-        {/* ==================== MOBILE & TABLET HERO (< lg): ULTRA-CLEAN, ZERO CLUTTER ==================== */}
-        <div className="lg:hidden relative z-10 w-full max-w-[420px] mx-auto px-4 pt-20 pb-8 flex flex-col items-center gap-5">
-          {/* 1. Minimal Single Identity Pill */}
-          <span
-            dir="ltr"
-            className="font-mono-code inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.07] border border-white/12 text-[10.5px] font-bold tracking-wide text-slate-200"
-          >
-            <span
-              className="w-1.5 h-1.5 rounded-full bg-[#66c7a6] shrink-0"
+        {/* ==================== MOBILE & TABLET HERO (< lg): BALANCED, CALM, SINGLE-SCREEN ==================== */}
+        <div className="lg:hidden relative z-10 w-full max-w-[400px] mx-auto px-4 pt-[72px] pb-6 flex flex-col items-center gap-4">
+          {/* 1. Compact Grounded 3D Desk Visual (No dead void, clean top anchor) */}
+          <div className="relative w-[225px] h-[175px] sm:w-[270px] sm:h-[210px] flex items-center justify-center select-none pointer-events-none">
+            <div
               aria-hidden="true"
+              className="pointer-events-none absolute inset-2 rounded-full blur-2xl opacity-75"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(102, 199, 166, 0.20) 0%, rgba(194, 94, 51, 0.14) 55%, transparent 75%)",
+              }}
             />
-            AI · Zagazig University
-          </span>
+            <div className="relative w-full h-full scale-[1.08]">
+              <Image
+                src="/images/desk/frame-3.jpg"
+                alt="مكتب المذاكرة المنظم"
+                width={900}
+                height={900}
+                sizes="(max-width: 640px) 225px, 270px"
+                className="frame-3d object-contain"
+                priority
+                draggable={false}
+              />
+            </div>
+          </div>
 
-          {/* 2. Clean 2-Line Headline + Short Subtitle */}
+          {/* 2. Balanced 2-Line Headline + Crisp 1-Line Subtitle (Zero Orphan Words) */}
           <div className="text-center space-y-2">
-            <h1 className="text-[26px] sm:text-[32px] font-black tracking-tight leading-[1.3] text-white">
+            <span
+              dir="ltr"
+              className="font-mono-code inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-[10px] font-semibold tracking-wide text-slate-300"
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-[#66c7a6] shrink-0"
+                aria-hidden="true"
+              />
+              AI · Zagazig University
+            </span>
+
+            <h1 className="text-[21px] sm:text-[28px] font-black tracking-tight leading-[1.35] text-white text-balance">
               بدل تشتيت الملفات..
               <span className="block mt-0.5 bg-gradient-to-l from-[#f0a786] via-[#f6c4a8] to-[#66c7a6] bg-clip-text text-transparent">
                 كل حاجة تخص المادة في مكان واحد
               </span>
             </h1>
 
-            <p className="text-[13px] text-slate-300/85 leading-relaxed max-w-[300px] mx-auto">
-              شرح تفاعلي، ملخص منظم، وكويزات لكل فصل بدون تشتيت.
+            <p className="text-[12.5px] sm:text-[13.5px] text-slate-300/80 leading-relaxed text-balance">
+              فيديو، شرح تفاعلي، ملخص منظم، وكويزات لكل فصل.
             </p>
           </div>
 
-          {/* 3. Sleek, Feather-Light Action Control */}
-          <div className="w-full">
+          {/* 3. One Calm Focal Action + Quiet Secondary Link */}
+          <div className="w-full flex flex-col items-center gap-2 pt-1">
             {lastVisited ? (
-              <div className="space-y-2">
+              <>
                 <Link
                   href={`/courses/${lastVisited.courseSlug}/${lastVisited.lessonId}`}
                   title={lastVisited.lessonTitle}
-                  className="group w-full flex items-center justify-between gap-3 rounded-2xl border border-white/14 bg-white/[0.07] p-2 pr-3.5 backdrop-blur-md transition-all active:scale-[0.985] hover:bg-white/[0.11]"
+                  className="cta-shimmer h-11 px-6 rounded-full text-[13.5px] font-extrabold text-white inline-flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-transform"
+                  style={{ background: "#c25e33" }}
                 >
-                  <div className="min-w-0 text-right">
-                    <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-slate-300/90">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#66c7a6] animate-pulse shrink-0" />
-                      <span>أكمل من آخر درس</span>
-                      <span
-                        dir="ltr"
-                        className="font-mono-code rounded bg-white/10 px-1.5 py-0.2 text-[10px] font-extrabold text-[#f5b899]"
-                      >
-                        {lastVisited.courseCode}
-                      </span>
-                    </div>
-                    <div className="mt-0.5 truncate text-[12.5px] font-extrabold text-white">
-                      {lastVisited.lessonTitle}
-                    </div>
-                  </div>
-
+                  <span>أكمل مذاكرة</span>
                   <span
-                    className="cta-shimmer inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-4 text-[12.5px] font-extrabold text-white shadow-md"
-                    style={{ background: "#c25e33" }}
+                    dir="ltr"
+                    className="font-mono-code rounded-md bg-black/20 px-1.5 py-0.5 text-[11.5px] font-bold"
                   >
-                    <span>أكمل</span>
-                    <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                    {lastVisited.courseCode}
                   </span>
+                  <ArrowLeft className="w-4 h-4 shrink-0" />
                 </Link>
-
-                <div className="flex items-center justify-center">
-                  <Link
-                    href="/courses"
-                    className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[12px] font-bold text-slate-300 hover:text-white transition-colors"
-                  >
-                    <BookOpen className="w-3.5 h-3.5 text-[#66c7a6] shrink-0" />
-                    <span>تصفح كل المقررات</span>
-                    <ArrowLeft className="w-3 h-3 opacity-70 shrink-0" />
-                  </Link>
-                </div>
-              </div>
+                <Link
+                  href="/courses"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-[12px] font-semibold text-slate-300/90 hover:text-white transition-colors"
+                >
+                  <BookOpen className="w-3.5 h-3.5 text-[#66c7a6] shrink-0" />
+                  <span>تصفح كل المقررات</span>
+                </Link>
+              </>
             ) : (
-              <div className="flex flex-col items-center gap-1.5">
+              <>
                 <Link
                   href="/courses"
                   className="cta-shimmer h-11 px-7 rounded-full text-[13.5px] font-extrabold text-white inline-flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-transform"
@@ -260,37 +265,13 @@ export function InteractiveDeskHero() {
                 </Link>
                 <a
                   href="#courses-picker"
-                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold text-slate-300 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-[12px] font-semibold text-slate-300/90 hover:text-white transition-colors"
                 >
                   <span>تصفح المقررات</span>
                   <ArrowDown className="w-3.5 h-3.5 text-[#66c7a6] shrink-0" />
                 </a>
-              </div>
+              </>
             )}
-          </div>
-
-          {/* 4. Compact Framed 3D Desk Visual — Clean Breathing Room */}
-          <div className="relative w-full max-w-[235px] sm:max-w-[290px] aspect-[5/4] flex items-center justify-center select-none pointer-events-none overflow-hidden rounded-3xl">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-3 rounded-full blur-2xl opacity-75"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(102, 199, 166, 0.22) 0%, rgba(194, 94, 51, 0.14) 52%, transparent 74%)",
-              }}
-            />
-            <div className="relative w-full h-full scale-[1.06]">
-              <Image
-                src="/images/desk/frame-3.jpg"
-                alt="مكتب المذاكرة المنظم"
-                width={900}
-                height={900}
-                sizes="(max-width: 640px) 235px, 290px"
-                className="frame-3d object-contain"
-                priority
-                draggable={false}
-              />
-            </div>
           </div>
         </div>
 
@@ -463,10 +444,10 @@ export function InteractiveDeskHero() {
         </div>
       </section>
 
-      {/* Smooth Transition Bridge BELOW the 100svh Hero — Only appears as you scroll down */}
+      {/* Smooth Transition Bridge BELOW the Hero — Tight on mobile, airy on desktop */}
       <div
         aria-hidden="true"
-        className="pointer-events-none w-full h-20 sm:h-28"
+        className="pointer-events-none w-full h-8 sm:h-20"
         style={{
           background:
             "linear-gradient(to bottom, #0f1b30 0%, color-mix(in srgb, #0f1b30 45%, var(--bg-canvas)) 55%, var(--bg-canvas) 100%)",

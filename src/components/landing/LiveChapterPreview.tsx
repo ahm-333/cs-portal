@@ -461,9 +461,9 @@ export function LiveChapterPreview() {
       className="reveal max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10 pb-8 sm:pb-10 space-y-6"
     >
       {/* ================= SECTION HEADER ================= */}
-      <div className="max-w-3xl mx-auto text-center space-y-3">
+      <div className="max-w-3xl mx-auto text-center space-y-2 sm:space-y-3">
         <div
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[12px] font-extrabold tracking-wide"
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] sm:text-[12px] font-extrabold tracking-wide"
           style={{
             background: "var(--accent-warm-soft)",
             borderColor:
@@ -476,18 +476,17 @@ export function LiveChapterPreview() {
         </div>
 
         <h2
-          className="text-2xl sm:text-4xl font-black tracking-tight leading-tight"
+          className="text-[20px] sm:text-4xl font-black tracking-tight leading-snug text-balance"
           style={{ color: "var(--text-primary)" }}
         >
           كل فصل متقسّم لـ 4 أركان متكاملة
         </h2>
 
         <p
-          className="text-[14px] sm:text-[15.5px] leading-relaxed max-w-2xl mx-auto"
+          className="text-[13px] sm:text-[15.5px] leading-relaxed max-w-xl mx-auto text-balance"
           style={{ color: "var(--text-secondary)" }}
         >
-          قلّب بين التابات الـ 4 وجرّب بنفسك شكل المذاكرة جوا كل فصل — من الفيديو
-          للمعمل التفاعلي للملخص للكويز.
+          جرّب التابات الـ 4 وشوف شكل المذاكرة جوا كل فصل قبل ما تبدأ.
         </p>
       </div>
 
@@ -787,8 +786,38 @@ export function LiveChapterPreview() {
                 </div>
               </div>
 
-              {/* Chapters Sidebar + Editorial Note */}
-              <div className="lg:col-span-4 flex flex-col justify-between gap-4">
+              {/* Mobile Compact Timestamp Pills (< lg — replaces 4 stacked boxes!) */}
+              <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto hide-scrollbar">
+                {VIDEO_CHAPTERS.map((chap, idx) => {
+                  const isActiveChap = selectedChapterIdx === idx;
+                  const shortTitle = chap.label.split("·")[1]?.trim() || chap.label;
+                  return (
+                    <button
+                      key={chap.label}
+                      type="button"
+                      onClick={() => handleSelectChapter(idx)}
+                      className="shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] font-bold transition-colors cursor-pointer"
+                      style={{
+                        background: isActiveChap
+                          ? "var(--accent-warm-soft)"
+                          : "var(--bg-canvas)",
+                        borderColor: isActiveChap
+                          ? "var(--accent-warm)"
+                          : "var(--border-soft)",
+                        color: isActiveChap
+                          ? "var(--accent-warm-text)"
+                          : "var(--text-secondary)",
+                      }}
+                    >
+                      <Play className="w-3 h-3 fill-current shrink-0" />
+                      <span>{shortTitle}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Chapters Sidebar + Editorial Note (Desktop only — zero stacked card clutter on mobile) */}
+              <div className="hidden lg:flex lg:col-span-4 flex-col justify-between gap-4">
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span
@@ -1704,14 +1733,14 @@ export function LiveChapterPreview() {
 
         {/* ================= BOTTOM CONVERSION FOOTER ================= */}
         <div
-          className="px-4 sm:px-6 lg:px-7 py-4 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
+          className="px-4 sm:px-6 lg:px-7 py-3 sm:py-4 border-t flex items-center justify-center sm:justify-between gap-3.5"
           style={{
             background: "var(--bg-canvas)",
             borderColor: "var(--border-soft)",
           }}
         >
           <p
-            className="text-[12.5px] sm:text-[13px] font-bold leading-relaxed"
+            className="hidden sm:block text-[13px] font-bold leading-relaxed"
             style={{ color: "var(--text-secondary)" }}
           >
             دي مجرد معاينة مصغّرة — التجربة الكاملة جوا كل مادة فيها حفظ تلقائي
@@ -1720,7 +1749,16 @@ export function LiveChapterPreview() {
 
           <Link
             href="/courses/data-structures"
-            className="magnetic-btn px-5 py-2.5 rounded-xl text-[13px] font-extrabold text-white inline-flex items-center justify-center gap-2 shadow-sm shrink-0 hover:opacity-95 transition-opacity"
+            className="sm:hidden inline-flex items-center gap-1.5 text-[12.5px] font-extrabold transition-opacity hover:opacity-85"
+            style={{ color: "var(--accent-warm)" }}
+          >
+            <span>افتح أول فصل مجاناً</span>
+            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+          </Link>
+
+          <Link
+            href="/courses/data-structures"
+            className="hidden sm:inline-flex magnetic-btn px-5 py-2.5 rounded-xl text-[13px] font-extrabold text-white items-center justify-center gap-2 shadow-sm shrink-0 hover:opacity-95 transition-opacity"
             style={{ background: "var(--accent-warm)" }}
           >
             <span>افتح أول فصل مجاناً</span>
