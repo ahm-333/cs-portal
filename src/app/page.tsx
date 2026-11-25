@@ -7,7 +7,6 @@ import { LandingCoursesShelf } from "@/components/landing/LandingCoursesShelf";
 import { LandingFaqSection } from "@/components/landing/LandingFaqSection";
 import { LandingTopbar } from "@/components/landing/LandingTopbar";
 import { RealitySwitchSection } from "@/components/landing/RealitySwitchSection";
-import { StudentCompareSplit } from "@/components/landing/StudentCompareSplit";
 import { Footer } from "@/components/layout/Footer";
 import { getCourseDetailBySlug, getPublishedCourses } from "@/lib/data";
 
@@ -29,7 +28,6 @@ export default async function HomePage() {
 
       <main className="flex-1 w-full">
         <InteractiveDeskHero />
-        <StudentCompareSplit />
         <ExpandingToolsStrips />
         <CsMarqueeStrip />
         <RealitySwitchSection />
