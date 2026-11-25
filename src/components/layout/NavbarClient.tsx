@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Compass, UserCircle2 } from "lucide-react";
+import { BookOpen, Compass } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/config";
-import { useLocalProfile } from "./localProfile";
 import { PomodoroTimer } from "./PomodoroTimer";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
@@ -50,7 +49,6 @@ const NAV_LINKS = [
 
 export function NavbarClient() {
   const pathname = usePathname();
-  const profile = useLocalProfile();
 
   const isActive = (href: string): boolean => {
     if (href === "/") {
@@ -113,20 +111,9 @@ export function NavbarClient() {
           </nav>
         </div>
 
-        {/* Utility Cluster: Pomodoro + Profile Pill + 3-Mode Theme Switcher */}
+        {/* Utility Cluster: Pomodoro + 3-Mode Theme Switcher */}
         <div className="flex items-center gap-2 sm:gap-2.5">
           <PomodoroTimer />
-
-          <Link
-            href="/login"
-            className="hidden min-h-[42px] items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--bg)] px-3.5 py-1.5 text-xs font-bold text-[var(--ink)] transition-colors hover:border-[var(--signal)] hover:text-[var(--accent)] sm:inline-flex"
-          >
-            <UserCircle2 className="h-4 w-4 shrink-0 text-[var(--accent)]" />
-            <span className="max-w-[140px] truncate">
-              {profile ? `ملفي: ${profile.full_name}` : "إعداد ملفي"}
-            </span>
-          </Link>
-
           <ThemeSwitcher compact />
         </div>
       </div>

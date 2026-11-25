@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Sparkles, UserRound } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
 import { BrandName } from "@/components/layout/BrandName";
 import { SITE_CONFIG } from "@/lib/config";
 import { openFeedbackModal } from "@/lib/stores/events";
@@ -72,7 +72,7 @@ export function FinalCtaSection() {
         <p className="relative z-10 text-[13.5px] sm:text-[15px] text-slate-200/85 max-w-xl mx-auto leading-relaxed">
           {hasProfile
             ? "تقدمك وملاحظاتك وبنك أخطاءك محفوظين بأمان على جهازك — ادخل كمل من آخر درس وقفت عنده."
-            : "اختار فرقتك في 5 ثوانٍ، وابدأ بأول درس في مادتك بدون باسورد أو أي خطوات معقدة."}
+            : "ادخل على مادتك وابدأ بأول فصل فوراً بدون تسجيل أو أي خطوات معقدة."}
         </p>
 
         {/* Action Row */}
@@ -86,16 +86,6 @@ export function FinalCtaSection() {
             <span>{hasProfile ? "ادخل مكتبة مقرراتك" : "ابدأ المذاكرة الآن"}</span>
             <ArrowLeft className="w-4 h-4" />
           </Link>
-
-          {!hasProfile && (
-            <Link
-              href="/login"
-              className="w-full sm:w-auto min-h-[48px] px-5 py-3 rounded-2xl font-bold text-[13.5px] bg-white/12 hover:bg-white/18 border border-white/20 text-white transition-colors inline-flex items-center justify-center gap-2"
-            >
-              <UserRound className="w-4 h-4 text-[#f0a786]" />
-              <span>إعداد كارنيه فرقتك (5 ثوانٍ)</span>
-            </Link>
-          )}
 
           <button
             id="openFeedbackBtn"

@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
-  ChevronDown,
   Moon,
   Play,
   Search,
@@ -18,7 +17,7 @@ import { BrandName } from "@/components/layout/BrandName";
 import { Footer } from "@/components/layout/Footer";
 import { PomodoroTimer } from "@/components/layout/PomodoroTimer";
 import { toggleTheme, useTheme } from "@/components/layout/themeStore";
-import { openFeedbackModal, openProfileModal } from "@/lib/stores/events";
+import { openFeedbackModal } from "@/lib/stores/events";
 import { usePortalState } from "@/lib/stores/portalStore";
 import type { CourseWithStats } from "@/types/database";
 
@@ -84,7 +83,6 @@ export function CoursesHubClient({
   ]);
 
   const lastVisited = portal.lastVisited;
-  const studentInitial = (portal.profile.name.trim()[0] || "ط").toUpperCase();
 
   function resetAllFilters() {
     setSearch("");
@@ -149,16 +147,9 @@ export function CoursesHubClient({
             >
               المقررات
             </span>
-            <Link
-              href="/login"
-              className="px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-colors hover:text-[var(--text-primary)]"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              كارنيه الطالب
-            </Link>
           </nav>
 
-          {/* Left (RTL End): Pro Pomodoro + Theme Circle + Pro Student Profile Pill */}
+          {/* Left (RTL End): Pro Pomodoro + Theme Circle */}
           <div className="flex items-center gap-2 shrink-0">
             <PomodoroTimer className="hidden sm:inline-flex" />
 
@@ -186,55 +177,6 @@ export function CoursesHubClient({
                 />
               )}
             </button>
-
-            <button
-              type="button"
-              onClick={openProfileModal}
-              className="group inline-flex items-center gap-2 pl-2.5 pr-1.5 h-10 rounded-full border shadow-xs transition-all hover:border-[var(--accent-warm)] cursor-pointer shrink-0"
-              style={{
-                background: "var(--bg-surface)",
-                borderColor: "var(--border-soft)",
-              }}
-            >
-              <span
-                className="relative w-7 h-7 rounded-full flex items-center justify-center text-[11.5px] font-black text-white shrink-0"
-                style={{
-                  background: hasSavedProfile
-                    ? "linear-gradient(135deg, #1e355c 0%, #c25e33 100%)"
-                    : "#c25e33",
-                }}
-              >
-                {hasSavedProfile ? studentInitial : "+"}
-                {hasSavedProfile && (
-                  <span
-                    className="absolute -bottom-0.5 -left-0.5 w-2.5 h-2.5 rounded-full bg-[#1d6b52] ring-2 ring-[var(--bg-surface)]"
-                    aria-hidden="true"
-                  />
-                )}
-              </span>
-
-              <div className="hidden sm:flex flex-col items-start leading-none text-right max-w-[115px]">
-                <span
-                  className="text-[12px] font-extrabold truncate max-w-full"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {hasSavedProfile ? portal.profile.name : "إعداد ملفك"}
-                </span>
-                <span
-                  className="text-[10px] font-bold mt-0.5 truncate max-w-full"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  {hasSavedProfile
-                    ? `الفرقة ${portal.profile.year} · ${portal.profile.dept}`
-                    : "بدون باسورد"}
-                </span>
-              </div>
-
-              <ChevronDown
-                className="w-3.5 h-3.5 shrink-0 transition-transform group-hover:translate-y-0.5"
-                style={{ color: "var(--text-muted)" }}
-              />
-            </button>
           </div>
         </div>
       </header>
@@ -244,7 +186,7 @@ export function CoursesHubClient({
         {/* Mobile Quick Navigation Tabs (< md) */}
         <nav
           aria-label="التنقل السريع للموبايل"
-          className="md:hidden grid grid-cols-3 gap-1 p-1 rounded-2xl border"
+          className="md:hidden grid grid-cols-2 gap-1 p-1 rounded-2xl border"
           style={{
             background: "var(--bg-surface)",
             borderColor: "var(--border-soft)",
@@ -266,13 +208,6 @@ export function CoursesHubClient({
           >
             المقررات
           </span>
-          <Link
-            href="/login"
-            className="min-h-[38px] rounded-xl flex items-center justify-center text-[12px] font-bold transition-colors"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            كارنيه الطالب
-          </Link>
         </nav>
 
         {/* Clean Minimal Page Title + Optional Resume Pill */}

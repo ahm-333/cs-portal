@@ -276,24 +276,6 @@ export function LandingTopbar() {
               <span>مكتبة المقررات</span>
               <ArrowLeft className="w-4 h-4 shrink-0" />
             </Link>
-            <Link
-              href="/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2.5 rounded-xl text-[13px] font-bold"
-              style={
-                isOverHero
-                  ? {
-                      background: "rgba(255, 255, 255, 0.08)",
-                      color: "#f0a786",
-                    }
-                  : {
-                      background: "var(--bg-subtle)",
-                      color: "var(--brand-primary)",
-                    }
-              }
-            >
-              اصنع كارنيه فرقتك (3D) ←
-            </Link>
           </div>
         </div>
       )}

@@ -16,7 +16,6 @@ const COURSE_SHORTCUTS = [
 
 const QUICK_LINKS = [
   { label: "مكتبة المقررات", href: "/courses" },
-  { label: "إعداد كارنيه الطالب", href: "/login" },
   { label: "المقررات المتاحة", href: "/#courses-picker" },
   { label: "بينا ومن غيرنا", href: "/#compare" },
   { label: "الأسئلة الشائعة", href: "/#faq" },
