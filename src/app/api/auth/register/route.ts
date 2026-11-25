@@ -4,7 +4,7 @@ import { hashPassword } from "@/lib/auth/password";
 import { normalizePhoneNumber } from "@/lib/auth/phone";
 import {
   createSession,
-  setSessionCookie,
+  SESSION_COOKIE_NAME,
   type SessionDepartment,
   type SessionUser,
 } from "@/lib/auth/session";
@@ -180,7 +180,6 @@ export async function POST(request: NextRequest) {
       created.id,
       request.headers.get("user-agent")
     );
-    await setSessionCookie(token, expiresAt);
 
     const sessionUser: SessionUser = {
       id: created.id,
@@ -193,10 +192,18 @@ export async function POST(request: NextRequest) {
       examDate: created.examDate ?? null,
     };
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       { ok: true, user: sessionUser },
       { status: 201, headers: NO_STORE_HEADERS }
     );
+    response.cookies.set(SESSION_COOKIE_NAME, token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      expires: expiresAt,
+    });
+    return response;
   } catch (error) {
     if (isUniqueConstraintError(error)) {
       return NextResponse.json(

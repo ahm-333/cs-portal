@@ -7,7 +7,7 @@ import {
 } from "@/lib/auth/phone";
 import {
   createSession,
-  setSessionCookie,
+  SESSION_COOKIE_NAME,
   type SessionDepartment,
   type SessionUser,
 } from "@/lib/auth/session";
@@ -125,7 +125,6 @@ export async function POST(request: NextRequest) {
       userRow.id,
       request.headers.get("user-agent")
     );
-    await setSessionCookie(token, expiresAt);
 
     let finalExamDate = userRow.examDate ?? null;
     if (!finalExamDate && record.localState !== undefined) {
@@ -151,10 +150,18 @@ export async function POST(request: NextRequest) {
       examDate: finalExamDate,
     };
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       { ok: true, user: sessionUser },
       { status: 200, headers: NO_STORE_HEADERS }
     );
+    response.cookies.set(SESSION_COOKIE_NAME, token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      expires: expiresAt,
+    });
+    return response;
   } catch (error) {
     console.error("[auth/login] Failed to sign in:", error);
     return NextResponse.json(

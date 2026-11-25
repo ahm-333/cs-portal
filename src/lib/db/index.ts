@@ -32,19 +32,41 @@ let cachedSql: NeonQueryFunction<false, false> | null = null;
 let cachedDb: PortalDb | null = null;
 let cachedConnStr: string | null = null;
 
+const DB_ENV_KEYS = [
+  "DATABASE_URL",
+  "POSTGRES_URL",
+  "NEON_DATABASE_URL",
+  "STORAGE_DATABASE_URL",
+  "DATABASE_URL_UNPOOLED",
+  "POSTGRES_URL_NON_POOLING",
+] as const;
+
+export function resolveDatabaseUrl(): string {
+  for (const key of DB_ENV_KEYS) {
+    const raw = process.env[key];
+    if (!raw) continue;
+    // Strip accidental surrounding quotes/whitespace when pasted into Vercel Env UI
+    const cleaned = raw.trim().replace(/^["']+|["']+$/g, "").trim();
+    if (cleaned.length > 0) {
+      return cleaned;
+    }
+  }
+  return "";
+}
+
 /**
- * Returns true only when `DATABASE_URL` is configured with a non-empty value.
- * Used to keep Standalone Zero-DB mode working cleanly at build time and runtime.
+ * Returns true when a Neon / Postgres connection string is configured.
+ * Supports DATABASE_URL as well as Vercel Marketplace Neon integration keys (POSTGRES_URL, etc.).
  */
 export function isDatabaseConfigured(): boolean {
-  return Boolean(process.env.DATABASE_URL?.trim());
+  return Boolean(resolveDatabaseUrl());
 }
 
 function initDbSingleton(): PortalDb {
-  const connectionString = process.env.DATABASE_URL?.trim();
+  const connectionString = resolveDatabaseUrl();
   if (!connectionString) {
     throw new Error(
-      "DATABASE_URL is not configured. Set DATABASE_URL to your Neon pooled connection string, or guard callers with isDatabaseConfigured() / getDbOrNull()."
+      "DATABASE_URL is not configured. Set DATABASE_URL (or POSTGRES_URL) to your Neon pooled connection string, or guard callers with isDatabaseConfigured() / getDbOrNull()."
     );
   }
 
