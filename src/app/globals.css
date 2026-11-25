@@ -1693,6 +1693,146 @@ html.dark .chapter-viewer .hl-rose,
   filter: blur(0);
 }
 
+/* ==========================================================================
+   Student Study Notebook ("كشكول المذاكرة") — Light Ivory & Midnight Ink
+   ========================================================================== */
+
+.notebook-paper {
+  position: relative;
+  background-color: #fcfaf2;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 33px,
+    rgba(100, 130, 180, 0.13) 33px,
+    rgba(100, 130, 180, 0.13) 34px
+  );
+  border-color: #e6dfc8;
+  box-shadow:
+    0 12px 32px rgba(30, 41, 59, 0.07),
+    0 3px 0 0 #efe9d5,
+    0 6px 0 0 rgba(30, 41, 59, 0.05);
+}
+
+html.dark .notebook-paper,
+[data-theme="dark"] .notebook-paper {
+  background-color: #131b27;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 33px,
+    rgba(148, 163, 184, 0.09) 33px,
+    rgba(148, 163, 184, 0.09) 34px
+  );
+  border-color: #263246;
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.42),
+    0 3px 0 0 #1b2535;
+}
+
+/* Realistic Stabilo-style highlighter marker swipe behind key terms */
+.nb-marker-yellow {
+  background: linear-gradient(
+    104deg,
+    rgba(253, 224, 71, 0) 0.5%,
+    rgba(253, 224, 71, 0.52) 2.5%,
+    rgba(254, 240, 138, 0.62) 96%,
+    rgba(253, 224, 71, 0) 99%
+  );
+  padding: 0.04rem 0.32rem;
+  border-radius: 4px;
+  color: #1e293b;
+}
+
+.nb-marker-mint {
+  background: linear-gradient(
+    104deg,
+    rgba(110, 231, 183, 0) 0.5%,
+    rgba(167, 243, 208, 0.58) 2.5%,
+    rgba(167, 243, 208, 0.65) 96%,
+    rgba(110, 231, 183, 0) 99%
+  );
+  padding: 0.04rem 0.32rem;
+  border-radius: 4px;
+  color: #064e3b;
+}
+
+.nb-marker-sky {
+  background: linear-gradient(
+    104deg,
+    rgba(147, 197, 253, 0) 0.5%,
+    rgba(191, 219, 254, 0.6) 2.5%,
+    rgba(191, 219, 254, 0.68) 96%,
+    rgba(147, 197, 253, 0) 99%
+  );
+  padding: 0.04rem 0.32rem;
+  border-radius: 4px;
+  color: #1e3a8a;
+}
+
+.nb-marker-warm {
+  background: linear-gradient(
+    104deg,
+    rgba(253, 186, 116, 0) 0.5%,
+    rgba(254, 215, 170, 0.62) 2.5%,
+    rgba(254, 215, 170, 0.7) 96%,
+    rgba(253, 186, 116, 0) 99%
+  );
+  padding: 0.04rem 0.32rem;
+  border-radius: 4px;
+  color: #7c2d12;
+}
+
+html.dark .nb-marker-yellow,
+[data-theme="dark"] .nb-marker-yellow {
+  background: rgba(250, 204, 21, 0.22);
+  color: #fde68a;
+}
+
+html.dark .nb-marker-mint,
+[data-theme="dark"] .nb-marker-mint {
+  background: rgba(16, 185, 129, 0.22);
+  color: #a7f3d0;
+}
+
+html.dark .nb-marker-sky,
+[data-theme="dark"] .nb-marker-sky {
+  background: rgba(59, 130, 246, 0.24);
+  color: #bfdbfe;
+}
+
+html.dark .nb-marker-warm,
+[data-theme="dark"] .nb-marker-warm {
+  background: rgba(249, 115, 22, 0.22);
+  color: #fed7aa;
+}
+
+/* Sticky Note Card inside Notebook */
+.nb-sticky-note {
+  background-color: #fef9d7;
+  border-color: #f0df8d;
+  color: #3f3414;
+  box-shadow: 0 4px 12px rgba(120, 95, 20, 0.08);
+}
+
+html.dark .nb-sticky-note,
+[data-theme="dark"] .nb-sticky-note {
+  background-color: #252014;
+  border-color: rgba(245, 158, 11, 0.32);
+  color: #fef3c7;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* Student Blue-Ink Margin Pen Color for Egyptian Arabic Notes */
+.nb-ink-ar {
+  color: #1d4ed8;
+}
+
+html.dark .nb-ink-ar,
+[data-theme="dark"] .nb-ink-ar {
+  color: #7dd3fc;
+}
+
 .chapter-svg-stage svg {
   display: block;
   width: 100%;

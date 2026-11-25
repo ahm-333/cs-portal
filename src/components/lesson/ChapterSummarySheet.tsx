@@ -3,10 +3,12 @@
 import { useState } from "react";
 import {
   ArrowRight,
-  BookOpenCheck,
+  Bookmark,
   Calculator,
   Eye,
   EyeOff,
+  PenLine,
+  Printer,
   Sparkles,
   Target,
 } from "lucide-react";
@@ -20,41 +22,36 @@ interface ChapterSummarySheetProps {
   onGoToQuiz?: () => void;
 }
 
-function getToneAccent(tone: SummaryConceptCard["tone"] = "neutral") {
+function getMarkerClass(tone: SummaryConceptCard["tone"] = "neutral") {
   switch (tone) {
     case "brand":
-      return {
-        bar: "#2563eb",
-        lead: "text-blue-700 dark:text-blue-300",
-        pill: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
-      };
+      return { marker: "nb-marker-sky", dot: "#2563eb", tab: "#3b82f6" };
     case "mint":
-      return {
-        bar: "#059669",
-        lead: "text-emerald-700 dark:text-emerald-300",
-        pill: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-      };
+      return { marker: "nb-marker-mint", dot: "#059669", tab: "#10b981" };
     case "warm":
-      return {
-        bar: "#c25e33",
-        lead: "text-amber-800 dark:text-amber-300",
-        pill: "bg-amber-500/12 text-amber-800 dark:text-amber-300",
-      };
+      return { marker: "nb-marker-warm", dot: "#c25e33", tab: "#f59e0b" };
     default:
-      return {
-        bar: "#6366f1",
-        lead: "text-indigo-700 dark:text-indigo-300",
-        pill: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300",
-      };
+      return { marker: "nb-marker-yellow", dot: "#ca8a04", tab: "#eab308" };
   }
 }
 
-function HighlightedEnglishText({
+const BOOKMARK_COLORS = [
+  { bg: "#fef08a", border: "#eab308", text: "#713f12" },
+  { bg: "#bae6fd", border: "#0284c7", text: "#0c4a6e" },
+  { bg: "#bbf7d0", border: "#16a34a", text: "#14532d" },
+  { bg: "#fed7aa", border: "#ea580c", text: "#7c2d12" },
+  { bg: "#e9d5ff", border: "#9333ea", text: "#581c87" },
+];
+
+/**
+ * Highlights key term before ":" with a realistic Stabilo highlighter marker swipe
+ */
+function NotebookEnglishLine({
   text,
-  leadClass,
+  markerClass,
 }: {
   text: string;
-  leadClass: string;
+  markerClass: string;
 }) {
   const colonIdx = text.indexOf(":");
   if (colonIdx > 1 && colonIdx <= 48) {
@@ -62,7 +59,7 @@ function HighlightedEnglishText({
     const rest = text.slice(colonIdx + 1);
     return (
       <>
-        <strong className={`font-extrabold ${leadClass}`}>{lead}:</strong>
+        <span className={`${markerClass} font-extrabold`}>{lead}:</span>
         <span>{rest}</span>
       </>
     );
@@ -75,12 +72,8 @@ export default function ChapterSummarySheet({
   onGoToQuiz,
 }: ChapterSummarySheetProps) {
   const [showArabic, setShowArabic] = useState(true);
-  const [activeSecId, setActiveSecId] = useState<string>(
-    summary.sections[0]?.id ?? ""
-  );
 
   function scrollToSection(sectionId: string) {
-    setActiveSecId(sectionId);
     const el = document.getElementById(
       `summary-sec-${summary.chapterNum}-${sectionId}`
     );
@@ -88,209 +81,195 @@ export default function ChapterSummarySheet({
   }
 
   return (
-    <div className="mx-auto max-w-[1280px]">
-      {/* Mobile / Tablet Compact Top Bar (< xl) */}
-      <div
-        className="mb-5 flex items-center justify-between gap-2 border-b pb-3 xl:hidden"
-        style={{ borderColor: "var(--border-soft)" }}
-      >
+    <div className="mx-auto max-w-[1040px] space-y-3">
+      {/* ==================== STICKY BOOKMARK TABS ON TOP EDGE OF NOTEBOOK ==================== */}
+      <div className="flex flex-wrap items-end justify-between gap-2 px-1 sm:px-3">
+        {/* Colored Paper Bookmark Tabs */}
         <div
           dir="ltr"
-          className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto hide-scrollbar"
+          className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto hide-scrollbar pb-0.5"
         >
-          {summary.sections.map((sec) => {
-            const active = activeSecId === sec.id;
+          {summary.sections.map((sec, idx) => {
+            const c = BOOKMARK_COLORS[idx % BOOKMARK_COLORS.length];
             return (
               <button
                 key={sec.id}
                 type="button"
                 onClick={() => scrollToSection(sec.id)}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11.5px] font-bold transition-colors cursor-pointer"
-                style={
-                  active
-                    ? {
-                        background: "var(--brand-soft)",
-                        color: "var(--brand-soft-text)",
-                      }
-                    : {
-                        background: "var(--bg-canvas)",
-                        color: "var(--text-secondary)",
-                      }
-                }
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-t-xl rounded-b-md border px-3 py-1.5 text-[11.5px] font-extrabold shadow-2xs transition-transform hover:-translate-y-0.5 cursor-pointer"
+                style={{
+                  background: c.bg,
+                  borderColor: c.border,
+                  color: c.text,
+                }}
               >
                 <span className="font-mono-code text-[10px] font-black opacity-75">
                   {sec.number}
                 </span>
-                <span className="font-en">{sec.titleEn}</span>
+                <span className="font-en max-w-[160px] truncate">
+                  {sec.titleEn}
+                </span>
               </button>
             );
           })}
+          {summary.examTraps.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => scrollToSection("exam-traps")}
+              className="inline-flex shrink-0 items-center gap-1 rounded-t-xl rounded-b-md border border-rose-400 bg-rose-100 px-3 py-1.5 text-[11.5px] font-extrabold text-rose-900 shadow-2xs transition-transform hover:-translate-y-0.5 cursor-pointer"
+            >
+              <Target className="h-3 w-3 shrink-0" />
+              <span>تريكات الامتحان</span>
+            </button>
+          ) : null}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowArabic((prev) => !prev)}
-          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-[11.5px] font-bold transition-colors cursor-pointer"
-          style={{
-            background: "var(--bg-canvas)",
-            borderColor: "var(--border-soft)",
-            color: "var(--text-primary)",
-          }}
-        >
-          {showArabic ? (
-            <>
-              <EyeOff className="h-3.5 w-3.5 text-[var(--text-muted)]" />
-              <span>إخفاء العامية</span>
-            </>
-          ) : (
-            <>
-              <Eye className="h-3.5 w-3.5 text-[var(--success-fg)]" />
-              <span>إظهار العامية</span>
-            </>
-          )}
-        </button>
+        {/* Notebook Tools: Hide Arabic + Print PDF */}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setShowArabic((prev) => !prev)}
+            className="inline-flex h-8 items-center gap-1.5 rounded-xl border px-3 text-[11.5px] font-bold transition-colors hover:opacity-85 cursor-pointer"
+            style={{
+              background: "var(--bg-surface)",
+              borderColor: "var(--border-soft)",
+              color: "var(--text-primary)",
+            }}
+          >
+            {showArabic ? (
+              <>
+                <EyeOff className="h-3.5 w-3.5 text-[var(--text-muted)]" />
+                <span>إخفاء شرح القلم</span>
+              </>
+            ) : (
+              <>
+                <Eye className="h-3.5 w-3.5 text-[var(--success-fg)]" />
+                <span>إظهار الشرح بالعامية</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.print()}
+            title="طباعة أو حفظ الكشكول كـ PDF"
+            className="hidden sm:inline-flex h-8 items-center gap-1.5 rounded-xl border px-2.5 text-[11.5px] font-bold transition-colors hover:opacity-85 cursor-pointer"
+            style={{
+              background: "var(--bg-surface)",
+              borderColor: "var(--border-soft)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            <Printer className="h-3.5 w-3.5" />
+            <span>PDF</span>
+          </button>
+        </div>
       </div>
 
-      {/* Spacious Editorial Grid: Quiet Sticky Outline (xl) + Clean Reading Paper */}
-      <div className="grid grid-cols-1 items-start gap-8 xl:grid-cols-12">
-        {/* Right Sticky Mini Outline (Desktop >= xl — Notion / Docs Style) */}
-        <aside className="hidden xl:sticky xl:top-24 xl:col-span-3 xl:block">
-          <div className="space-y-4 pl-2">
-            <div className="space-y-1">
-              <div className="text-[11px] font-extrabold tracking-wide text-[var(--text-muted)]">
-                فهرس الملخص
-              </div>
-              <nav className="space-y-1">
-                {summary.sections.map((sec) => {
-                  const active = activeSecId === sec.id;
-                  return (
-                    <button
-                      key={sec.id}
-                      type="button"
-                      onClick={() => scrollToSection(sec.id)}
-                      className="flex w-full items-start gap-2.5 rounded-xl px-3 py-2 text-right transition-colors cursor-pointer"
-                      style={
-                        active
-                          ? {
-                              background: "var(--brand-soft)",
-                              color: "var(--brand-soft-text)",
-                            }
-                          : {
-                              color: "var(--text-secondary)",
-                            }
-                      }
-                    >
-                      <span className="font-mono-code mt-0.5 text-[10.5px] font-black opacity-70">
-                        {sec.number}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span
-                          dir="ltr"
-                          className="font-en block truncate text-left text-[12px] font-bold"
-                        >
-                          {sec.titleEn}
-                        </span>
-                        <span className="block truncate text-[11px] opacity-75">
-                          {sec.titleAr}
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
-                {summary.examTraps.length > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => scrollToSection("exam-traps")}
-                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-right text-[12px] font-bold text-amber-700 dark:text-amber-300 transition-colors hover:bg-amber-500/10 cursor-pointer"
-                  >
-                    <Target className="h-3.5 w-3.5 shrink-0" />
-                    <span>تريكات الامتحان ({summary.examTraps.length})</span>
-                  </button>
-                ) : null}
-              </nav>
-            </div>
-
-            <div
-              className="border-t pt-4 space-y-2.5"
-              style={{ borderColor: "var(--border-soft)" }}
-            >
-              <button
-                type="button"
-                onClick={() => setShowArabic((prev) => !prev)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2 text-[12px] font-bold transition-colors hover:opacity-85 cursor-pointer"
+      {/* ==================== OPEN RULED STUDENT NOTEBOOK SHEET ==================== */}
+      <div className="notebook-paper relative overflow-hidden rounded-2xl border sm:rounded-[26px]">
+        {/* Left Spiral Binding Ring Column (Desktop/Tablet — Realistic Student Notebook Feel!) */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none hidden sm:flex absolute inset-y-0 left-0 z-10 w-12 flex-col items-center justify-around border-r py-8"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(15, 23, 42, 0.055) 0%, transparent 100%)",
+            borderColor: "rgba(225, 29, 72, 0.24)",
+          }}
+        >
+          {Array.from({ length: 14 }).map((_, i) => (
+            <div key={i} className="relative flex items-center">
+              <span
+                className="h-3.5 w-3.5 rounded-full border shadow-inner"
                 style={{
                   background: "var(--bg-canvas)",
-                  borderColor: "var(--border-soft)",
-                  color: "var(--text-primary)",
+                  borderColor: "rgba(100, 116, 139, 0.35)",
                 }}
-              >
-                {showArabic ? (
-                  <>
-                    <EyeOff className="h-3.5 w-3.5 text-[var(--text-muted)]" />
-                    <span>إخفاء العامية (اختبار)</span>
-                  </>
-                ) : (
-                  <>
-                    <Eye className="h-3.5 w-3.5 text-[var(--success-fg)]" />
-                    <span>إظهار الشرح بالعامية</span>
-                  </>
-                )}
-              </button>
-
-              {onGoToQuiz ? (
-                <button
-                  type="button"
-                  onClick={onGoToQuiz}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-extrabold text-white transition-opacity hover:opacity-95 cursor-pointer"
-                  style={{ background: "var(--hero-bg)" }}
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  <span>ابدأ كويز الشابتر</span>
-                </button>
-              ) : null}
+              />
+              <span
+                className="absolute -left-2.5 h-[3px] w-4 rounded-full"
+                style={{ background: "rgba(100, 116, 139, 0.38)" }}
+              />
             </div>
-          </div>
-        </aside>
+          ))}
+        </div>
 
-        {/* Main Clean Reading Column — Open, Calm, Zero Box-Inside-Box Clutter */}
-        <div className="space-y-10 xl:col-span-9 xl:max-w-[880px]">
+        {/* Double Red Margin Line next to Spiral Gutter (Desktop/Tablet) */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none hidden sm:block absolute inset-y-0 left-[52px] w-[1px]"
+          style={{ background: "rgba(225, 29, 72, 0.16)" }}
+        />
+
+        {/* Notebook Content Page */}
+        <div className="relative z-10 px-4 py-6 sm:py-8 sm:pr-10 sm:pl-20 space-y-10">
+          {/* Notebook Page Top Title Stamp */}
+          <div
+            className="flex flex-wrap items-end justify-between gap-3 border-b-2 border-dashed pb-4"
+            style={{ borderColor: "rgba(100, 116, 139, 0.24)" }}
+          >
+            <div dir="ltr" className="text-left space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono-code inline-flex items-center gap-1 rounded-md bg-rose-500/12 px-2 py-0.5 text-[11px] font-black text-rose-700 dark:text-rose-300">
+                  <Bookmark className="h-3 w-3" />
+                  {summary.courseCode} · Ch.{summary.chapterNum} Notes
+                </span>
+                <span className="font-signature text-[15px] text-[var(--accent-warm)]">
+                  Eng. Ahmed Amir
+                </span>
+              </div>
+              <h2 className="font-en text-[20px] sm:text-[24px] font-black tracking-tight text-[var(--text-primary)]">
+                {summary.titleEn}
+              </h2>
+            </div>
+
+            {showArabic ? (
+              <span className="nb-ink-ar inline-flex items-center gap-1.5 text-[13px] font-extrabold">
+                <PenLine className="h-3.5 w-3.5 shrink-0" />
+                <span>كشكول: {summary.titleAr}</span>
+              </span>
+            ) : null}
+          </div>
+
+          {/* ==================== NOTEBOOK SECTIONS ==================== */}
           {summary.sections.map((section) => (
             <section
               key={section.id}
               id={`summary-sec-${summary.chapterNum}-${section.id}`}
               className="scroll-mt-24 space-y-6"
             >
-              {/* Clean Editorial Section Heading (No Outer Box!) */}
-              <div
-                className="flex flex-wrap items-baseline justify-between gap-2 border-b pb-3"
-                style={{ borderColor: "var(--border-soft)" }}
-              >
-                <div dir="ltr" className="flex items-baseline gap-2.5 text-left">
-                  <span className="font-mono-code text-[12px] font-black text-[var(--brand-primary)] opacity-80">
-                    {section.number}
+              {/* Underlined Notebook Section Heading */}
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div dir="ltr" className="flex items-center gap-2.5 text-left">
+                  <span className="nb-marker-yellow font-mono-code text-[13px] font-black">
+                    #{section.number}
                   </span>
-                  <h3 className="font-en text-[18px] sm:text-[21px] font-black tracking-tight text-[var(--text-primary)]">
+                  <h3 className="font-en text-[18px] sm:text-[20px] font-black text-[var(--text-primary)] underline decoration-amber-400/75 decoration-[3px] underline-offset-[6px]">
                     {section.titleEn}
                   </h3>
                 </div>
                 {showArabic ? (
-                  <span className="text-[12.5px] font-bold text-[var(--text-muted)]">
-                    {section.titleAr}
+                  <span className="nb-ink-ar text-[12.5px] font-extrabold">
+                    ({section.titleAr})
                   </span>
                 ) : null}
               </div>
 
-              {/* Quiet Visual Flow Strip */}
+              {/* Hand-Sketched Flow Diagram */}
               {section.flowBanner ? (
                 <div
-                  className="rounded-2xl px-4 py-3.5 sm:px-5"
-                  style={{ background: "var(--bg-canvas)" }}
+                  className="rounded-xl border-2 border-dashed px-4 py-3.5 space-y-2.5"
+                  style={{
+                    borderColor: "rgba(37, 99, 235, 0.28)",
+                    background: "rgba(37, 99, 235, 0.035)",
+                  }}
                 >
                   <div
                     dir="ltr"
-                    className="font-mono-code mb-2.5 text-left text-[10.5px] font-bold uppercase tracking-wider text-[var(--text-muted)]"
+                    className="font-mono-code text-left text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300"
                   >
-                    {section.flowBanner.labelEn}
+                    ✎ {section.flowBanner.labelEn}
                   </div>
                   <div
                     dir="ltr"
@@ -302,33 +281,36 @@ export default function ChapterSummarySheet({
                         className="inline-flex items-center gap-2"
                       >
                         <span
-                          className="font-en rounded-lg border px-3 py-1 text-[12.5px] font-bold text-[var(--text-primary)]"
+                          className="font-en rounded-lg border px-3 py-1 text-[12.5px] font-extrabold text-[var(--text-primary)]"
                           style={{
                             background: "var(--bg-surface)",
-                            borderColor: "var(--border-soft)",
+                            borderColor: "var(--border-strong)",
                           }}
                         >
                           {step}
                         </span>
                         {idx < section.flowBanner!.steps.length - 1 ? (
-                          <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[var(--brand-primary)] opacity-70" />
+                          <ArrowRight className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
                         ) : null}
                       </div>
                     ))}
                   </div>
                   {showArabic && section.flowBanner.captionAr ? (
-                    <p className="mt-2.5 text-[12.5px] leading-relaxed text-[var(--text-secondary)]">
-                      {section.flowBanner.captionAr}
+                    <p
+                      dir="rtl"
+                      className="nb-ink-ar text-right text-[13px] font-semibold leading-relaxed"
+                    >
+                      ✏️ {section.flowBanner.captionAr}
                     </p>
                   ) : null}
                 </div>
               ) : null}
 
-              {/* Clean Flat Concept Blocks (1-to-1 Paired English + Arabic — NO nested box soup!) */}
+              {/* Notebook Concept Notes (Directly on the Ruled Paper — Zero Heavy Cards!) */}
               {section.cards && section.cards.length > 0 ? (
-                <div className="space-y-7">
+                <div className="space-y-8">
                   {section.cards.map((card, cIdx) => {
-                    const accent = getToneAccent(card.tone);
+                    const style = getMarkerClass(card.tone);
                     const hasPairedPoints =
                       Array.isArray(card.points) && card.points.length > 0;
                     const topArabic =
@@ -336,46 +318,48 @@ export default function ChapterSummarySheet({
                       (!hasPairedPoints ? card.arNote : undefined);
 
                     return (
-                      <div key={`${card.term}-${cIdx}`} className="space-y-3.5">
-                        {/* Concept Title with Subtle Left Bar */}
+                      <div key={`${card.term}-${cIdx}`} className="space-y-3">
+                        {/* Topic Sub-Heading in Notebook */}
                         <div
                           dir="ltr"
-                          className="flex flex-wrap items-center gap-2.5 pl-3 text-left"
-                          style={{ borderLeft: `3px solid ${accent.bar}` }}
+                          className="flex flex-wrap items-center gap-2 text-left"
                         >
-                          <h4 className="font-en text-[15.5px] sm:text-[16.5px] font-extrabold text-[var(--text-primary)]">
+                          <span
+                            className="h-2.5 w-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: style.dot }}
+                          />
+                          <h4 className="font-en text-[15.5px] sm:text-[17px] font-black text-[var(--text-primary)]">
                             {card.term}
                           </h4>
                           {card.badge ? (
-                            <span
-                              className={`font-mono-code rounded-md px-2 py-0.5 text-[10.5px] font-bold ${accent.pill}`}
-                            >
+                            <span className="font-mono-code rounded border border-dashed border-slate-400/50 px-2 py-0.5 text-[10.5px] font-bold text-[var(--text-muted)]">
                               {card.badge}
                             </span>
                           ) : null}
                         </div>
 
-                        {/* Core Definition (English + Calm Arabic Directly Underneath) */}
+                        {/* Core Definition Line + Student Blue-Ink Margin Note Underneath */}
                         <div className="space-y-1.5 pl-3">
                           <p
                             dir="ltr"
-                            className="font-en text-left text-[14.5px] font-medium leading-[1.8] text-[var(--text-primary)]"
+                            className="font-en text-left text-[14.5px] font-semibold leading-[1.9] text-[var(--text-primary)]"
                           >
-                            <HighlightedEnglishText
+                            <NotebookEnglishLine
                               text={card.enSummary}
-                              leadClass={accent.lead}
+                              markerClass={style.marker}
                             />
                           </p>
                           {showArabic && topArabic ? (
                             <p
                               dir="rtl"
-                              className="text-right text-[13px] leading-[1.8] text-[var(--text-secondary)]"
+                              className="nb-ink-ar text-right text-[13.5px] font-semibold leading-[1.9]"
                             >
-                              {topArabic}
+                              ↳ {topArabic}
                             </p>
                           ) : null}
                         </div>
 
+                        {/* Optional Inline Flow */}
                         {card.flowSteps && card.flowSteps.length > 0 ? (
                           <div
                             dir="ltr"
@@ -387,98 +371,73 @@ export default function ChapterSummarySheet({
                                 className="inline-flex items-center gap-1.5"
                               >
                                 <span
-                                  className="font-mono-code rounded-md border px-2.5 py-0.5 text-[11.5px] font-bold text-[var(--text-primary)]"
+                                  className="font-mono-code rounded-md border border-dashed px-2.5 py-0.5 text-[11.5px] font-bold text-[var(--text-primary)]"
                                   style={{
-                                    background: "var(--bg-canvas)",
-                                    borderColor: "var(--border-soft)",
+                                    borderColor: "var(--border-strong)",
+                                    background: "var(--bg-surface)",
                                   }}
                                 >
                                   {st}
                                 </span>
                                 {sIdx < card.flowSteps!.length - 1 ? (
-                                  <ArrowRight className="h-3 w-3 shrink-0 opacity-60" />
+                                  <ArrowRight className="h-3.5 w-3.5 shrink-0 opacity-65" />
                                 ) : null}
                               </div>
                             ))}
                           </div>
                         ) : null}
 
-                        {/* Clean Hairline-Separated 1-to-1 Bilingual Points List */}
+                        {/* 1-to-1 Paired English Lines + Student Blue-Ink Arabic Notes Directly Underneath */}
                         {hasPairedPoints ? (
-                          <div
-                            className="divide-y rounded-2xl border px-4 sm:px-5"
-                            style={{
-                              background: "var(--bg-canvas)",
-                              borderColor: "var(--border-soft)",
-                            }}
-                          >
+                          <ul className="space-y-4 pl-2 sm:pl-4 pt-1">
                             {card.points!.map((pt, pIdx) => (
-                              <div
-                                key={pIdx}
-                                className="space-y-1.5 py-3.5 first:pt-4 last:pb-4"
-                                style={{ borderColor: "var(--border-soft)" }}
-                              >
-                                {/* English Point (Strict LTR, Crisp Contrast) */}
+                              <li key={pIdx} className="space-y-1">
                                 <div
                                   dir="ltr"
                                   className="flex items-start gap-2.5 text-left"
                                 >
-                                  <span
-                                    className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
-                                    style={{ background: accent.bar }}
-                                  />
-                                  <p className="font-en min-w-0 flex-1 text-[14px] leading-[1.75] text-[var(--text-primary)]">
-                                    <HighlightedEnglishText
+                                  <span className="font-mono-code mt-0.5 text-[12px] font-black text-rose-600 dark:text-rose-400 shrink-0">
+                                    {pIdx + 1})
+                                  </span>
+                                  <p className="font-en min-w-0 flex-1 text-[14px] sm:text-[14.5px] font-medium leading-[1.85] text-[var(--text-primary)]">
+                                    <NotebookEnglishLine
                                       text={pt.en}
-                                      leadClass={accent.lead}
+                                      markerClass={style.marker}
                                     />
                                   </p>
                                   {pt.tag ? (
-                                    <span className="font-mono-code shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/12 text-amber-800 dark:text-amber-300">
-                                      {pt.tag}
+                                    <span className="shrink-0 -rotate-1 rounded border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 text-[10px] font-black text-rose-700 dark:text-rose-300">
+                                      ★ {pt.tag}
                                     </span>
                                   ) : null}
                                 </div>
 
-                                {/* Egyptian Arabic Directly Underneath (Soft, Calm, No Heavy Box!) */}
                                 {showArabic ? (
                                   <p
                                     dir="rtl"
-                                    className="pr-3 text-right text-[13px] leading-[1.85] text-[var(--text-secondary)]"
-                                    style={{
-                                      borderRight:
-                                        "2px solid color-mix(in srgb, var(--success-fg) 35%, transparent)",
-                                    }}
+                                    className="nb-ink-ar pr-2 text-right text-[13px] sm:text-[13.5px] font-semibold leading-[1.85]"
                                   >
-                                    {pt.ar}
+                                    ✏️ {pt.ar}
                                   </p>
                                 ) : null}
-                              </div>
+                              </li>
                             ))}
-                          </div>
+                          </ul>
                         ) : card.enBullets && card.enBullets.length > 0 ? (
-                          <ul
-                            className="divide-y rounded-2xl border px-4 sm:px-5"
-                            style={{
-                              background: "var(--bg-canvas)",
-                              borderColor: "var(--border-soft)",
-                            }}
-                          >
+                          <ul className="space-y-2.5 pl-4 pt-1">
                             {card.enBullets.map((b, bIdx) => (
                               <li
                                 key={bIdx}
                                 dir="ltr"
-                                className="font-en flex items-start gap-2.5 py-3 text-left text-[13.5px] leading-[1.75] text-[var(--text-primary)]"
-                                style={{ borderColor: "var(--border-soft)" }}
+                                className="font-en flex items-start gap-2 text-left text-[14px] leading-[1.85] text-[var(--text-primary)]"
                               >
-                                <span
-                                  className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
-                                  style={{ background: accent.bar }}
-                                />
+                                <span className="font-mono-code font-black text-rose-600 dark:text-rose-400">
+                                  •
+                                </span>
                                 <span className="min-w-0 flex-1">
-                                  <HighlightedEnglishText
+                                  <NotebookEnglishLine
                                     text={b}
-                                    leadClass={accent.lead}
+                                    markerClass={style.marker}
                                   />
                                 </span>
                               </li>
@@ -491,55 +450,48 @@ export default function ChapterSummarySheet({
                 </div>
               ) : null}
 
-              {/* Formulas Callout */}
+              {/* Hand-Boxed Formulas (Dashed Ink Box like a real exam notebook!) */}
               {section.formulas && section.formulas.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {section.formulas.map((f, fIdx) => (
                     <div
                       key={`${f.labelEn}-${fIdx}`}
-                      className="rounded-2xl border px-4 py-4 sm:px-5 space-y-2.5"
+                      className="relative rounded-xl border-2 border-dashed p-4 sm:p-5 space-y-2"
                       style={{
-                        background:
-                          "color-mix(in srgb, var(--brand-soft) 35%, var(--bg-canvas))",
-                        borderColor:
-                          "color-mix(in srgb, var(--brand-primary) 18%, var(--border-soft))",
+                        borderColor: "rgba(194, 94, 51, 0.45)",
+                        background: "rgba(194, 94, 51, 0.04)",
                       }}
                     >
                       <div
                         dir="ltr"
-                        className="flex items-center gap-1.5 text-left text-[11.5px] font-extrabold uppercase tracking-wide text-[var(--brand-soft-text)]"
+                        className="flex items-center gap-1.5 text-left text-[11.5px] font-black uppercase tracking-wide text-[var(--accent-warm)]"
                       >
                         <Calculator className="h-3.5 w-3.5 shrink-0" />
-                        <span className="font-en">{f.labelEn}</span>
+                        <span className="font-en">Formula · {f.labelEn}</span>
                       </div>
                       <div
                         dir="ltr"
-                        className="font-mono-code rounded-xl border px-3.5 py-2.5 text-left text-[13.5px] font-black text-[var(--text-primary)]"
-                        style={{
-                          background: "var(--bg-surface)",
-                          borderColor: "var(--border-soft)",
-                        }}
+                        className="font-mono-code text-left text-[14px] sm:text-[15px] font-black text-[var(--text-primary)] py-1"
                       >
                         {f.formula}
                       </div>
                       {f.workedExampleEn ? (
                         <p
                           dir="ltr"
-                          className="font-en text-left text-[13px] leading-relaxed text-[var(--text-secondary)]"
+                          className="font-en text-left text-[13px] font-medium leading-relaxed text-[var(--text-secondary)]"
                         >
+                          <strong className="text-[var(--text-primary)]">
+                            Ex:
+                          </strong>{" "}
                           {f.workedExampleEn}
                         </p>
                       ) : null}
                       {showArabic ? (
                         <p
                           dir="rtl"
-                          className="pr-3 text-right text-[13px] leading-relaxed text-[var(--text-secondary)]"
-                          style={{
-                            borderRight:
-                              "2px solid color-mix(in srgb, var(--success-fg) 40%, transparent)",
-                          }}
+                          className="nb-ink-ar pt-1 text-right text-[13px] font-semibold leading-relaxed"
                         >
-                          {f.arNote}
+                          ✏️ {f.arNote}
                         </p>
                       ) : null}
                     </div>
@@ -547,31 +499,31 @@ export default function ChapterSummarySheet({
                 </div>
               ) : null}
 
-              {/* Clean Comparison Table */}
+              {/* Hand-Ruled Comparison Table */}
               {section.table ? (
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <h5
                       dir="ltr"
-                      className="font-en text-left text-[14px] font-extrabold text-[var(--text-primary)]"
+                      className="font-en text-left text-[14.5px] font-black text-[var(--text-primary)]"
                     >
-                      {section.table.titleEn}
+                      ▤ {section.table.titleEn}
                     </h5>
                     {showArabic && section.table.titleAr ? (
-                      <span className="text-[12px] font-semibold text-[var(--text-muted)]">
+                      <span className="nb-ink-ar text-[12px] font-bold">
                         {section.table.titleAr}
                       </span>
                     ) : null}
                   </div>
 
                   <div
-                    className="overflow-x-auto rounded-2xl border"
-                    style={{ borderColor: "var(--border-soft)" }}
+                    className="overflow-x-auto rounded-xl border-2"
+                    style={{ borderColor: "rgba(100, 116, 139, 0.28)" }}
                   >
                     <table className="w-full min-w-[520px] border-collapse text-[13px]">
                       <thead
                         style={{
-                          background: "var(--bg-subtle)",
+                          background: "rgba(100, 116, 139, 0.10)",
                           color: "var(--text-primary)",
                         }}
                       >
@@ -582,12 +534,14 @@ export default function ChapterSummarySheet({
                               <th
                                 key={hIdx}
                                 dir={h.dir}
-                                className={`border-b px-4 py-2.5 font-extrabold ${
+                                className={`border-b-2 px-3.5 py-2.5 font-black ${
                                   h.dir === "ltr"
                                     ? "font-en text-left"
                                     : "text-right"
                                 }`}
-                                style={{ borderColor: "var(--border-soft)" }}
+                                style={{
+                                  borderColor: "rgba(100, 116, 139, 0.25)",
+                                }}
                               >
                                 {h.label}
                               </th>
@@ -597,17 +551,13 @@ export default function ChapterSummarySheet({
                       </thead>
                       <tbody
                         className="divide-y"
-                        style={{ borderColor: "var(--border-soft)" }}
+                        style={{ borderColor: "rgba(100, 116, 139, 0.20)" }}
                       >
                         {section.table.rows.map((row, rIdx) => (
                           <tr
                             key={rIdx}
                             style={{
-                              background:
-                                rIdx % 2 === 1
-                                  ? "var(--bg-canvas)"
-                                  : "var(--bg-surface)",
-                              borderColor: "var(--border-soft)",
+                              borderColor: "rgba(100, 116, 139, 0.20)",
                             }}
                           >
                             {row.map((cell, cIdx) => {
@@ -616,19 +566,27 @@ export default function ChapterSummarySheet({
                                 <td
                                   key={cIdx}
                                   dir={cell.dir}
-                                  className={`px-4 py-2.5 align-top leading-relaxed ${
+                                  className={`px-3.5 py-2.5 align-top leading-relaxed ${
                                     cell.dir === "ltr"
                                       ? "font-en text-left"
                                       : "text-right"
                                   } ${
                                     cell.highlight
-                                      ? "font-extrabold text-[var(--brand-soft-text)]"
+                                      ? "font-black"
                                       : cIdx === 0
-                                        ? "font-bold text-[var(--text-primary)]"
-                                        : "text-[var(--text-secondary)]"
+                                        ? "font-extrabold text-[var(--text-primary)]"
+                                        : cell.dir === "rtl"
+                                          ? "nb-ink-ar font-semibold"
+                                          : "text-[var(--text-secondary)]"
                                   }`}
                                 >
-                                  {cell.text}
+                                  {cell.highlight ? (
+                                    <span className="nb-marker-yellow">
+                                      {cell.text}
+                                    </span>
+                                  ) : (
+                                    cell.text
+                                  )}
                                 </td>
                               );
                             })}
@@ -642,69 +600,67 @@ export default function ChapterSummarySheet({
             </section>
           ))}
 
-          {/* Calm Exam Traps Final Checklist */}
+          {/* ==================== PINNED STICKY NOTE: EXAM TRAPS ==================== */}
           {summary.examTraps.length > 0 ? (
             <section
               id={`summary-sec-${summary.chapterNum}-exam-traps`}
-              className="scroll-mt-24 rounded-2xl border p-5 sm:p-6 space-y-4"
-              style={{
-                background:
-                  "color-mix(in srgb, var(--accent-warm-soft) 35%, var(--bg-canvas))",
-                borderColor:
-                  "color-mix(in srgb, var(--accent-warm) 22%, var(--border-soft))",
-              }}
+              className="scroll-mt-24 pt-2"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-[15px] font-black text-[var(--accent-warm-text)]">
-                  <Target className="h-4 w-4 shrink-0" />
-                  <span>أهم تريكات الامتحان — Chapter {summary.chapterNum}</span>
-                </div>
-                {onGoToQuiz ? (
-                  <button
-                    type="button"
-                    onClick={onGoToQuiz}
-                    className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[12px] font-extrabold text-white transition-opacity hover:opacity-95 cursor-pointer xl:hidden"
-                    style={{ background: "var(--hero-bg)" }}
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>ابدأ الكويز</span>
-                  </button>
-                ) : null}
-              </div>
+              <div className="nb-sticky-note relative rounded-2xl border p-5 sm:p-6 space-y-4">
+                {/* Translucent Tape Strip at Top Center */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -top-2.5 left-1/2 -translate-x-1/2 h-5 w-24 rounded-sm bg-amber-300/45 dark:bg-amber-400/20 backdrop-blur-[1px] rotate-[-1deg]"
+                />
 
-              <div
-                className="divide-y"
-                style={{
-                  borderColor:
-                    "color-mix(in srgb, var(--accent-warm) 16%, var(--border-soft))",
-                }}
-              >
-                {summary.examTraps.map((trap, tIdx) => (
-                  <div
-                    key={tIdx}
-                    className="space-y-1 py-3 first:pt-1 last:pb-0"
-                    style={{
-                      borderColor:
-                        "color-mix(in srgb, var(--accent-warm) 16%, var(--border-soft))",
-                    }}
-                  >
-                    <div
-                      dir="ltr"
-                      className="font-en flex items-start gap-2 text-left text-[13.5px] font-bold leading-relaxed text-[var(--text-primary)]"
-                    >
-                      <BookOpenCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent-warm)]" />
-                      <span>{trap.en}</span>
-                    </div>
-                    {showArabic ? (
-                      <p
-                        dir="rtl"
-                        className="pr-3 text-right text-[12.5px] leading-relaxed text-[var(--text-secondary)]"
-                      >
-                        {trap.ar}
-                      </p>
-                    ) : null}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-[15.5px] font-black">
+                    <Target className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                    <span>
+                      📌 ورقة تريكات الامتحان — Chapter {summary.chapterNum}
+                    </span>
                   </div>
-                ))}
+
+                  {onGoToQuiz ? (
+                    <button
+                      type="button"
+                      onClick={onGoToQuiz}
+                      className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-extrabold text-white shadow-xs transition-opacity hover:opacity-95 cursor-pointer"
+                      style={{ background: "#c25e33" }}
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>اختبر نفسك في الكويز دلوقتي</span>
+                    </button>
+                  ) : null}
+                </div>
+
+                <ul className="space-y-3">
+                  {summary.examTraps.map((trap, tIdx) => (
+                    <li
+                      key={tIdx}
+                      className="space-y-1 border-b border-dashed pb-2.5 last:border-b-0 last:pb-0"
+                      style={{ borderColor: "rgba(180, 130, 20, 0.28)" }}
+                    >
+                      <div
+                        dir="ltr"
+                        className="font-en text-left text-[13.5px] font-extrabold leading-relaxed"
+                      >
+                        <span className="mr-1.5 text-rose-600 dark:text-rose-400">
+                          !
+                        </span>
+                        {trap.en}
+                      </div>
+                      {showArabic ? (
+                        <p
+                          dir="rtl"
+                          className="text-right text-[12.5px] font-bold leading-relaxed opacity-85"
+                        >
+                          ✏️ {trap.ar}
+                        </p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </section>
           ) : null}
