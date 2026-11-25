@@ -542,9 +542,9 @@ export function InteractiveDeskHero() {
             aria-hidden="true"
           />
 
-          {/* Top Clean Crossfading Headline Stage (Zero pill clutter, zero jitter) */}
-          <div className="relative z-20 max-w-[960px] w-full mx-auto px-6 pt-[76px]">
-            <div className="relative h-[108px] xl:h-[118px] w-full">
+          {/* Top Clean Crossfading Headline Stage (Generous clearance below Floating Topbar) */}
+          <div className="relative z-20 max-w-[960px] w-full mx-auto px-6 pt-[90px] xl:pt-[96px]">
+            <div className="relative h-[116px] xl:h-[126px] w-full">
               {STAGE_COPY.map((stage, idx) => {
                 const isActive = stageIdx === idx;
                 return (
@@ -557,15 +557,15 @@ export function InteractiveDeskHero() {
                         : "opacity-0 translate-y-2.5 pointer-events-none"
                     }`}
                   >
-                    <h1 className="text-3xl xl:text-[38px] font-black tracking-tight leading-[1.28] text-white">
+                    <h1 className="text-[28px] xl:text-[34px] font-black tracking-tight leading-[1.28] text-white">
                       {stage.title}
                       {stage.gradientLine && (
-                        <span className="block mt-1 bg-gradient-to-l from-[#f0a786] via-[#f6c4a8] to-[#66c7a6] bg-clip-text text-transparent">
+                        <span className="block mt-0.5 bg-gradient-to-l from-[#f0a786] via-[#f6c4a8] to-[#66c7a6] bg-clip-text text-transparent">
                           {stage.gradientLine}
                         </span>
                       )}
                     </h1>
-                    <p className="text-[14.5px] text-slate-300/90 mt-2 max-w-2xl leading-relaxed">
+                    <p className="text-[13.5px] xl:text-[14.5px] text-slate-300/85 mt-2 max-w-2xl leading-relaxed">
                       {stage.sub}
                     </p>
                   </div>
@@ -575,7 +575,7 @@ export function InteractiveDeskHero() {
           </div>
 
           {/* CENTER FULL-SCREEN 3D STAGE */}
-          <div className="relative z-10 flex-1 w-full max-w-[1280px] mx-auto px-4 flex items-center justify-center my-1 min-h-0">
+          <div className="relative z-10 flex-1 w-full max-w-[1280px] mx-auto px-4 flex items-center justify-center py-2 min-h-0">
             {/* CHAOS LAYER (Smoothly glides inward & dissolves) */}
             <div
               id="chaosOverlay"
@@ -697,11 +697,11 @@ export function InteractiveDeskHero() {
               </p>
             </div>
 
-            {/* PIXEL-LOCKED 4-FRAME 3D STUDIO DESK STACK */}
+            {/* PIXEL-LOCKED 4-FRAME 3D STUDIO DESK STACK (Viewport-balanced sizing) */}
             <div
               id="deskCinemaWrap"
               ref={deskWrapRef}
-              className="desk-cinema-wrap relative w-[440px] h-[440px] xl:w-[485px] xl:h-[485px] flex items-center justify-center"
+              className="desk-cinema-wrap relative w-[min(48vh,430px)] h-[min(48vh,430px)] xl:w-[min(52vh,460px)] xl:h-[min(52vh,460px)] flex items-center justify-center"
               style={{
                 transform: "translate3d(0, 12px, 0) scale(0.91)",
                 willChange: "transform, opacity",
