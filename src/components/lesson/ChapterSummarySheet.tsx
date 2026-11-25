@@ -8,7 +8,6 @@ import {
   CornerDownLeft,
   Eye,
   EyeOff,
-  Layers,
   Sparkles,
   Target,
 } from "lucide-react";
@@ -106,114 +105,56 @@ export default function ChapterSummarySheet({
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      {/* ==================== VIBRANT SUMMARY HERO CARD ==================== */}
+      {/* ==================== SINGLE SLIM SUMMARY CONTROL BAR ==================== */}
       <div
-        className="overflow-hidden rounded-2xl border"
+        className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border px-3 py-2.5 sm:px-4"
         style={{
-          background: "var(--bg-surface)",
+          background: "var(--bg-canvas)",
           borderColor: "var(--border-soft)",
-          boxShadow: "var(--shadow-card)",
         }}
       >
-        {/* Multi-tone Top Accent Bar */}
-        <div
-          className="h-1.5 w-full"
-          style={{
-            background:
-              "linear-gradient(90deg, #2563eb 0%, #7c3aed 38%, #059669 72%, #d97706 100%)",
-          }}
-        />
-
-        <div
-          className="border-b p-4 sm:p-6"
-          style={{
-            background:
-              "linear-gradient(135deg, color-mix(in srgb, var(--brand-soft) 38%, var(--bg-canvas)) 0%, var(--bg-canvas) 100%)",
-            borderColor: "var(--border-soft)",
-          }}
-        >
-          <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
-            {/* LTR English Title Block */}
-            <div dir="ltr" className="min-w-0 flex-1 space-y-1.5 sm:space-y-2 text-left">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono-code inline-flex items-center gap-1 rounded-lg bg-gradient-to-l from-indigo-600 to-blue-600 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-xs">
-                  <Layers className="h-3 w-3" />
-                  {summary.courseCode} · Chapter {summary.chapterNum}
-                </span>
-                <span className="hidden sm:inline-flex items-center rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
-                  Bilingual Study Sheet · {summary.sections.length} Sections
-                </span>
-              </div>
-
-              <h3 className="font-en text-[18px] font-black leading-tight text-[var(--text-primary)] sm:text-[23px]">
-                {summary.titleEn}
-              </h3>
-
-              <p className="hidden sm:block font-en max-w-3xl text-[13.5px] leading-[1.75] text-[var(--text-secondary)]">
-                {summary.overviewEn}
-              </p>
-            </div>
-
-            {/* Arabic Toggle Button */}
-            <button
-              type="button"
-              onClick={() => setShowArabic((prev) => !prev)}
-              className={`inline-flex min-h-[38px] shrink-0 items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-[12px] font-extrabold transition-all cursor-pointer ${
-                showArabic
-                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/15"
-                  : "border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-500/15"
-              }`}
-            >
-              {showArabic ? (
-                <>
-                  <EyeOff className="h-3.5 w-3.5" />
-                  <span>إخفاء العامية (اختبار نفسك)</span>
-                </>
-              ) : (
-                <>
-                  <Eye className="h-3.5 w-3.5" />
-                  <span>إظهار التوضيح بالعامية</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {showArabic ? (
-            <div
-              dir="rtl"
-              className="mt-4 flex items-start gap-2 rounded-xl border border-emerald-500/20 bg-[var(--bg-surface)] px-4 py-3 text-right text-[13.5px] font-medium leading-[1.8] text-[var(--text-secondary)]"
-            >
-              <CornerDownLeft className="mt-1 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-              <div>
-                <span className="ml-1.5 font-black text-emerald-700 dark:text-emerald-400">
-                  ملخص الشابتر ببساطة:
-                </span>
-                {summary.overviewAr}
-              </div>
-            </div>
-          ) : null}
-        </div>
-
         {/* Quick-Jump Section Pills (Clean LTR) */}
         <div
           dir="ltr"
-          className="flex items-center gap-2 overflow-x-auto px-4 py-3 sm:px-5"
-          style={{ background: "var(--bg-surface)" }}
+          className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto hide-scrollbar"
         >
           {summary.sections.map((sec) => (
             <button
               key={sec.id}
               type="button"
               onClick={() => scrollToSection(sec.id)}
-              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--bg-canvas)] px-3 py-1.5 text-[12px] font-bold text-[var(--text-primary)] transition-all hover:border-indigo-400/60 hover:bg-indigo-500/[0.06] cursor-pointer"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-[var(--border-soft)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-[11.5px] font-bold text-[var(--text-primary)] transition-all hover:border-indigo-400/60 cursor-pointer"
             >
-              <span className="font-mono-code inline-flex h-5 w-5 items-center justify-center rounded-md bg-indigo-500/12 text-[10.5px] font-black text-indigo-700 dark:text-indigo-300">
+              <span className="font-mono-code inline-flex h-5 w-5 items-center justify-center rounded-md bg-indigo-500/12 text-[10px] font-black text-indigo-700 dark:text-indigo-300">
                 {sec.number}
               </span>
               <span className="font-en">{sec.titleEn}</span>
             </button>
           ))}
         </div>
+
+        {/* Compact Arabic Toggle */}
+        <button
+          type="button"
+          onClick={() => setShowArabic((prev) => !prev)}
+          className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-[11.5px] font-extrabold transition-all cursor-pointer ${
+            showArabic
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+              : "border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300"
+          }`}
+        >
+          {showArabic ? (
+            <>
+              <EyeOff className="h-3.5 w-3.5" />
+              <span>إخفاء العامية</span>
+            </>
+          ) : (
+            <>
+              <Eye className="h-3.5 w-3.5" />
+              <span>إظهار العامية</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* ==================== STRUCTURED SECTIONS ==================== */}

@@ -233,247 +233,172 @@ export default function ChapterInteractiveViewer({
           : `chapter-viewer ${recallBlur ? "recall-blur" : ""} space-y-4`
       }
     >
-      {/* ==================== VIBRANT EDITORIAL HEADER BAR ==================== */}
+      {/* ==================== SINGLE SLIM CONTROL BAR (ZERO DUPLICATE HEADERS) ==================== */}
       <div
-        className="overflow-hidden rounded-2xl border"
+        className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border px-3 py-2.5 sm:px-4"
         style={{
-          background: "var(--bg-surface)",
+          background: "var(--bg-canvas)",
           borderColor: "var(--border-soft)",
-          boxShadow: "var(--shadow-card)",
         }}
       >
-        {/* Top Multi-Tone Energy Strip */}
-        <div
-          className="h-1.5 w-full"
-          style={{
-            background:
-              "linear-gradient(90deg, #2563eb 0%, #7c3aed 38%, #059669 72%, #d97706 100%)",
-          }}
-        />
-
-        <div className="p-3 sm:p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
-            <div className="min-w-0 flex-1 space-y-1">
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <span className="font-mono-code inline-flex items-center rounded-lg bg-gradient-to-l from-indigo-600 to-blue-600 px-2 py-0.5 text-[10.5px] sm:text-[11px] font-bold text-white shadow-xs">
-                  Ch {chapter.chapterNum} · {chapter.courseCode}
-                </span>
-                <span className="hidden sm:inline-flex items-center rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
-                  {totalSlides} سلايد تفاعلية
-                </span>
-                <span className="sm:hidden font-mono-code text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400">
-                  {masteredCount}/{totalSlides} ✓
-                </span>
-              </div>
-
-              <h3 className="hidden sm:block text-[17px] font-black leading-snug text-[var(--text-primary)] sm:text-[19px]">
-                <span className="font-en">{chapter.titleEn}</span>
-                <span className="mx-2 font-normal text-[var(--text-muted)] opacity-50">
-                  ·
-                </span>
-                <span className="text-[14.5px] font-bold text-[var(--text-secondary)] sm:text-[16px]">
-                  {chapter.titleAr}
-                </span>
-              </h3>
-            </div>
-
-            {/* Mastery Progress (Desktop) + Compact Controls */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div
-                className="hidden sm:flex items-center gap-2.5 rounded-xl border px-3 py-1.5"
-                style={{
-                  background: "var(--bg-canvas)",
-                  borderColor: "var(--border-soft)",
-                }}
-              >
-                <span className="text-[11px] font-bold text-[var(--text-muted)]">
-                  إنجازك
-                </span>
-                <span className="font-mono-code text-[12px] font-black text-emerald-600 dark:text-emerald-400">
-                  {masteredCount}/{totalSlides} ({masteryPct}%)
-                </span>
-                <div className="h-2 w-16 overflow-hidden rounded-full bg-[var(--bg-subtle)]">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-l from-emerald-500 to-teal-400 transition-all duration-300"
-                    style={{ width: `${masteryPct}%` }}
-                  />
-                </div>
-              </div>
-
-              {activeSection === "slides" ? (
-                <button
-                  type="button"
-                  onClick={() => setRecallBlur((prev) => !prev)}
-                  aria-label="تغبيش الهايلايت"
-                  title="غبّش الهايلايت ومرر الماوس للكشف عشان تختبر حفظك"
-                  className={`sm:hidden inline-flex h-8 items-center gap-1 rounded-lg border px-2.5 text-[11px] font-bold cursor-pointer ${
-                    recallBlur
-                      ? "border-violet-500/40 bg-violet-500/15 text-violet-700 dark:text-violet-300"
-                      : "border-[var(--border-soft)] bg-[var(--bg-canvas)] text-[var(--text-secondary)]"
-                  }`}
-                >
-                  {recallBlur ? (
-                    <Eye className="h-3.5 w-3.5" />
-                  ) : (
-                    <EyeOff className="h-3.5 w-3.5" />
-                  )}
-                  <span>تغبيش</span>
-                </button>
-              ) : null}
-
+        {/* Right side: Bonus switcher (when available) + Compact Slide Selector + Mastery */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          {hasBonusProblems ? (
+            <div
+              className="grid w-full grid-cols-2 sm:inline-flex sm:w-auto items-center gap-0.5 rounded-xl border p-0.5"
+              style={{
+                background: "var(--bg-surface)",
+                borderColor: "var(--border-soft)",
+              }}
+            >
               <button
                 type="button"
-                onClick={() => setIsFullscreen((prev) => !prev)}
-                aria-label={isFullscreen ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
-                className="inline-flex h-8 w-8 sm:h-9 sm:w-auto items-center justify-center rounded-lg sm:rounded-xl border transition-colors hover:opacity-85 cursor-pointer sm:gap-1.5 sm:px-3"
+                onClick={() => setActiveSection("slides")}
+                className={`inline-flex min-h-[32px] items-center justify-center gap-1.5 rounded-lg px-3 py-1 text-[11.5px] font-extrabold transition-all cursor-pointer ${
+                  activeSection === "slides"
+                    ? "bg-gradient-to-l from-blue-600 to-indigo-600 text-white"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                <BookOpen className="h-3.5 w-3.5 shrink-0" />
+                <span>السلايدات</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSection("bonus")}
+                className={`inline-flex min-h-[32px] items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 text-[11.5px] font-extrabold transition-all cursor-pointer ${
+                  activeSection === "bonus"
+                    ? "bg-gradient-to-l from-amber-600 to-orange-600 text-white"
+                    : "text-amber-700 dark:text-amber-400 hover:opacity-85"
+                }`}
+              >
+                <Calculator className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">مسائل 3 و 4 (بونص)</span>
+              </button>
+            </div>
+          ) : null}
+
+          {activeSection === "slides" ? (
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-initial">
+              <select
+                aria-label="الانتقال السريع لأي سلايد"
+                value={activeSlideIndex}
+                onChange={(e) => handleJumpToSlide(Number(e.target.value))}
+                className="h-9 w-full sm:w-auto sm:max-w-[300px] truncate rounded-xl border px-3 text-[12px] font-bold outline-none cursor-pointer"
                 style={{
-                  background: "var(--bg-canvas)",
+                  background: "var(--bg-surface)",
                   borderColor: "var(--border-soft)",
                   color: "var(--text-primary)",
                 }}
               >
-                {isFullscreen ? (
-                  <>
-                    <Minimize2 className="h-3.5 w-3.5" />
-                    <span className="hidden text-[11.5px] font-bold sm:inline">
-                      إغلاق
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Maximize2 className="h-3.5 w-3.5" />
-                    <span className="hidden text-[11.5px] font-bold sm:inline">
-                      ملء الشاشة
-                    </span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+                {chapter.slides.map((slide, idx) => (
+                  <option key={slide.id} value={idx}>
+                    {`${idx + 1}/${totalSlides} · ${slide.title}${masteredSet.has(slide.id) ? " ✓" : ""}`}
+                  </option>
+                ))}
+              </select>
 
-          {/* Interactive Toolbar Row (Ultra-Clean on Mobile — Full Controls on Desktop) */}
-          <div
-            className={`${hasBonusProblems ? "flex" : "hidden sm:flex"} mt-3 sm:mt-4 flex-wrap items-center justify-between gap-2 border-t pt-3 sm:pt-3.5`}
-            style={{ borderColor: "var(--border-soft)" }}
-          >
-            <div className="flex w-full sm:w-auto flex-wrap items-center gap-2">
-              {hasBonusProblems ? (
-                <div
-                  className="grid w-full grid-cols-2 sm:inline-flex sm:w-auto items-center gap-1 rounded-xl border p-1"
-                  style={{
-                    background: "var(--bg-canvas)",
-                    borderColor: "var(--border-soft)",
-                  }}
+              <span
+                className="hidden md:inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1 font-mono-code text-[11px] font-extrabold"
+                style={{
+                  background: "var(--bg-surface)",
+                  color: "var(--success-fg)",
+                }}
+                title="عدد السلايدات التي حددتها كمفهومة"
+              >
+                <Check className="h-3 w-3" />
+                <span>
+                  {masteredCount}/{totalSlides}
+                </span>
+                <span className="opacity-65">({masteryPct}%)</span>
+              </span>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Left side: Quiet Secondary Controls */}
+        <div className="flex shrink-0 items-center gap-1.5">
+          {activeSection === "slides" ? (
+            <>
+              <div
+                className="hidden md:inline-flex items-center gap-0.5 rounded-xl border p-0.5"
+                style={{
+                  background: "var(--bg-surface)",
+                  borderColor: "var(--border-soft)",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setDisplayMode("single")}
+                  className="inline-flex min-h-[30px] items-center gap-1 rounded-lg px-2.5 py-1 text-[11.5px] font-bold transition-colors cursor-pointer"
+                  style={
+                    displayMode === "single"
+                      ? {
+                          background: "var(--bg-subtle)",
+                          color: "var(--text-primary)",
+                        }
+                      : { color: "var(--text-muted)" }
+                  }
                 >
-                  <button
-                    type="button"
-                    onClick={() => setActiveSection("slides")}
-                    className={`inline-flex min-h-[34px] items-center justify-center gap-1.5 rounded-lg px-3 py-1 text-[11.5px] sm:text-[12px] font-extrabold transition-all cursor-pointer ${
-                      activeSection === "slides"
-                        ? "bg-gradient-to-l from-blue-600 to-indigo-600 text-white shadow-xs"
-                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                    }`}
-                  >
-                    <BookOpen className="h-3.5 w-3.5 shrink-0" />
-                    <span>شرح السلايدات</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveSection("bonus")}
-                    className={`inline-flex min-h-[34px] items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3.5 py-1 text-[11.5px] sm:text-[12px] font-extrabold transition-all cursor-pointer ${
-                      activeSection === "bonus"
-                        ? "bg-gradient-to-l from-amber-600 to-orange-600 text-white shadow-xs"
-                        : "text-amber-700 dark:text-amber-400 hover:opacity-85"
-                    }`}
-                  >
-                    <Calculator className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">مسائل 3 و 4 (بونص)</span>
-                  </button>
-                </div>
-              ) : null}
+                  <SquareStack className="h-3.5 w-3.5" />
+                  <span>سلايد بسلايد</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDisplayMode("all")}
+                  className="inline-flex min-h-[30px] items-center gap-1 rounded-lg px-2.5 py-1 text-[11.5px] font-bold transition-colors cursor-pointer"
+                  style={
+                    displayMode === "all"
+                      ? {
+                          background: "var(--bg-subtle)",
+                          color: "var(--text-primary)",
+                        }
+                      : { color: "var(--text-muted)" }
+                  }
+                >
+                  <LayoutList className="h-3.5 w-3.5" />
+                  <span>الكل</span>
+                </button>
+              </div>
 
-              {activeSection === "slides" ? (
-                <>
-                  <div
-                    className="hidden sm:inline-flex items-center gap-0.5 rounded-xl border p-0.5"
-                    style={{
-                      background: "var(--bg-canvas)",
-                      borderColor: "var(--border-soft)",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setDisplayMode("single")}
-                      className="inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-3 py-1 text-[12px] font-bold transition-colors cursor-pointer"
-                      style={
-                        displayMode === "single"
-                          ? {
-                              background: "var(--bg-surface)",
-                              color: "var(--text-primary)",
-                              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-                            }
-                          : { color: "var(--text-muted)" }
-                      }
-                    >
-                      <SquareStack className="h-3.5 w-3.5" />
-                      <span>سلايد بسلايد</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDisplayMode("all")}
-                      className="inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-3 py-1 text-[12px] font-bold transition-colors cursor-pointer"
-                      style={
-                        displayMode === "all"
-                          ? {
-                              background: "var(--bg-surface)",
-                              color: "var(--text-primary)",
-                              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-                            }
-                          : { color: "var(--text-muted)" }
-                      }
-                    >
-                      <LayoutList className="h-3.5 w-3.5" />
-                      <span>عرض الكل ({totalSlides})</span>
-                    </button>
-                  </div>
-
-                  {/* Active Recall Blur Highlights Toggle (Desktop) */}
-                  <button
-                    type="button"
-                    onClick={() => setRecallBlur((prev) => !prev)}
-                    className={`hidden sm:inline-flex min-h-[34px] items-center gap-1.5 rounded-xl border px-3 py-1 text-[12px] font-bold transition-all cursor-pointer ${
-                      recallBlur
-                        ? "border-violet-500/40 bg-violet-500/15 text-violet-700 dark:text-violet-300"
-                        : "border-[var(--border-soft)] bg-[var(--bg-canvas)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                    }`}
-                    title="غبّش الهايلايت ومرر الماوس للكشف عشان تختبر حفظك"
-                  >
-                    {recallBlur ? (
-                      <Eye className="h-3.5 w-3.5" />
-                    ) : (
-                      <EyeOff className="h-3.5 w-3.5" />
-                    )}
-                    <span>
-                      {recallBlur
-                        ? "إلغاء تغبيش الهايلايت"
-                        : "اختبر حفظك (تغبيش)"}
-                    </span>
-                  </button>
-                </>
-              ) : null}
-            </div>
-
-            {onGoToQuiz ? (
               <button
                 type="button"
-                onClick={onGoToQuiz}
-                className="hidden sm:inline-flex min-h-[36px] items-center gap-1.5 rounded-xl bg-gradient-to-l from-emerald-600 to-teal-600 px-4 py-1.5 text-[12px] font-extrabold text-white shadow-xs transition-opacity hover:opacity-95 cursor-pointer"
+                onClick={() => setRecallBlur((prev) => !prev)}
+                className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-2.5 sm:px-3 text-[11.5px] font-bold transition-all cursor-pointer ${
+                  recallBlur
+                    ? "border-violet-500/40 bg-violet-500/15 text-violet-700 dark:text-violet-300"
+                    : "border-[var(--border-soft)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+                title="غبّش الهايلايت ومرر الماوس للكشف عشان تختبر حفظك"
               >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>اختبر نفسك في الكويز</span>
+                {recallBlur ? (
+                  <Eye className="h-3.5 w-3.5" />
+                ) : (
+                  <EyeOff className="h-3.5 w-3.5" />
+                )}
+                <span>{recallBlur ? "إظهار" : "تغبيش الحفظ"}</span>
               </button>
-            ) : null}
-          </div>
+            </>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={() => setIsFullscreen((prev) => !prev)}
+            aria-label={isFullscreen ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
+            title={isFullscreen ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:opacity-85 cursor-pointer"
+            style={{
+              background: "var(--bg-surface)",
+              borderColor: "var(--border-soft)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-3.5 w-3.5" />
+            ) : (
+              <Maximize2 className="h-3.5 w-3.5" />
+            )}
+          </button>
         </div>
       </div>
 
@@ -485,72 +410,6 @@ export default function ChapterInteractiveViewer({
       {/* ==================== VIVID SLIDE VIEWER ==================== */}
       {activeSection === "slides" ? (
         <div ref={slideTopRef} className="space-y-4">
-          {/* Mobile Compact 1-Line Slide Selector (Zero Clutter) */}
-          <div className="sm:hidden flex items-center gap-2">
-            <select
-              aria-label="الانتقال السريع لأي سلايد"
-              value={activeSlideIndex}
-              onChange={(e) => handleJumpToSlide(Number(e.target.value))}
-              className="w-full h-10 rounded-xl border px-3 text-[12.5px] font-bold outline-none"
-              style={{
-                background: "var(--bg-surface)",
-                borderColor: "var(--border-soft)",
-                color: "var(--text-primary)",
-              }}
-            >
-              {chapter.slides.map((slide, idx) => (
-                <option key={slide.id} value={idx}>
-                  {`${idx + 1}/${totalSlides} · ${slide.title}${masteredSet.has(slide.id) ? " ✓" : ""}`}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Desktop Quick-Jump Slide Navigator */}
-          <div
-            className="hidden sm:block rounded-2xl border px-3.5 py-3"
-            style={{
-              background: "var(--bg-surface)",
-              borderColor: "var(--border-soft)",
-            }}
-          >
-            <div className="mb-2 flex items-center justify-between gap-2 px-1">
-              <span className="text-[11.5px] font-extrabold text-[var(--text-secondary)]">
-                فهرس السلايدات السريع
-              </span>
-              {displayMode === "single" ? (
-                <span className="font-mono-code rounded-md bg-indigo-500/10 px-2 py-0.5 text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300">
-                  Slide {activeSlideIndex + 1} / {totalSlides}
-                </span>
-              ) : null}
-            </div>
-
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-              {chapter.slides.map((slide, idx) => {
-                const isDone = masteredSet.has(slide.id);
-                const isActive =
-                  displayMode === "single" && idx === activeSlideIndex;
-                return (
-                  <button
-                    key={slide.id}
-                    type="button"
-                    onClick={() => handleJumpToSlide(idx)}
-                    className={`inline-flex shrink-0 items-center gap-1 rounded-xl border px-3 py-1.5 text-[11.5px] font-bold transition-all cursor-pointer ${
-                      isActive
-                        ? "border-indigo-600 bg-gradient-to-l from-blue-600 to-indigo-600 text-white shadow-xs"
-                        : isDone
-                          ? "border-emerald-500/35 bg-emerald-500/12 text-emerald-700 dark:text-emerald-300"
-                          : "border-[var(--border-soft)] bg-[var(--bg-canvas)] text-[var(--text-secondary)] hover:border-indigo-400/50"
-                    }`}
-                  >
-                    {isDone ? <Check className="h-3 w-3 shrink-0" /> : null}
-                    <span>{slide.shortLabel}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           {/* Slide Card(s) */}
           <div className="space-y-6">
             {visibleSlides.map(({ slide, index }) => {
