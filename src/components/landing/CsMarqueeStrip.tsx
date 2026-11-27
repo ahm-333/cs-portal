@@ -35,13 +35,9 @@ function RibbonGroup({ hidden = false }: { hidden?: boolean }) {
         >
           <span
             dir="rtl"
-            className="inline-flex items-center gap-2 whitespace-nowrap text-[12px] sm:text-[13px] font-bold"
-            style={{ color: "var(--text-secondary)" }}
+            className="inline-flex items-center gap-2.5 whitespace-nowrap text-[12px] sm:text-[13px] font-bold text-[#1e2c44] transition-colors duration-200 hover:text-[#111a2c] dark:text-[#d8d3c9] dark:hover:text-[#f6f4ef]"
           >
-            <span
-              className="font-mono-code text-[10px] sm:text-[11px] font-bold px-[7px] py-[2px] rounded-[6px] border border-[#1e355c]/20 dark:border-[#d8b07a]/25 text-[#c25e33] dark:text-[#d8b07a]"
-              style={{ background: "transparent" }}
-            >
+            <span className="font-mono-code text-[10px] sm:text-[11px] font-extrabold px-[7px] py-[2px] rounded-[6px] border border-[#1e355c]/[0.18] bg-white/95 text-[#b54d24] shadow-[0_1px_2px_rgba(18,28,45,0.06)] dark:border-[#d8b07a]/30 dark:bg-[#d8b07a]/[0.08] dark:text-[#e7c592] dark:shadow-none">
               {item.code}
             </span>
             <span>{item.label}</span>
@@ -49,7 +45,7 @@ function RibbonGroup({ hidden = false }: { hidden?: boolean }) {
 
           <span
             aria-hidden="true"
-            className="inline-block w-[5px] h-[5px] rotate-45 shrink-0 bg-[#c25e33]/60 dark:bg-[#d8b07a]/60"
+            className="inline-block w-[5px] h-[5px] rotate-45 shrink-0 bg-[#c25e33]/75 dark:bg-[#d8b07a]/70"
           />
         </div>
       ))}
@@ -62,7 +58,7 @@ export function CsMarqueeStrip() {
   const groupRef = useRef<HTMLDivElement | null>(null);
   const hoveredRef = useRef(false);
 
-  // Ultra-calm, zero-skew, GPU-composited continuous drift (slows gracefully on hover)
+  // Ultra-calm, zero-skew, GPU-composited continuous drift with frame-rate-independent hover deceleration
   useEffect(() => {
     const track = trackRef.current;
     const firstGroup = groupRef.current;
@@ -84,8 +80,10 @@ export function CsMarqueeStrip() {
       const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
 
-      const targetFactor = hoveredRef.current ? 0.28 : 1;
-      speedFactor += (targetFactor - speedFactor) * 0.06;
+      // Frame-rate-independent exponential smoothing for silky hover deceleration
+      const targetFactor = hoveredRef.current ? 0.18 : 1;
+      const damp = 1 - Math.exp(-5.5 * dt);
+      speedFactor += (targetFactor - speedFactor) * damp;
 
       const loopWidth = firstGroup.offsetWidth;
       if (loopWidth > 0) {
@@ -106,10 +104,7 @@ export function CsMarqueeStrip() {
   return (
     <section
       aria-label="أركان المساحة الدراسية"
-      className="relative w-full overflow-hidden border-y py-3.5 sm:py-[15px] bg-[#1e355c]/[0.03] dark:bg-[#fff5e6]/[0.025]"
-      style={{
-        borderColor: "var(--border-soft)",
-      }}
+      className="relative w-full overflow-hidden border-y border-[#1e355c]/[0.15] bg-white/55 py-3.5 sm:py-[15px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur-[2px] dark:border-[#fff5e6]/[0.09] dark:bg-[#fff5e6]/[0.025] dark:shadow-[inset_0_1px_0_rgba(238,210,164,0.06)]"
       onMouseEnter={() => {
         hoveredRef.current = true;
       }}

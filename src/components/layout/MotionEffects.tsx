@@ -16,8 +16,8 @@ declare global {
 /**
  * Global Motion & Micro-Interaction Controller (GSAP + Lenis + GPU Compositing):
  * 1. Updates `#scrollProgressBar` via GPU `transform: scaleX(...)` (zero layout thrash).
- * 2. Initializes Lenis smooth momentum scroll synced 1:1 with GSAP ticker + ScrollTrigger,
- *    exposes `window.__lenis` and `window.__scrollVelocity`, and intercepts `#anchor` clicks.
+ * 2. Initializes Lenis smooth momentum scroll on desktop pointer devices (synced 1:1 with
+ *    GSAP ticker + ScrollTrigger), skipping unnecessary RAF work on touch-only devices.
  * 3. Refreshes ScrollTrigger on route/layout shifts and triggers `.reveal` elements cleanly.
  * 4. Handles delegated cursor spotlight (`.spotlight-card`) and elastic `.magnetic-btn` pull.
  */
@@ -25,9 +25,12 @@ export function MotionEffects() {
   const pathname = usePathname();
   const progressBarRef = useRef<HTMLDivElement | null>(null);
 
-  // 1. GPU-composited Scroll Progress Bar updater (fallback when Lenis is disabled)
+  // 1. GPU-composited Scroll Progress Bar updater (native scroll & resize fallback)
   useEffect(() => {
-    const updateProgress = () => {
+    let rafId = 0;
+
+    const applyProgress = () => {
+      rafId = 0;
       const bar = progressBarRef.current;
       if (!bar) return;
       const docH =
@@ -37,31 +40,51 @@ export function MotionEffects() {
       bar.style.transform = `scaleX(${ratio.toFixed(4)})`;
     };
 
-    updateProgress();
-    window.addEventListener("scroll", updateProgress, { passive: true });
-    window.addEventListener("resize", updateProgress, { passive: true });
+    const scheduleProgress = () => {
+      // When Lenis is driving desktop scroll, let `onLenisScroll` update the bar once per tick.
+      if (window.__lenis) return;
+      if (!rafId) {
+        rafId = requestAnimationFrame(applyProgress);
+      }
+    };
+
+    const onResize = () => {
+      if (!rafId) {
+        rafId = requestAnimationFrame(applyProgress);
+      }
+    };
+
+    applyProgress();
+    window.addEventListener("scroll", scheduleProgress, { passive: true });
+    window.addEventListener("resize", onResize, { passive: true });
 
     return () => {
-      window.removeEventListener("scroll", updateProgress);
-      window.removeEventListener("resize", updateProgress);
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", scheduleProgress);
+      window.removeEventListener("resize", onResize);
     };
   }, [pathname]);
 
-  // 2. Lenis smooth scroll synced with GSAP ticker + ScrollTrigger + velocity telemetry
+  // 2. Lenis smooth scroll synced with GSAP ticker + ScrollTrigger (desktop wheel devices)
   useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
-    if (reducedMotion) {
+    const isTouchOnly =
+      window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+
+    if (reducedMotion || isTouchOnly) {
       window.__scrollVelocity = 0;
       return;
     }
 
-    gsap.registerPlugin(ScrollTrigger);
+    let isDisposed = false;
 
     const lenis = new Lenis({
-      lerp: 0.088,
-      wheelMultiplier: 0.96,
+      lerp: 0.095,
+      wheelMultiplier: 1.0,
       smoothWheel: true,
     });
     window.__lenis = lenis;
@@ -97,7 +120,7 @@ export function MotionEffects() {
       const dest = document.querySelector<HTMLElement>(hash);
       if (!dest) return;
       event.preventDefault();
-      lenis.scrollTo(dest, { offset: -72, duration: 1.1 });
+      lenis.scrollTo(dest, { offset: -72, duration: 1.05 });
     };
 
     document.addEventListener("click", onAnchorClick);
@@ -105,6 +128,7 @@ export function MotionEffects() {
     // Refresh ScrollTrigger once fonts finish loading to keep pinned geometry exact
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(() => {
+        if (isDisposed) return;
         try {
           ScrollTrigger.refresh();
         } catch {
@@ -114,6 +138,7 @@ export function MotionEffects() {
     }
 
     return () => {
+      isDisposed = true;
       document.removeEventListener("click", onAnchorClick);
       lenis.off("scroll", onLenisScroll);
       gsap.ticker.remove(onTick);
@@ -210,8 +235,9 @@ export function MotionEffects() {
 
       if (!card && !magBtn) return;
 
-      cancelAnimationFrame(frame);
+      if (frame) cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
+        frame = 0;
         if (card) {
           const rect = card.getBoundingClientRect();
           card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
@@ -235,7 +261,10 @@ export function MotionEffects() {
     };
 
     const onMouseLeaveDoc = () => {
-      cancelAnimationFrame(frame);
+      if (frame) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      }
       resetMagnetic();
     };
 
@@ -243,7 +272,7 @@ export function MotionEffects() {
     document.addEventListener("mouseleave", onMouseLeaveDoc);
 
     return () => {
-      cancelAnimationFrame(frame);
+      if (frame) cancelAnimationFrame(frame);
       resetMagnetic();
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseleave", onMouseLeaveDoc);

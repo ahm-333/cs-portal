@@ -26,7 +26,6 @@ interface StudyPillar {
   needleDeg: number;
   arcProgress: number;
   positionClass: string;
-  isPaperNode?: boolean;
 }
 
 const STUDY_PILLARS: readonly StudyPillar[] = [
@@ -39,7 +38,8 @@ const STUDY_PILLARS: readonly StudyPillar[] = [
     kicker: "01 · VIDEO",
     needleDeg: 90,
     arcProgress: 0.25,
-    positionClass: "right-0 lg:-right-3 top-1/2 -translate-y-1/2",
+    positionClass:
+      "-right-8 min-[400px]:-right-9 sm:-right-6 lg:-right-2 top-1/2 -translate-y-1/2",
   },
   {
     id: "read",
@@ -50,7 +50,7 @@ const STUDY_PILLARS: readonly StudyPillar[] = [
     kicker: "02 · GUIDE",
     needleDeg: 0,
     arcProgress: 0.5,
-    positionClass: "top-1 lg:top-2 left-1/2 -translate-x-1/2",
+    positionClass: "-top-1.5 sm:top-1 lg:top-2 left-1/2 -translate-x-1/2",
   },
   {
     id: "summary",
@@ -61,8 +61,7 @@ const STUDY_PILLARS: readonly StudyPillar[] = [
     kicker: "03 · REVISION",
     needleDeg: 180,
     arcProgress: 0.75,
-    positionClass: "bottom-1 lg:bottom-2 left-1/2 -translate-x-1/2",
-    isPaperNode: true,
+    positionClass: "-bottom-1.5 sm:bottom-1 lg:bottom-2 left-1/2 -translate-x-1/2",
   },
   {
     id: "quiz",
@@ -73,7 +72,8 @@ const STUDY_PILLARS: readonly StudyPillar[] = [
     kicker: "94% READY",
     needleDeg: 270,
     arcProgress: 1,
-    positionClass: "left-0 lg:-left-3 top-1/2 -translate-y-1/2",
+    positionClass:
+      "-left-8 min-[400px]:-left-9 sm:-left-6 lg:-left-2 top-1/2 -translate-y-1/2",
   },
 ] as const;
 
@@ -118,7 +118,7 @@ const WAVEFORM_BARS: readonly { height: number; active: boolean }[] = [
   { height: 13, active: false },
 ];
 
-const AUTO_CYCLE_MS = 6000;
+const AUTO_CYCLE_MS = 5200;
 
 interface CenterLensContentProps {
   pillar: StudyPillar;
@@ -126,25 +126,40 @@ interface CenterLensContentProps {
   reducedMotion: boolean;
 }
 
+/**
+ * CenterLensContent — Luminous inner micro-UI for all 4 universal CS/AI pillars.
+ * Both Dark Mode (Obsidian lens) and Light Mode (Deep Architectural Navy Focal Jewel)
+ * use a rich deep jewel lens interior so inner details always pop with serene elegance.
+ */
 function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentProps) {
-  const textMain = isDark ? "#f6f4ef" : "#131c2b";
-  const textMuted = isDark ? "rgba(182, 176, 166, 0.84)" : "#5c687c";
-  const accent1 = isDark ? "#d8b07a" : "#1d6b52";
-  const accent2 = isDark ? "#6ec4a3" : "#c25e33";
-  const pillBg = isDark ? "rgba(255, 245, 230, 0.06)" : "rgba(30, 53, 92, 0.06)";
-  const borderMid = isDark ? "rgba(216, 176, 122, 0.24)" : "rgba(30, 53, 92, 0.16)";
+  const lensTextMain = "#f8f5ef";
+  const lensTextMuted = isDark
+    ? "rgba(196, 190, 180, 0.86)"
+    : "rgba(219, 229, 245, 0.84)";
+  const lensWarm = isDark ? "#eed2a4" : "#f2a07a";
+  const lensWarmStrong = isDark ? "#d8b07a" : "#e58257";
+  const lensMint = isDark ? "#6ec4a3" : "#7ad8b8";
+  const lensPillBg = isDark
+    ? "rgba(255, 245, 230, 0.065)"
+    : "rgba(255, 255, 255, 0.08)";
+  const lensBorder = isDark
+    ? "rgba(216, 176, 122, 0.26)"
+    : "rgba(255, 255, 255, 0.16)";
+  const lensSurface = isDark
+    ? "rgba(13, 15, 22, 0.9)"
+    : "rgba(11, 22, 42, 0.72)";
 
   switch (pillar.id) {
     case "video":
       return (
-        <div className="w-full flex flex-col items-center justify-center gap-2 lg:gap-3">
+        <div className="w-full flex flex-col items-center justify-center gap-1.5 sm:gap-2 lg:gap-3">
           <span
             dir="ltr"
-            className="font-mono-code text-[8.5px] lg:text-[10px] font-extrabold tracking-[0.1em] px-2.5 py-0.5 rounded-full"
+            className="font-mono-code text-[7.5px] sm:text-[8.5px] lg:text-[10px] font-extrabold tracking-[0.1em] px-2 lg:px-2.5 py-0.5 rounded-full"
             style={{
-              color: isDark ? "#eed2a4" : "#c25e33",
-              background: pillBg,
-              border: `1px solid ${borderMid}`,
+              color: lensWarm,
+              background: lensPillBg,
+              border: `1px solid ${lensBorder}`,
             }}
           >
             {pillar.kicker}
@@ -157,28 +172,30 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
               className="absolute inset-0 rounded-full scale-125 opacity-45 blur-md"
               style={{
                 background: isDark
-                  ? "rgba(216, 176, 122, 0.35)"
-                  : "rgba(194, 94, 51, 0.25)",
+                  ? "rgba(216, 176, 122, 0.34)"
+                  : "rgba(229, 130, 87, 0.34)",
               }}
             />
             <div
-              className="relative w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center"
+              className="relative w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center"
               style={{
                 background: isDark
                   ? "linear-gradient(135deg, rgba(216,176,122,0.24), rgba(216,176,122,0.08))"
-                  : "linear-gradient(135deg, rgba(194,94,51,0.18), rgba(194,94,51,0.06))",
-                border: `1.5px solid ${isDark ? "rgba(238,210,164,0.65)" : "rgba(194,94,51,0.55)"}`,
+                  : "linear-gradient(135deg, rgba(229,130,87,0.26), rgba(229,130,87,0.08))",
+                border: `1.5px solid ${
+                  isDark ? "rgba(238,210,164,0.65)" : "rgba(242,160,122,0.7)"
+                }`,
                 boxShadow: isDark
                   ? "0 0 22px rgba(216, 176, 122, 0.24)"
-                  : "0 6px 18px rgba(194, 94, 51, 0.16)",
+                  : "0 0 22px rgba(229, 130, 87, 0.24)",
               }}
             >
               <svg
-                width="15"
-                height="15"
+                width="13"
+                height="13"
                 viewBox="0 0 16 16"
-                fill={isDark ? "#eed2a4" : "#c25e33"}
-                className="translate-x-[1px]"
+                fill={lensWarm}
+                className="translate-x-[1px] lg:w-[15px] lg:h-[15px]"
                 aria-hidden="true"
               >
                 <path d="M5 3.2L13 8L5 12.8V3.2Z" />
@@ -188,22 +205,18 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
 
           {/* Calm Audio/Video Waveform Bars */}
           <div
-            className="flex items-center justify-center gap-[2.5px] lg:gap-[3.5px] h-5 lg:h-6 w-[134px] lg:w-[176px]"
+            className="flex items-center justify-center gap-[2px] sm:gap-[2.5px] lg:gap-[3.5px] h-4 sm:h-5 lg:h-6 w-[106px] sm:w-[138px] lg:w-[176px]"
             aria-hidden="true"
           >
             {WAVEFORM_BARS.map((bar, idx) => (
               <motion.span
                 key={idx}
-                className="w-[2.5px] lg:w-[3px] rounded-full"
+                className="w-[2px] sm:w-[2.5px] lg:w-[3px] rounded-full"
                 style={{
-                  height: `${Math.round(bar.height * 0.85)}px`,
+                  height: `${Math.round(bar.height * 0.78)}px`,
                   background: bar.active
-                    ? isDark
-                      ? "#d8b07a"
-                      : "#c25e33"
-                    : isDark
-                      ? "rgba(255, 245, 230, 0.16)"
-                      : "rgba(30, 53, 92, 0.15)",
+                    ? lensWarmStrong
+                    : "rgba(255, 248, 238, 0.16)",
                 }}
                 animate={
                   !reducedMotion && bar.active && idx % 3 === 1
@@ -221,34 +234,25 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
 
           {/* 3-Segment Chapter Progress Rail */}
           <div
-            className="w-[134px] lg:w-[176px] grid grid-cols-[1.1fr_1.4fr_0.9fr] gap-1"
+            className="w-[106px] sm:w-[138px] lg:w-[176px] grid grid-cols-[1.1fr_1.4fr_0.9fr] gap-1"
             aria-hidden="true"
           >
+            <div className="h-[3px] lg:h-1 rounded-full" style={{ background: lensWarmStrong }} />
             <div
-              className="h-1 rounded-full"
-              style={{ background: isDark ? "#d8b07a" : "#c25e33" }}
-            />
-            <div
-              className="h-1 rounded-full"
+              className="h-[3px] lg:h-1 rounded-full"
               style={{
-                background: isDark
-                  ? "linear-gradient(270deg, #d8b07a 58%, rgba(255,245,230,0.14) 58%)"
-                  : "linear-gradient(270deg, #c25e33 58%, rgba(30,53,92,0.13) 58%)",
+                background: `linear-gradient(270deg, ${lensWarmStrong} 58%, rgba(255,248,238,0.14) 58%)`,
               }}
             />
             <div
-              className="h-1 rounded-full"
-              style={{
-                background: isDark
-                  ? "rgba(255, 245, 230, 0.14)"
-                  : "rgba(30, 53, 92, 0.13)",
-              }}
+              className="h-[3px] lg:h-1 rounded-full"
+              style={{ background: "rgba(255, 248, 238, 0.14)" }}
             />
           </div>
 
           <span
-            className="text-[9.5px] lg:text-[11px] font-bold leading-snug max-w-[155px] lg:max-w-[205px]"
-            style={{ color: textMuted }}
+            className="text-[8.5px] sm:text-[9.5px] lg:text-[11px] font-bold leading-snug max-w-[122px] sm:max-w-[155px] lg:max-w-[205px]"
+            style={{ color: lensTextMuted }}
           >
             فصول زمنية واضحة بدون إعلانات
           </span>
@@ -257,14 +261,14 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
 
     case "read":
       return (
-        <div className="w-full flex flex-col items-center justify-center gap-2 lg:gap-2.5">
+        <div className="w-full flex flex-col items-center justify-center gap-1.5 sm:gap-2 lg:gap-2.5">
           <span
             dir="ltr"
-            className="font-mono-code text-[8.5px] lg:text-[10px] font-extrabold tracking-[0.1em] px-2.5 py-0.5 rounded-full"
+            className="font-mono-code text-[7.5px] sm:text-[8.5px] lg:text-[10px] font-extrabold tracking-[0.1em] px-2 lg:px-2.5 py-0.5 rounded-full"
             style={{
-              color: accent1,
-              background: pillBg,
-              border: `1px solid ${borderMid}`,
+              color: lensMint,
+              background: lensPillBg,
+              border: `1px solid ${lensBorder}`,
             }}
           >
             {pillar.kicker}
@@ -272,47 +276,39 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
 
           {/* Universal Structured Chapter Page Preview */}
           <div
-            className="w-[138px] sm:w-[156px] lg:w-[192px] rounded-xl p-2 lg:p-2.5 text-right flex flex-col gap-1.5 lg:gap-2"
+            className="w-[112px] sm:w-[144px] lg:w-[192px] rounded-lg lg:rounded-xl p-1.5 sm:p-2 lg:p-2.5 text-right flex flex-col gap-1 sm:gap-1.5 lg:gap-2"
             style={{
-              background: isDark
-                ? "rgba(12, 14, 20, 0.88)"
-                : "rgba(255, 255, 255, 0.94)",
-              border: `1px solid ${borderMid}`,
-              boxShadow: isDark
-                ? "0 10px 24px rgba(0, 0, 0, 0.42)"
-                : "0 8px 20px rgba(18, 28, 45, 0.08)",
+              background: lensSurface,
+              border: `1px solid ${lensBorder}`,
+              boxShadow: "0 10px 24px rgba(0, 0, 0, 0.36)",
             }}
           >
             {/* Header bar with A- / A+ */}
             <div
-              className="flex items-center justify-between pb-1.5"
-              style={{
-                borderBottom: `1px solid ${
-                  isDark ? "rgba(255,245,230,0.08)" : "rgba(30,53,92,0.1)"
-                }`,
-              }}
+              className="flex items-center justify-between pb-1"
+              style={{ borderBottom: "1px solid rgba(255, 248, 238, 0.08)" }}
             >
               <span
                 dir="ltr"
-                className="font-mono-code text-[8px] lg:text-[9px] font-bold"
-                style={{ color: accent1 }}
+                className="font-mono-code text-[7px] sm:text-[8px] lg:text-[9px] font-bold"
+                style={{ color: lensMint }}
               >
                 CHAPTER
               </span>
               <div dir="ltr" className="flex items-center gap-1">
                 <span
-                  className="font-mono-code text-[7.5px] lg:text-[8.5px] font-bold px-1.5 py-0.5 rounded"
-                  style={{ background: pillBg, color: textMain }}
+                  className="font-mono-code text-[6.5px] sm:text-[7.5px] lg:text-[8.5px] font-bold px-1 lg:px-1.5 py-0.5 rounded"
+                  style={{ background: lensPillBg, color: lensTextMain }}
                 >
                   A-
                 </span>
                 <span
-                  className="font-mono-code text-[7.5px] lg:text-[8.5px] font-bold px-1.5 py-0.5 rounded"
+                  className="font-mono-code text-[6.5px] sm:text-[7.5px] lg:text-[8.5px] font-bold px-1 lg:px-1.5 py-0.5 rounded"
                   style={{
                     background: isDark
                       ? "rgba(216,176,122,0.18)"
-                      : "rgba(30,53,92,0.12)",
-                    color: isDark ? "#eed2a4" : "#1e355c",
+                      : "rgba(229,130,87,0.22)",
+                    color: lensWarm,
                   }}
                 >
                   A+
@@ -323,63 +319,53 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
             {/* Clean Structured Heading + Text Lines */}
             <div className="space-y-1">
               <div
-                className="h-1.5 lg:h-2 w-3/4 rounded-full"
-                style={{
-                  background: isDark
-                    ? "rgba(246, 244, 239, 0.85)"
-                    : "rgba(19, 28, 43, 0.8)",
-                }}
+                className="h-1 lg:h-1.5 w-3/4 rounded-full"
+                style={{ background: "rgba(248, 245, 239, 0.85)" }}
               />
               <div
-                className="h-1 w-full rounded-full"
-                style={{
-                  background: isDark
-                    ? "rgba(220, 215, 206, 0.25)"
-                    : "rgba(30, 53, 92, 0.16)",
-                }}
+                className="h-[3px] lg:h-1 w-full rounded-full"
+                style={{ background: "rgba(220, 224, 235, 0.24)" }}
               />
             </div>
 
             {/* Mini Universal Diagram / Schema Flow */}
             <div
-              className="rounded-lg px-2 py-1.5 flex items-center justify-between gap-1"
+              className="rounded-md lg:rounded-lg px-1.5 lg:px-2 py-1 lg:py-1.5 flex items-center justify-between gap-1"
               style={{
-                background: isDark
-                  ? "rgba(216, 176, 122, 0.06)"
-                  : "rgba(30, 53, 92, 0.045)",
-                border: `1px solid ${
-                  isDark ? "rgba(216,176,122,0.15)" : "rgba(30,53,92,0.1)"
-                }`,
+                background: "rgba(255, 255, 255, 0.04)",
+                border: "1px solid rgba(255, 255, 255, 0.09)",
               }}
               aria-hidden="true"
             >
               <span
-                className="w-3.5 h-3.5 lg:w-4 lg:h-4 rounded-md border"
+                className="w-2.5 h-2.5 lg:w-4 lg:h-4 rounded lg:rounded-md border"
                 style={{
-                  background: isDark ? "rgba(110,196,163,0.16)" : "rgba(29,107,82,0.14)",
-                  borderColor: accent2,
+                  background: "rgba(122, 216, 184, 0.16)",
+                  borderColor: lensMint,
                 }}
               />
               <span
                 className="flex-1 h-[1.5px] rounded-full"
-                style={{ background: borderMid }}
+                style={{ background: lensBorder }}
               />
               <span
-                className="w-3.5 h-3.5 lg:w-4 lg:h-4 rounded-full border"
+                className="w-2.5 h-2.5 lg:w-4 lg:h-4 rounded-full border"
                 style={{
-                  background: isDark ? "rgba(216,176,122,0.22)" : "rgba(30,53,92,0.16)",
-                  borderColor: accent1,
+                  background: isDark
+                    ? "rgba(216,176,122,0.22)"
+                    : "rgba(242,160,122,0.22)",
+                  borderColor: lensWarmStrong,
                 }}
               />
               <span
                 className="flex-1 h-[1.5px] rounded-full"
-                style={{ background: borderMid }}
+                style={{ background: lensBorder }}
               />
               <span
-                className="w-3.5 h-3.5 lg:w-4 lg:h-4 rounded-md border"
+                className="w-2.5 h-2.5 lg:w-4 lg:h-4 rounded lg:rounded-md border"
                 style={{
-                  background: isDark ? "rgba(180,167,214,0.2)" : "rgba(194,94,51,0.14)",
-                  borderColor: isDark ? "#b4a7d6" : "#c25e33",
+                  background: "rgba(180, 167, 214, 0.2)",
+                  borderColor: "#b4a7d6",
                 }}
               />
             </div>
@@ -387,21 +373,21 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
             {/* Clean Syntax Block */}
             <div
               dir="ltr"
-              className="rounded-lg px-2 py-1.5 font-mono-code text-[7.5px] lg:text-[9px] leading-tight text-left"
+              className="hidden sm:block rounded-md lg:rounded-lg px-2 py-1 lg:py-1.5 font-mono-code text-[7.5px] lg:text-[9px] leading-tight text-left"
               style={{
-                background: isDark ? "#090b10" : "#152238",
+                background: "rgba(6, 9, 16, 0.82)",
                 color: "#e6e2da",
               }}
             >
-              <span style={{ color: "#6ec4a3" }}>step</span>
-              <span style={{ color: "#d8b07a" }}>(data)</span>
+              <span style={{ color: lensMint }}>step</span>
+              <span style={{ color: lensWarm }}>(data)</span>
               <span style={{ color: "rgba(230,226,218,0.65)" }}> → out</span>
             </div>
           </div>
 
           <span
-            className="text-[9.5px] lg:text-[11px] font-bold leading-snug max-w-[155px] lg:max-w-[208px]"
-            style={{ color: textMuted }}
+            className="text-[8.5px] sm:text-[9.5px] lg:text-[11px] font-bold leading-snug max-w-[122px] sm:max-w-[155px] lg:max-w-[208px]"
+            style={{ color: lensTextMuted }}
           >
             شرح الشابتر كامل برسومات وأكواد
           </span>
@@ -410,28 +396,29 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
 
     case "summary":
       return (
-        <div className="w-full flex flex-col items-center justify-center gap-2 lg:gap-2.5">
-          {/* Tactile Warm Ivory Paper Card with Terracotta Bookmark Ribbon */}
+        <div className="w-full flex flex-col items-center justify-center gap-1.5 sm:gap-2 lg:gap-2.5">
+          {/* Harmonious Obsidian/Champagne (Dark) or Navy/Terracotta (Light Jewel) Framed Summary Sheet */}
           <div
-            className="relative w-[142px] sm:w-[162px] lg:w-[196px] rounded-[14px] p-2.5 lg:p-3.5 text-right flex flex-col gap-1.5 lg:gap-2"
+            className="relative w-[114px] sm:w-[148px] lg:w-[196px] rounded-[11px] lg:rounded-[14px] p-2 sm:p-2.5 lg:p-3.5 text-right flex flex-col gap-1 sm:gap-1.5 lg:gap-2"
             style={{
-              background: "#f6f5f1",
-              color: "#171614",
-              border: "1px solid rgba(30, 53, 92, 0.12)",
-              boxShadow: isDark
-                ? "0 16px 32px rgba(0, 0, 0, 0.48)"
-                : "0 12px 28px rgba(24, 34, 52, 0.12)",
+              background: lensSurface,
+              color: lensTextMain,
+              border: `1px solid ${lensBorder}`,
+              boxShadow: "0 14px 28px rgba(0, 0, 0, 0.36)",
             }}
           >
-            {/* Terracotta Bookmark Ribbon */}
+            {/* Subtle Bookmark Ribbon */}
             <span
               aria-hidden="true"
-              className="absolute top-0 left-3.5 w-[9px] h-[14px] lg:h-[16px] rounded-b-[3px]"
-              style={{ background: "#c25e33" }}
+              className="absolute top-0 left-2.5 lg:left-3.5 w-[7px] lg:w-[9px] h-[11px] lg:h-[15px] rounded-b-[3px]"
+              style={{ background: lensWarmStrong }}
             />
 
-            <div className="text-[8.5px] lg:text-[10px] font-extrabold text-[#c25e33] pl-4">
-              ملخص الفصل في دقائق
+            <div
+              className="text-[7.5px] sm:text-[8.5px] lg:text-[10px] font-extrabold pl-3"
+              style={{ color: lensWarm }}
+            >
+              ملخص الفصل السريع
             </div>
 
             <div className="space-y-1 lg:space-y-1.5">
@@ -442,16 +429,21 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
               ].map((line, i) => (
                 <div
                   key={line}
-                  className="flex items-center gap-1.5 rounded-md px-1.5 py-0.5 lg:py-1 text-[8.5px] lg:text-[10px] font-bold"
+                  className="flex items-center gap-1 lg:gap-1.5 rounded-md px-1.5 py-0.5 lg:py-1 text-[7.5px] sm:text-[8.5px] lg:text-[10px] font-bold"
                   style={{
                     background:
                       i === 0
-                        ? "rgba(194, 94, 51, 0.11)"
-                        : "rgba(30, 53, 92, 0.055)",
-                    color: i === 0 ? "#8f3d1c" : "#1e355c",
+                        ? isDark
+                          ? "rgba(216, 176, 122, 0.14)"
+                          : "rgba(229, 130, 87, 0.16)"
+                        : "rgba(255, 255, 255, 0.055)",
+                    color: i === 0 ? lensWarm : lensTextMain,
                   }}
                 >
-                  <Check className="w-2.5 h-2.5 lg:w-3 lg:h-3 shrink-0 text-[#1d6b52]" />
+                  <Check
+                    className="w-2.5 h-2.5 lg:w-3 lg:h-3 shrink-0"
+                    style={{ color: lensMint }}
+                  />
                   <span className="truncate">{line}</span>
                 </div>
               ))}
@@ -459,8 +451,8 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
           </div>
 
           <span
-            className="text-[9.5px] lg:text-[11px] font-bold leading-snug max-w-[155px] lg:max-w-[205px]"
-            style={{ color: textMuted }}
+            className="text-[8.5px] sm:text-[9.5px] lg:text-[11px] font-bold leading-snug max-w-[122px] sm:max-w-[155px] lg:max-w-[205px]"
+            style={{ color: lensTextMuted }}
           >
             مذاكر وتريد التذكّر سريعاً؟
           </span>
@@ -469,7 +461,7 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
 
     case "quiz":
       return (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 lg:gap-2.5">
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1 sm:gap-1.5 lg:gap-2.5">
           {/* Concentric Circular Readiness Ring Hugging Inner Rim */}
           <svg
             viewBox="0 0 288 288"
@@ -481,9 +473,7 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
               cy="144"
               r="134"
               fill="none"
-              stroke={
-                isDark ? "rgba(110, 196, 163, 0.14)" : "rgba(29, 107, 82, 0.13)"
-              }
+              stroke="rgba(122, 216, 184, 0.16)"
               strokeWidth="3.2"
             />
             <motion.circle
@@ -491,7 +481,7 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
               cy="144"
               r="134"
               fill="none"
-              stroke={isDark ? "#6ec4a3" : "#1d6b52"}
+              stroke={lensMint}
               strokeWidth="3.2"
               strokeLinecap="round"
               initial={{ pathLength: reducedMotion ? 0.94 : 0.12 }}
@@ -502,15 +492,11 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
 
           <span
             dir="ltr"
-            className="font-mono-code text-[8.5px] lg:text-[10px] font-extrabold tracking-[0.1em] px-2.5 py-0.5 rounded-full"
+            className="font-mono-code text-[7.5px] sm:text-[8.5px] lg:text-[10px] font-extrabold tracking-[0.1em] px-2 lg:px-2.5 py-0.5 rounded-full"
             style={{
-              color: isDark ? "#6ec4a3" : "#1d6b52",
-              background: isDark
-                ? "rgba(110, 196, 163, 0.12)"
-                : "rgba(29, 107, 82, 0.1)",
-              border: `1px solid ${
-                isDark ? "rgba(110, 196, 163, 0.34)" : "rgba(29, 107, 82, 0.25)"
-              }`,
+              color: lensMint,
+              background: "rgba(122, 216, 184, 0.12)",
+              border: "1px solid rgba(122, 216, 184, 0.34)",
             }}
           >
             {pillar.kicker}
@@ -519,32 +505,28 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
           {/* Readiness Percentage */}
           <div
             dir="ltr"
-            className="font-mono-code text-[28px] lg:text-[38px] font-black leading-none tracking-tight"
-            style={{ color: textMain }}
+            className="font-mono-code text-[22px] sm:text-[28px] lg:text-[38px] font-black leading-none tracking-tight"
+            style={{ color: lensTextMain }}
           >
             94%
           </div>
 
           {/* Instant Check Pill */}
           <div
-            className="inline-flex items-center gap-1.5 px-2.5 lg:px-3 py-1 rounded-full text-[9.5px] lg:text-[11px] font-extrabold"
+            className="inline-flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-0.5 lg:py-1 rounded-full text-[8.5px] sm:text-[9.5px] lg:text-[11px] font-extrabold"
             style={{
-              background: isDark
-                ? "rgba(110, 196, 163, 0.15)"
-                : "rgba(29, 107, 82, 0.12)",
-              border: `1px solid ${
-                isDark ? "rgba(110, 196, 163, 0.45)" : "rgba(29, 107, 82, 0.35)"
-              }`,
-              color: isDark ? "#a7ead0" : "#155742",
+              background: "rgba(122, 216, 184, 0.16)",
+              border: "1px solid rgba(122, 216, 184, 0.44)",
+              color: "#bdf3df",
             }}
           >
-            <Check className="w-3 h-3 shrink-0" />
+            <Check className="w-2.5 h-2.5 lg:w-3 lg:h-3 shrink-0" />
             <span>تصحيح فوري</span>
           </div>
 
           <span
-            className="text-[10px] lg:text-[11.5px] font-extrabold"
-            style={{ color: textMuted }}
+            className="text-[8.5px] sm:text-[10px] lg:text-[11.5px] font-extrabold"
+            style={{ color: lensTextMuted }}
           >
             +40 سؤال لكل فصل
           </span>
@@ -559,6 +541,7 @@ export function InteractiveDeskHero() {
   const reducedMotion = useReducedMotion() ?? false;
 
   const [activeIdx, setActiveIdx] = useState<number>(0);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState<boolean>(false);
 
   const heroSectionRef = useRef<HTMLElement | null>(null);
@@ -579,7 +562,8 @@ export function InteractiveDeskHero() {
 
   const handleSelectPillar = useCallback(
     (index: number) => {
-      const safeIdx = ((index % STUDY_PILLARS.length) + STUDY_PILLARS.length) % STUDY_PILLARS.length;
+      const safeIdx =
+        ((index % STUDY_PILLARS.length) + STUDY_PILLARS.length) % STUDY_PILLARS.length;
       setActiveIdx(safeIdx);
       setIsPaused(true);
       clearManualPauseTimer();
@@ -591,7 +575,7 @@ export function InteractiveDeskHero() {
     [clearManualPauseTimer]
   );
 
-  // Calm 6-second auto-cycle (pauses on hover, focus, interaction, or reduced motion)
+  // Ultra-gentle, calm ~5.2s auto-cycle (pauses cleanly on hover, focus, click, or reduced motion)
   useEffect(() => {
     if (reducedMotion || isPaused) return;
     const id = window.setInterval(() => {
@@ -727,61 +711,68 @@ export function InteractiveDeskHero() {
     }
   }, []);
 
-  // Dual Mode Palette Tokens (Dark: Obsidian & Champagne | Light: Daylight Ivory Atelier)
+  // Dual Mode Palette Tokens (Dark: Obsidian & Champagne | Light: Rich Daylight Ivory + Navy Focal Jewel)
   const bgGrad = isDark
     ? "linear-gradient(175deg, #08090c 0%, #111319 54%, #0a0c10 100%)"
-    : "linear-gradient(175deg, #f9f7f2 0%, #f2eee5 56%, #ebe6da 100%)";
+    : "linear-gradient(175deg, #f4f0e6 0%, #ebe5d8 56%, #e5dfd1 100%)";
 
-  const gridLine = isDark ? "rgba(216, 176, 122, 0.038)" : "rgba(30, 53, 92, 0.05)";
+  const dotColor = isDark ? "rgba(216, 176, 122, 0.14)" : "rgba(22, 40, 71, 0.14)";
   const glowGrad = isDark
     ? "radial-gradient(circle, rgba(216, 176, 122, 0.11) 0%, rgba(110, 196, 163, 0.08) 48%, transparent 72%)"
-    : "radial-gradient(circle, rgba(194, 94, 51, 0.08) 0%, rgba(29, 107, 82, 0.075) 48%, transparent 72%)";
+    : "radial-gradient(circle, rgba(194, 94, 51, 0.1) 0%, rgba(21, 102, 75, 0.085) 48%, transparent 72%)";
 
-  const borderSoft = isDark ? "rgba(255, 245, 230, 0.085)" : "rgba(30, 53, 92, 0.1)";
-  const borderMid = isDark ? "rgba(216, 176, 122, 0.22)" : "rgba(30, 53, 92, 0.16)";
+  const borderSoft = isDark ? "rgba(255, 245, 230, 0.085)" : "rgba(22, 40, 71, 0.11)";
+  const borderMid = isDark ? "rgba(216, 176, 122, 0.22)" : "rgba(22, 40, 71, 0.15)";
   const textMain = isDark ? "#f6f4ef" : "#131c2b";
-  const textSub = isDark ? "rgba(220, 215, 206, 0.82)" : "#3c485c";
-  const textMuted = isDark ? "rgba(160, 155, 146, 0.8)" : "#626e82";
-  const pillBg = isDark ? "rgba(255, 245, 230, 0.055)" : "rgba(30, 53, 92, 0.055)";
+  const textSub = isDark ? "rgba(220, 215, 206, 0.82)" : "#334157";
+  const textMuted = isDark ? "rgba(160, 155, 146, 0.8)" : "#5b677c";
+  const pillBg = isDark ? "rgba(255, 245, 230, 0.055)" : "rgba(22, 40, 71, 0.055)";
 
   const titleGrad = isDark
     ? "linear-gradient(270deg, #e7c694 0%, #f7e8d0 46%, #79d2ad 100%)"
-    : "linear-gradient(270deg, #c25e33 0%, #1e355c 56%, #1d6b52 100%)";
+    : "linear-gradient(270deg, #c25e33 0%, #162847 54%, #15664b 100%)";
 
   const ctaBg = isDark
     ? "linear-gradient(135deg, #d6a96c 0%, #b88749 100%)"
-    : "linear-gradient(135deg, #1e355c 0%, #132442 100%)";
+    : "linear-gradient(135deg, #162847 0%, #0e1c34 100%)";
   const ctaText = isDark ? "#101115" : "#ffffff";
   const ctaShadow = isDark
     ? "0 10px 28px rgba(214, 169, 108, 0.28), inset 0 1px 0 rgba(255, 250, 240, 0.35)"
-    : "0 12px 28px rgba(30, 53, 92, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.16)";
+    : "0 12px 28px rgba(22, 40, 71, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.16)";
 
-  const secBg = isDark ? "rgba(255, 255, 255, 0.045)" : "rgba(255, 255, 255, 0.78)";
-  const secText = isDark ? "#f3efe8" : "#1e355c";
+  const secBg = isDark ? "rgba(255, 255, 255, 0.045)" : "rgba(255, 255, 255, 0.86)";
+  const secText = isDark ? "#f3efe8" : "#162847";
 
-  const accent1 = isDark ? "#d8b07a" : "#1d6b52";
-  const accent3 = isDark ? "#b4a7d6" : "#1e355c";
+  const accent1 = isDark ? "#d8b07a" : "#15664b";
+  const accent3 = isDark ? "#b4a7d6" : "#162847";
 
-  const ringOuter = isDark ? "rgba(216, 176, 122, 0.17)" : "rgba(30, 53, 92, 0.15)";
-  const ringInner = isDark ? "rgba(255, 255, 255, 0.075)" : "rgba(30, 53, 92, 0.1)";
-  const tickColor = isDark ? "rgba(216, 176, 122, 0.32)" : "rgba(30, 53, 92, 0.24)";
-  const needleColor = isDark ? "#d8b07a" : "#1e355c";
+  const ringOuter = isDark ? "rgba(216, 176, 122, 0.18)" : "rgba(22, 40, 71, 0.16)";
+  const ringInner = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(22, 40, 71, 0.11)";
+  const tickColor = isDark ? "rgba(216, 176, 122, 0.32)" : "rgba(22, 40, 71, 0.26)";
+  const needleColor = isDark ? "#d8b07a" : "#162847";
 
+  // Center Lens: Obsidian in Dark Mode | Deep Architectural Navy Focal Jewel in Light Mode
   const coreBg = isDark
     ? "radial-gradient(circle at 36% 18%, #1e222c 0%, #0d0f14 78%)"
-    : "radial-gradient(circle at 34% 20%, #ffffff 0%, #f5f2ea 82%)";
-  const coreBorder = isDark ? "rgba(216, 176, 122, 0.28)" : "rgba(30, 53, 92, 0.15)";
-  const coreHalo = isDark ? "rgba(216, 176, 122, 0.04)" : "rgba(30, 53, 92, 0.035)";
+    : "radial-gradient(circle at 35% 20%, #1d3257 0%, #0e1a30 82%)";
+  const coreBorder = isDark
+    ? "rgba(216, 176, 122, 0.28)"
+    : "rgba(255, 255, 255, 0.15)";
+  const coreHalo = isDark
+    ? "rgba(216, 176, 122, 0.045)"
+    : "rgba(22, 40, 71, 0.065)";
   const coreShadow = isDark
-    ? `0 32px 72px rgba(0, 0, 0, 0.68), 0 0 0 12px ${coreHalo}`
-    : `0 26px 58px rgba(24, 34, 52, 0.13), 0 4px 14px rgba(194, 94, 51, 0.05), 0 0 0 12px ${coreHalo}`;
+    ? `0 32px 72px rgba(0, 0, 0, 0.68), 0 0 0 11px ${coreHalo}`
+    : `0 28px 60px rgba(14, 26, 48, 0.28), 0 6px 18px rgba(194, 94, 51, 0.1), 0 0 0 11px ${coreHalo}`;
   const rimGlint = isDark
     ? "linear-gradient(90deg, transparent 10%, rgba(245, 224, 188, 0.65) 50%, transparent 90%)"
-    : "linear-gradient(90deg, transparent 10%, rgba(255, 255, 255, 0.95) 50%, transparent 90%)";
+    : "linear-gradient(90deg, transparent 10%, rgba(255, 255, 255, 0.58) 50%, transparent 90%)";
 
-  const stepperBg = isDark ? "rgba(16, 18, 24, 0.76)" : "rgba(255, 253, 249, 0.86)";
+  const stepperBg = isDark
+    ? "rgba(16, 18, 24, 0.78)"
+    : "rgba(255, 255, 255, 0.88)";
 
-  // Per-station number badge palette when inactive
+  // Per-station number badge palette when inactive (uniform node surface across all 4 stations!)
   const getInactiveNumStyle = (id: PillarId) => {
     switch (id) {
       case "video":
@@ -795,19 +786,21 @@ export function InteractiveDeskHero() {
         return {
           background: isDark
             ? "rgba(110, 196, 163, 0.14)"
-            : "rgba(29, 107, 82, 0.13)",
-          color: isDark ? "#6ec4a3" : "#1d6b52",
+            : "rgba(21, 102, 75, 0.13)",
+          color: isDark ? "#6ec4a3" : "#15664b",
         };
       case "summary":
         return {
-          background: "rgba(194, 94, 51, 0.15)",
-          color: "#c25e33",
+          background: isDark
+            ? "rgba(216, 176, 122, 0.14)"
+            : "rgba(194, 94, 51, 0.13)",
+          color: isDark ? "#eed2a4" : "#c25e33",
         };
       case "quiz":
         return {
           background: isDark
             ? "rgba(180, 167, 214, 0.16)"
-            : "rgba(30, 53, 92, 0.11)",
+            : "rgba(22, 40, 71, 0.1)",
           color: accent3,
         };
     }
@@ -824,13 +817,13 @@ export function InteractiveDeskHero() {
         borderBottom: `1px solid ${borderSoft}`,
       }}
     >
-      {/* Architectural Drafting Grid */}
+      {/* Ultra-Fine Geometric Dot Matrix Background */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage: `linear-gradient(to right, ${gridLine} 1px, transparent 1px), linear-gradient(to bottom, ${gridLine} 1px, transparent 1px)`,
-          backgroundSize: "48px 48px",
+          backgroundImage: `radial-gradient(circle, ${dotColor} 1px, transparent 1px)`,
+          backgroundSize: "26px 26px",
           maskImage:
             "radial-gradient(ellipse 80% 76% at 34% 50%, #000 28%, transparent 100%)",
           WebkitMaskImage:
@@ -843,7 +836,7 @@ export function InteractiveDeskHero() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
-          opacity: isDark ? 0.03 : 0.04,
+          opacity: isDark ? 0.03 : 0.035,
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
         }}
@@ -852,22 +845,22 @@ export function InteractiveDeskHero() {
       {/* Restrained Ambient Glow Behind Study Dial */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-[12%] left-[8%] w-[360px] h-[360px] lg:w-[560px] lg:h-[560px] rounded-full blur-[54px]"
+        className="pointer-events-none absolute top-[12%] left-[8%] w-[340px] h-[340px] lg:w-[560px] lg:h-[560px] rounded-full blur-[56px]"
         style={{ background: glowGrad }}
       />
 
       {/* ==================== MAIN HERO GRID ==================== */}
-      <div className="relative z-10 flex-1 w-full max-w-[1220px] mx-auto px-4 sm:px-6 lg:px-8 pt-[72px] md:pt-[96px] pb-24 md:pb-8 lg:pb-4 flex items-center">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-[1.06fr_0.94fr] items-center gap-6 lg:gap-9">
+      <div className="relative z-10 flex-1 w-full max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-12 pt-[54px] pb-[68px] md:pt-[86px] md:pb-8 lg:pt-[84px] lg:pb-4 flex items-center">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr] items-center gap-3.5 sm:gap-5 lg:gap-12 xl:gap-20">
           {/* Copy Column (Right in RTL on Desktop, Centered on Mobile) */}
           <div
             ref={copyColRef}
-            className="flex flex-col items-center lg:items-start text-center lg:text-right gap-3 lg:gap-[18px]"
+            className="flex flex-col items-center lg:items-start text-center lg:text-right gap-2 sm:gap-3 lg:gap-[18px]"
           >
             {/* Eyebrow */}
             <div
               data-hero-eyebrow
-              className="inline-flex items-center gap-2 px-3 py-1 lg:px-3.5 lg:py-1.5 rounded-full text-[10.5px] lg:text-[11.5px] font-bold"
+              className="inline-flex items-center gap-1.5 lg:gap-2 px-2.5 py-0.5 sm:px-3 sm:py-1 lg:px-3.5 lg:py-1.5 rounded-full text-[10px] sm:text-[10.5px] lg:text-[11.5px] font-bold"
               style={{
                 background: pillBg,
                 border: `1px solid ${borderSoft}`,
@@ -887,7 +880,7 @@ export function InteractiveDeskHero() {
 
             {/* Sculptural 2-Line Headline */}
             <h1
-              className="text-[24px] sm:text-[32px] lg:text-[35px] xl:text-[42px] font-black leading-[1.32] tracking-[-0.02em]"
+              className="text-[21px] min-[400px]:text-[23px] sm:text-[31px] lg:text-[36px] xl:text-[42px] font-black leading-[1.28] lg:leading-[1.32] tracking-[-0.02em]"
               style={{ color: textMain }}
             >
               <span className="block overflow-hidden pb-0.5">
@@ -895,7 +888,7 @@ export function InteractiveDeskHero() {
                   بدل تشتيت الملفات..
                 </span>
               </span>
-              <span className="block overflow-hidden pb-1">
+              <span className="block overflow-hidden pb-0.5 lg:pb-1">
                 <span
                   data-hero-line
                   className="block mt-0.5 lg:whitespace-nowrap bg-clip-text text-transparent"
@@ -913,7 +906,7 @@ export function InteractiveDeskHero() {
             {/* Subtitle */}
             <p
               data-hero-fade
-              className="text-[12.5px] sm:text-[14px] lg:text-[15.5px] leading-[1.72] lg:leading-[1.82] font-medium max-w-[345px] sm:max-w-[460px] lg:max-w-[500px]"
+              className="text-[11.5px] min-[400px]:text-[12px] sm:text-[13.5px] lg:text-[15.5px] leading-[1.55] sm:leading-[1.68] lg:leading-[1.82] font-medium max-w-[335px] sm:max-w-[460px] lg:max-w-[520px]"
               style={{ color: textSub }}
             >
               اسمع الفيديو أو اقرأ شرح الفصل كامل، راجع من الملخص السريع، وحلّ
@@ -923,13 +916,13 @@ export function InteractiveDeskHero() {
             {/* Primary & Secondary CTAs */}
             <div
               data-hero-fade
-              className="w-full lg:w-auto flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2.5 lg:gap-3 pt-1"
+              className="w-full max-w-[330px] sm:max-w-none lg:w-auto flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2 lg:gap-3 pt-0.5 lg:pt-1"
             >
               {lastVisited ? (
                 <Link
                   href={`/courses/${lastVisited.courseSlug}/${lastVisited.lessonId}`}
                   title={lastVisited.lessonTitle}
-                  className="w-full sm:w-auto h-[44px] lg:h-[48px] px-6 lg:px-[26px] rounded-[13px] lg:rounded-[14px] text-[13.5px] lg:text-[14px] font-extrabold inline-flex items-center justify-center gap-2 transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+                  className="group w-full sm:w-auto h-[40px] min-[400px]:h-[42px] lg:h-[48px] px-5 lg:px-[26px] rounded-[12px] lg:rounded-[14px] text-[13px] lg:text-[14px] font-extrabold inline-flex items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-0.5 hover:brightness-105 active:scale-[0.98]"
                   style={{
                     background: ctaBg,
                     color: ctaText,
@@ -939,7 +932,7 @@ export function InteractiveDeskHero() {
                   <span>أكمل مذاكرة</span>
                   <span
                     dir="ltr"
-                    className="font-mono-code rounded-md px-1.5 py-0.5 text-[11.5px] font-bold"
+                    className="font-mono-code rounded-md px-1.5 py-0.5 text-[11px] lg:text-[11.5px] font-bold"
                     style={{
                       background: isDark
                         ? "rgba(16, 17, 21, 0.16)"
@@ -948,12 +941,12 @@ export function InteractiveDeskHero() {
                   >
                     {lastVisited.courseCode}
                   </span>
-                  <ArrowLeft className="w-4 h-4 shrink-0" />
+                  <ArrowLeft className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:-translate-x-1" />
                 </Link>
               ) : (
                 <Link
                   href="/courses"
-                  className="w-full sm:w-auto h-[44px] lg:h-[48px] px-6 lg:px-[26px] rounded-[13px] lg:rounded-[14px] text-[13.5px] lg:text-[14px] font-extrabold inline-flex items-center justify-center gap-2 transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+                  className="group w-full sm:w-auto h-[40px] min-[400px]:h-[42px] lg:h-[48px] px-5 lg:px-[26px] rounded-[12px] lg:rounded-[14px] text-[13px] lg:text-[14px] font-extrabold inline-flex items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-0.5 hover:brightness-105 active:scale-[0.98]"
                   style={{
                     background: ctaBg,
                     color: ctaText,
@@ -961,13 +954,17 @@ export function InteractiveDeskHero() {
                   }}
                 >
                   <span>ابدأ المذاكرة الآن</span>
-                  <ArrowLeft className="w-4 h-4 shrink-0" />
+                  <ArrowLeft className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:-translate-x-1" />
                 </Link>
               )}
 
               <Link
                 href="/courses"
-                className="hidden lg:inline-flex h-[48px] px-5 rounded-[14px] text-[13.5px] font-bold items-center justify-center gap-2 transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+                className={`hidden lg:inline-flex h-[48px] px-5 rounded-[14px] text-[13.5px] font-bold items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${
+                  isDark
+                    ? "hover:bg-white/[0.08] hover:border-[#d8b07a]/45"
+                    : "hover:bg-white hover:shadow-[0_10px_24px_rgba(18,28,45,0.08)]"
+                }`}
                 style={{
                   background: secBg,
                   border: `1px solid ${borderMid}`,
@@ -1007,16 +1004,19 @@ export function InteractiveDeskHero() {
           {/* Progressive Swiss Study Dial Column */}
           <div
             ref={dialColRef}
-            className="flex flex-col items-center gap-3 lg:gap-4"
+            className="flex flex-col items-center gap-2 sm:gap-3 lg:gap-4"
             onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
+            onMouseLeave={() => {
+              setIsPaused(false);
+              setHoveredIdx(null);
+            }}
             onFocusCapture={() => setIsPaused(true)}
             onBlurCapture={() => setIsPaused(false)}
           >
-            {/* Dial Stage */}
+            {/* Dial Stage (Compact Above-the-Fold on Mobile | Grand Precision Bezel on Desktop) */}
             <div
               data-hero-dial
-              className="relative w-[328px] h-[328px] sm:w-[390px] sm:h-[390px] lg:w-[468px] lg:h-[468px] xl:w-[510px] xl:h-[510px] flex items-center justify-center select-none"
+              className="relative w-[246px] h-[246px] min-[400px]:w-[272px] min-[400px]:h-[272px] sm:w-[356px] sm:h-[356px] lg:w-[456px] lg:h-[456px] xl:w-[500px] xl:h-[500px] flex items-center justify-center select-none"
             >
               {/* Watchmaker Bezel SVG */}
               <svg
@@ -1043,14 +1043,14 @@ export function InteractiveDeskHero() {
                     cy="255"
                     r="224"
                     stroke="url(#heroProgArc)"
-                    strokeWidth="2.6"
+                    strokeWidth="2.8"
                     strokeLinecap="round"
                     initial={{ pathLength: activePillar.arcProgress }}
                     animate={{ pathLength: activePillar.arcProgress }}
                     transition={
                       reducedMotion
                         ? { duration: 0.15 }
-                        : { duration: 0.7, ease: EDITORIAL_EASE }
+                        : { duration: 0.72, ease: EDITORIAL_EASE }
                     }
                   />
                 </g>
@@ -1087,12 +1087,12 @@ export function InteractiveDeskHero() {
                     gradientUnits="userSpaceOnUse"
                   >
                     <stop stopColor={isDark ? "#6ec4a3" : "#c25e33"} />
-                    <stop offset="1" stopColor={isDark ? "#d8b07a" : "#1d6b52"} />
+                    <stop offset="1" stopColor={isDark ? "#d8b07a" : "#15664b"} />
                   </linearGradient>
                 </defs>
               </svg>
 
-              {/* Smooth Spring-Rotated Watchmaker Triangle Needle */}
+              {/* Smooth Gentle Spring-Rotated Watchmaker Triangle Needle */}
               <motion.div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0"
@@ -1100,7 +1100,7 @@ export function InteractiveDeskHero() {
                 transition={
                   reducedMotion
                     ? { duration: 0.15 }
-                    : { type: "spring", stiffness: 170, damping: 24, mass: 0.85 }
+                    : { type: "spring", stiffness: 135, damping: 22, mass: 0.9 }
                 }
               >
                 <svg
@@ -1113,46 +1113,37 @@ export function InteractiveDeskHero() {
                 </svg>
               </motion.div>
 
-              {/* 4 Interactive Orbital Station Pills */}
+              {/* 4 Uniform Interactive Orbital Station Pills */}
               {STUDY_PILLARS.map((pillar) => {
                 const isActive = pillar.index === activeIdx;
-                const isPaper = Boolean(pillar.isPaperNode) && !isActive;
+                const isHovered = pillar.index === hoveredIdx && !isActive;
 
                 const nodeBg = isActive
                   ? isDark
                     ? "rgba(29, 31, 40, 0.98)"
-                    : "#1e355c"
-                  : isPaper
-                    ? isDark
-                      ? "#f4efe6"
-                      : "#faece5"
-                    : isDark
-                      ? "rgba(19, 21, 27, 0.92)"
-                      : "rgba(255, 255, 255, 0.95)";
+                    : "#162847"
+                  : isDark
+                    ? isHovered
+                      ? "rgba(25, 28, 36, 0.96)"
+                      : "rgba(19, 21, 27, 0.92)"
+                    : "#ffffff";
 
                 const nodeBorder = isActive
                   ? isDark
-                    ? "rgba(216, 176, 122, 0.68)"
-                    : "#1e355c"
-                  : borderMid;
-
-                const nodeTitleColor = isActive
-                  ? "#ffffff"
-                  : isPaper
+                    ? "rgba(216, 176, 122, 0.72)"
+                    : "#162847"
+                  : isHovered
                     ? isDark
-                      ? "#171614"
-                      : "#8f3d1c"
-                    : textMain;
+                      ? "rgba(216, 176, 122, 0.48)"
+                      : "rgba(22, 40, 71, 0.34)"
+                    : borderMid;
 
+                const nodeTitleColor = isActive ? "#ffffff" : textMain;
                 const nodeSubColor = isActive
                   ? isDark
                     ? "rgba(226, 220, 210, 0.82)"
-                    : "rgba(226, 232, 240, 0.85)"
-                  : isPaper
-                    ? isDark
-                      ? "#5c574f"
-                      : "#a05537"
-                    : textMuted;
+                    : "rgba(226, 232, 240, 0.86)"
+                  : textMuted;
 
                 const numStyle = isActive
                   ? isDark
@@ -1168,19 +1159,25 @@ export function InteractiveDeskHero() {
 
                 const nodeShadow = isActive
                   ? isDark
-                    ? `0 14px 34px rgba(0, 0, 0, 0.52), 0 0 0 4px ${coreHalo}`
-                    : `0 12px 28px rgba(30, 53, 92, 0.22), 0 0 0 4px ${coreHalo}`
-                  : isDark
-                    ? "0 14px 34px rgba(0, 0, 0, 0.48)"
-                    : "0 10px 26px rgba(18, 28, 45, 0.09)";
+                    ? `0 14px 34px rgba(0, 0, 0, 0.54), 0 0 0 4px ${coreHalo}`
+                    : `0 14px 30px rgba(22, 40, 71, 0.26), 0 0 0 4px ${coreHalo}`
+                  : isHovered
+                    ? isDark
+                      ? "0 16px 36px rgba(0, 0, 0, 0.56)"
+                      : "0 14px 32px rgba(18, 28, 45, 0.14)"
+                    : isDark
+                      ? "0 14px 34px rgba(0, 0, 0, 0.48)"
+                      : "0 10px 26px rgba(18, 28, 45, 0.1)";
 
                 return (
                   <button
                     key={pillar.id}
                     type="button"
                     onClick={() => handleSelectPillar(pillar.index)}
+                    onMouseEnter={() => setHoveredIdx(pillar.index)}
+                    onMouseLeave={() => setHoveredIdx(null)}
                     aria-pressed={isActive}
-                    className={`absolute z-10 ${pillar.positionClass} px-2.5 py-1.5 lg:px-3.5 lg:py-2 rounded-[11px] lg:rounded-[14px] backdrop-blur-md flex items-center gap-1.5 lg:gap-2.5 whitespace-nowrap cursor-pointer transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2`}
+                    className={`absolute z-10 ${pillar.positionClass} px-2 py-1 min-[400px]:px-2.5 min-[400px]:py-1.5 lg:px-3.5 lg:py-2 rounded-[10px] lg:rounded-[14px] backdrop-blur-md flex items-center gap-1.5 lg:gap-2.5 whitespace-nowrap cursor-pointer transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2`}
                     style={{
                       background: nodeBg,
                       border: `1px solid ${nodeBorder}`,
@@ -1190,13 +1187,13 @@ export function InteractiveDeskHero() {
                   >
                     <span
                       dir="ltr"
-                      className="font-mono-code w-[19px] h-[19px] lg:w-6 lg:h-6 rounded-[6px] lg:rounded-[8px] flex items-center justify-center text-[9px] lg:text-[10.5px] font-extrabold shrink-0"
+                      className="font-mono-code w-[17px] h-[17px] min-[400px]:w-[19px] min-[400px]:h-[19px] lg:w-6 lg:h-6 rounded-[5px] lg:rounded-[8px] flex items-center justify-center text-[8.5px] min-[400px]:text-[9px] lg:text-[10.5px] font-extrabold shrink-0"
                       style={numStyle}
                     >
                       {pillar.num}
                     </span>
-                    <span className="flex flex-col text-right leading-[1.25]">
-                      <span className="text-[10.5px] lg:text-[12px] font-extrabold">
+                    <span className="flex flex-col text-right leading-[1.22]">
+                      <span className="text-[9.5px] min-[400px]:text-[10px] lg:text-[12px] font-extrabold">
                         {pillar.label}
                       </span>
                       <span
@@ -1210,9 +1207,9 @@ export function InteractiveDeskHero() {
                 );
               })}
 
-              {/* Sapphire Crystal Center Lens */}
+              {/* Sapphire Crystal Center Lens (Obsidian in Dark | Deep Architectural Navy Focal Jewel in Light) */}
               <div
-                className="relative z-[6] w-[186px] h-[186px] sm:w-[224px] sm:h-[224px] lg:w-[266px] lg:h-[266px] xl:w-[288px] xl:h-[288px] rounded-full flex flex-col items-center justify-center text-center overflow-hidden"
+                className="relative z-[6] w-[144px] h-[144px] min-[400px]:w-[160px] min-[400px]:h-[160px] sm:w-[208px] sm:h-[208px] lg:w-[264px] lg:h-[264px] xl:w-[288px] xl:h-[288px] rounded-full flex flex-col items-center justify-center text-center overflow-hidden transition-shadow duration-300"
                 style={{
                   background: coreBg,
                   border: `1px solid ${coreBorder}`,
@@ -1232,16 +1229,16 @@ export function InteractiveDeskHero() {
                     initial={
                       reducedMotion
                         ? { opacity: 0 }
-                        : { opacity: 0, scale: 0.96, y: 6 }
+                        : { opacity: 0, scale: 0.96, y: 5 }
                     }
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={
                       reducedMotion
                         ? { opacity: 0 }
-                        : { opacity: 0, scale: 0.97, y: -5 }
+                        : { opacity: 0, scale: 0.97, y: -4 }
                     }
-                    transition={{ duration: 0.28, ease: EDITORIAL_EASE }}
-                    className="relative w-full h-full p-3.5 lg:p-6 flex flex-col items-center justify-center"
+                    transition={{ duration: 0.42, ease: EDITORIAL_EASE }}
+                    className="relative w-full h-full p-2.5 sm:p-4 lg:p-6 flex flex-col items-center justify-center"
                   >
                     <CenterLensContent
                       pillar={activePillar}
@@ -1256,24 +1253,31 @@ export function InteractiveDeskHero() {
             {/* Quiet Interactive Stepper Control Beneath Dial */}
             <div
               data-hero-stepper
-              className="inline-flex items-center gap-2.5 lg:gap-3 px-3 py-1 lg:px-3.5 lg:py-1.5 rounded-full backdrop-blur-md text-[10px] lg:text-[11px] font-bold"
+              className="inline-flex items-center gap-2 sm:gap-2.5 lg:gap-3 px-2.5 py-1 lg:px-3.5 lg:py-1.5 rounded-full backdrop-blur-md text-[9.5px] sm:text-[10px] lg:text-[11px] font-bold"
               style={{
                 background: stepperBg,
                 border: `1px solid ${borderSoft}`,
                 color: textMuted,
+                boxShadow: isDark
+                  ? "0 8px 20px rgba(0, 0, 0, 0.25)"
+                  : "0 6px 18px rgba(18, 28, 45, 0.07)",
               }}
             >
               <button
                 type="button"
                 onClick={() => handleSelectPillar(activeIdx - 1)}
                 aria-label="الركن السابق"
-                className="w-[20px] h-[20px] lg:w-[22px] lg:h-[22px] rounded-full inline-flex items-center justify-center transition-colors cursor-pointer hover:opacity-85"
+                className="w-[19px] h-[19px] lg:w-[22px] lg:h-[22px] rounded-full inline-flex items-center justify-center transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
                 style={{ background: pillBg, color: textMain }}
               >
-                <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                <ChevronRight className="w-3 h-3 lg:w-3.5 lg:h-3.5 shrink-0" />
               </button>
 
-              <div className="inline-flex items-center gap-1.5" role="tablist" aria-label="أركان الفصل">
+              <div
+                className="inline-flex items-center gap-1.5"
+                role="tablist"
+                aria-label="أركان الفصل"
+              >
                 {STUDY_PILLARS.map((pillar) => {
                   const on = pillar.index === activeIdx;
                   return (
@@ -1284,7 +1288,7 @@ export function InteractiveDeskHero() {
                       aria-selected={on}
                       aria-label={`${pillar.num} ${pillar.label}`}
                       onClick={() => handleSelectPillar(pillar.index)}
-                      className="h-[5px] rounded-full transition-all duration-300 cursor-pointer"
+                      className="h-[5px] rounded-full transition-all duration-300 cursor-pointer hover:opacity-85"
                       style={{
                         width: on ? "18px" : "5px",
                         background: on ? accent1 : borderMid,
@@ -1306,10 +1310,10 @@ export function InteractiveDeskHero() {
                 type="button"
                 onClick={() => handleSelectPillar(activeIdx + 1)}
                 aria-label="الركن التالي"
-                className="w-[20px] h-[20px] lg:w-[22px] lg:h-[22px] rounded-full inline-flex items-center justify-center transition-colors cursor-pointer hover:opacity-85"
+                className="w-[19px] h-[19px] lg:w-[22px] lg:h-[22px] rounded-full inline-flex items-center justify-center transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
                 style={{ background: pillBg, color: textMain }}
               >
-                <ChevronLeft className="w-3.5 h-3.5 shrink-0" />
+                <ChevronLeft className="w-3 h-3 lg:w-3.5 lg:h-3.5 shrink-0" />
               </button>
             </div>
           </div>
@@ -1317,7 +1321,7 @@ export function InteractiveDeskHero() {
       </div>
 
       {/* Desktop Whisper-Quiet Footer Bar */}
-      <div className="hidden lg:block relative z-10 w-full max-w-[1220px] mx-auto px-8 pb-5">
+      <div className="hidden lg:block relative z-10 w-full max-w-[1360px] mx-auto px-12 pb-5">
         <div
           className="pt-3 flex items-center justify-between text-[11px] font-semibold"
           style={{
@@ -1328,12 +1332,12 @@ export function InteractiveDeskHero() {
           <button
             type="button"
             onClick={() => handleJumpToShowcase(activeIdx)}
-            className="inline-flex items-center gap-1.5 transition-colors hover:opacity-90 cursor-pointer"
+            className="group inline-flex items-center gap-1.5 transition-colors hover:opacity-95 cursor-pointer"
             style={{ color: textSub }}
           >
             <span>استكشف الـ 4 أركان بالتفصيل</span>
             <ArrowDown
-              className="w-3.5 h-3.5 shrink-0"
+              className="w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover:translate-y-0.5"
               style={{ color: accent1 }}
             />
           </button>

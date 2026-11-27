@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion, useReducedMotion } from "motion/react";
@@ -22,7 +29,6 @@ interface ThreadStation {
   readonly sideKicker: string;
   readonly sideText: string;
   readonly visual: StationVisualType;
-  readonly isPaper?: boolean;
   /** On desktop lg+, stations alternate Right (start) / Left (end) across the center thread. */
   readonly cardOnStart: boolean;
 }
@@ -59,7 +65,6 @@ const STATIONS: readonly ThreadStation[] = [
     sideKicker: "ليلة الامتحان بدون تشتّت",
     sideText: "مراجعة مركّزة بعيداً عن التفاصيل الطويلة",
     visual: "summary",
-    isPaper: true,
     cardOnStart: true,
   },
   {
@@ -84,9 +89,12 @@ interface ThreadPalette {
   glowB: string;
   cardBg: string;
   cardActiveBg: string;
-  cardShadow: string;
+  cardIdleShadow: string;
+  cardActiveShadow: string;
+  cardHoverShadow: string;
   borderSoft: string;
   borderActive: string;
+  borderHover: string;
   textMain: string;
   textSub: string;
   textMuted: string;
@@ -94,19 +102,14 @@ interface ThreadPalette {
   accent1Bright: string;
   accent2: string;
   accent3: string;
-  terracotta: string;
-  paperBg: string;
-  paperInk: string;
-  paperSub: string;
-  paperBorder: string;
-  paperActiveBorder: string;
-  paperIdleShadow: string;
-  paperActiveShadow: string;
+  accentSummaryTag: string;
   threadTrack: string;
   threadFill: string;
   threadGlow: string;
   /** Strictly opaque solid fills so the vertical thread never bleeds inside nodes. */
   nodeIdleBg: string;
+  nodeIdleText: string;
+  nodeIdleBorder: string;
   nodeDoneBg: string;
   nodeActiveBg: string;
   nodeActiveBorder: string;
@@ -121,6 +124,7 @@ interface ThreadPalette {
   quizOkBg: string;
   summaryPillBg: string;
   summaryPillBorder: string;
+  summaryPillText: string;
   specularTop: string;
 }
 
@@ -129,11 +133,15 @@ const DARK_PALETTE: ThreadPalette = {
   gridLine: "rgba(216, 176, 122, 0.032)",
   glowA: "rgba(216, 176, 122, 0.08)",
   glowB: "rgba(110, 196, 163, 0.06)",
-  cardBg: "rgba(19, 22, 30, 0.86)",
+  cardBg: "rgba(19, 22, 30, 0.88)",
   cardActiveBg: "linear-gradient(165deg, #1a1e29 0%, #11141c 100%)",
-  cardShadow: "0 20px 48px rgba(0, 0, 0, 0.44)",
-  borderSoft: "rgba(255, 245, 230, 0.08)",
-  borderActive: "rgba(216, 176, 122, 0.36)",
+  cardIdleShadow: "0 12px 32px rgba(0, 0, 0, 0.28)",
+  cardActiveShadow: "0 22px 52px rgba(0, 0, 0, 0.48)",
+  cardHoverShadow:
+    "0 26px 58px rgba(0, 0, 0, 0.56), 0 0 0 1px rgba(216, 176, 122, 0.22)",
+  borderSoft: "rgba(255, 245, 230, 0.085)",
+  borderActive: "rgba(216, 176, 122, 0.38)",
+  borderHover: "rgba(216, 176, 122, 0.52)",
   textMain: "#f6f4ef",
   textSub: "rgba(220, 215, 206, 0.82)",
   textMuted: "rgba(160, 155, 146, 0.78)",
@@ -141,82 +149,79 @@ const DARK_PALETTE: ThreadPalette = {
   accent1Bright: "#ebd0a3",
   accent2: "#6ec4a3",
   accent3: "#b4a7d6",
-  terracotta: "#c25e33",
-  paperBg: "#f6f5f1",
-  paperInk: "#121721",
-  paperSub: "#3b4454",
-  paperBorder: "rgba(255, 255, 255, 0.65)",
-  paperActiveBorder: "rgba(216, 176, 122, 0.78)",
-  paperIdleShadow: "0 14px 32px rgba(0, 0, 0, 0.28)",
-  paperActiveShadow:
-    "0 22px 52px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(216, 176, 122, 0.35)",
-  threadTrack: "rgba(255, 255, 255, 0.08)",
+  accentSummaryTag: "#e59b72",
+  threadTrack: "rgba(255, 255, 255, 0.085)",
   threadFill: "linear-gradient(180deg, #d8b07a 0%, #6ec4a3 60%, #d8b07a 100%)",
-  threadGlow: "0 0 12px rgba(216, 176, 122, 0.35)",
+  threadGlow: "0 0 14px rgba(216, 176, 122, 0.42)",
   nodeIdleBg: "#12151e",
+  nodeIdleText: "rgba(160, 155, 146, 0.55)",
+  nodeIdleBorder: "rgba(255, 245, 230, 0.11)",
   nodeDoneBg: "#1b2c2a",
   nodeActiveBg: "#d8b07a",
   nodeActiveBorder: "#d8b07a",
   nodeActiveFg: "#101115",
-  nodeHalo: "rgba(216, 176, 122, 0.18)",
+  nodeHalo: "rgba(216, 176, 122, 0.2)",
   chipBg: "rgba(255, 245, 230, 0.055)",
-  innerBoxBg: "rgba(9, 11, 16, 0.75)",
-  playBg: "rgba(194, 94, 51, 0.16)",
-  playBorder: "rgba(229, 138, 98, 0.45)",
+  innerBoxBg: "rgba(9, 11, 16, 0.78)",
+  playBg: "rgba(216, 176, 122, 0.14)",
+  playBorder: "rgba(216, 176, 122, 0.42)",
   docCodeBg: "rgba(110, 196, 163, 0.22)",
   docCodeBorder: "rgba(110, 196, 163, 0.4)",
   quizOkBg: "rgba(110, 196, 163, 0.18)",
-  summaryPillBg: "rgba(194, 94, 51, 0.12)",
-  summaryPillBorder: "rgba(194, 94, 51, 0.22)",
+  summaryPillBg: "rgba(229, 155, 114, 0.14)",
+  summaryPillBorder: "rgba(229, 155, 114, 0.34)",
+  summaryPillText: "#f0b999",
   specularTop:
-    "linear-gradient(90deg, transparent 8%, rgba(235, 208, 163, 0.38) 50%, transparent 92%)",
+    "linear-gradient(90deg, transparent 8%, rgba(235, 208, 163, 0.4) 50%, transparent 92%)",
 };
 
 const LIGHT_PALETTE: ThreadPalette = {
-  bgGrad: "linear-gradient(175deg, #f9f7f2 0%, #f2eee5 56%, #ebe6da 100%)",
-  gridLine: "rgba(30, 53, 92, 0.045)",
-  glowA: "rgba(194, 94, 51, 0.07)",
-  glowB: "rgba(29, 107, 82, 0.06)",
-  cardBg: "rgba(255, 255, 255, 0.88)",
+  bgGrad: "linear-gradient(175deg, #faf8f3 0%, #f3efe6 56%, #ece7dc 100%)",
+  gridLine: "rgba(22, 40, 71, 0.045)",
+  glowA: "rgba(194, 94, 51, 0.085)",
+  glowB: "rgba(21, 102, 75, 0.075)",
+  cardBg: "#ffffff",
   cardActiveBg: "#ffffff",
-  cardShadow: "0 18px 44px rgba(18, 28, 45, 0.09)",
-  borderSoft: "rgba(30, 53, 92, 0.1)",
-  borderActive: "rgba(30, 53, 92, 0.28)",
-  textMain: "#131c2b",
-  textSub: "#3c485c",
-  textMuted: "#626e82",
+  cardIdleShadow: "0 14px 36px rgba(18, 28, 45, 0.08)",
+  cardActiveShadow:
+    "0 20px 48px rgba(18, 28, 45, 0.12), 0 0 0 1px rgba(22, 40, 71, 0.08)",
+  cardHoverShadow:
+    "0 24px 54px rgba(18, 28, 45, 0.15), 0 0 0 1px rgba(194, 94, 51, 0.14)",
+  borderSoft: "rgba(22, 40, 71, 0.11)",
+  borderActive: "rgba(22, 40, 71, 0.28)",
+  borderHover: "rgba(194, 94, 51, 0.42)",
+  textMain: "#121c2e",
+  textSub: "#3b475c",
+  textMuted: "#5e6b80",
   accent1: "#c25e33",
   accent1Bright: "#9e4722",
-  accent2: "#1d6b52",
-  accent3: "#1e355c",
-  terracotta: "#c25e33",
-  paperBg: "#faece5",
-  paperInk: "#131c2b",
-  paperSub: "#573528",
-  paperBorder: "rgba(194, 94, 51, 0.26)",
-  paperActiveBorder: "rgba(194, 94, 51, 0.54)",
-  paperIdleShadow: "0 10px 26px rgba(194, 94, 51, 0.07)",
-  paperActiveShadow: "0 18px 42px rgba(194, 94, 51, 0.14)",
-  threadTrack: "rgba(30, 53, 92, 0.12)",
-  threadFill: "linear-gradient(180deg, #1e355c 0%, #1d6b52 55%, #c25e33 100%)",
-  threadGlow: "0 0 12px rgba(30, 53, 92, 0.2)",
+  accent2: "#15664b",
+  accent3: "#162847",
+  accentSummaryTag: "#c25e33",
+  threadTrack: "rgba(22, 40, 71, 0.13)",
+  threadFill: "linear-gradient(180deg, #162847 0%, #15664b 52%, #c25e33 100%)",
+  threadGlow:
+    "0 0 14px rgba(194, 94, 51, 0.34), 0 0 6px rgba(21, 102, 75, 0.28)",
   nodeIdleBg: "#ffffff",
-  nodeDoneBg: "#e3f0eb",
-  nodeActiveBg: "#1e355c",
-  nodeActiveBorder: "#1e355c",
+  nodeIdleText: "rgba(94, 107, 128, 0.62)",
+  nodeIdleBorder: "rgba(22, 40, 71, 0.15)",
+  nodeDoneBg: "#e2f1eb",
+  nodeActiveBg: "#162847",
+  nodeActiveBorder: "#162847",
   nodeActiveFg: "#ffffff",
-  nodeHalo: "rgba(30, 53, 92, 0.15)",
-  chipBg: "rgba(30, 53, 92, 0.055)",
-  innerBoxBg: "rgba(242, 238, 229, 0.82)",
+  nodeHalo: "rgba(22, 40, 71, 0.16)",
+  chipBg: "rgba(22, 40, 71, 0.055)",
+  innerBoxBg: "rgba(245, 241, 233, 0.92)",
   playBg: "rgba(194, 94, 51, 0.12)",
-  playBorder: "rgba(194, 94, 51, 0.34)",
-  docCodeBg: "rgba(29, 107, 82, 0.16)",
-  docCodeBorder: "rgba(29, 107, 82, 0.36)",
-  quizOkBg: "rgba(29, 107, 82, 0.14)",
-  summaryPillBg: "rgba(194, 94, 51, 0.13)",
-  summaryPillBorder: "rgba(194, 94, 51, 0.26)",
+  playBorder: "rgba(194, 94, 51, 0.36)",
+  docCodeBg: "rgba(21, 102, 75, 0.15)",
+  docCodeBorder: "rgba(21, 102, 75, 0.36)",
+  quizOkBg: "rgba(21, 102, 75, 0.13)",
+  summaryPillBg: "rgba(194, 94, 51, 0.11)",
+  summaryPillBorder: "rgba(194, 94, 51, 0.28)",
+  summaryPillText: "#a94b24",
   specularTop:
-    "linear-gradient(90deg, transparent 10%, rgba(30, 53, 92, 0.2) 50%, transparent 90%)",
+    "linear-gradient(90deg, transparent 8%, rgba(22, 40, 71, 0.22) 50%, transparent 92%)",
 };
 
 function getStationTagColor(idx: number, palette: ThreadPalette): string {
@@ -226,7 +231,7 @@ function getStationTagColor(idx: number, palette: ThreadPalette): string {
     case 1:
       return palette.accent1;
     case 2:
-      return palette.terracotta;
+      return palette.accentSummaryTag;
     default:
       return palette.accent3;
   }
@@ -261,7 +266,7 @@ function StationMicroVisual({
   if (visual === "video") {
     return (
       <div
-        className="shrink-0 rounded-[11px] sm:rounded-[13px] border p-2 sm:px-3 sm:py-2.5 flex items-center gap-2.5"
+        className="shrink-0 rounded-[11px] sm:rounded-[13px] border p-2 sm:px-3 sm:py-2.5 flex items-center gap-2.5 transition-transform duration-300 ease-out group-hover:scale-[1.03]"
         style={{
           background: palette.innerBoxBg,
           borderColor: palette.borderSoft,
@@ -269,12 +274,15 @@ function StationMicroVisual({
         aria-hidden="true"
       >
         <span
-          className="w-7 h-7 sm:w-[34px] sm:h-[34px] rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300"
+          className={`w-7 h-7 sm:w-[34px] sm:h-[34px] rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300 ${
+            isActive
+              ? "scale-105 group-hover:scale-110"
+              : "scale-100 group-hover:scale-105"
+          }`}
           style={{
             background: palette.playBg,
             borderColor: palette.playBorder,
             color: palette.accent1,
-            transform: isActive ? "scale(1.05)" : "scale(1)",
           }}
         >
           <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current translate-x-[0.5px]" />
@@ -290,7 +298,7 @@ function StationMicroVisual({
               style={{
                 height: `${heightPx}px`,
                 background: palette.accent1,
-                opacity: isActive ? 0.92 : 0.68,
+                opacity: isActive ? 0.94 : 0.7,
               }}
               animate={
                 isActive && !prefersReducedMotion
@@ -318,7 +326,7 @@ function StationMicroVisual({
   if (visual === "guide") {
     return (
       <div
-        className="shrink-0 rounded-[11px] sm:rounded-[13px] border p-2 sm:px-3 sm:py-2.5 flex items-center"
+        className="shrink-0 rounded-[11px] sm:rounded-[13px] border p-2 sm:px-3 sm:py-2.5 flex items-center transition-transform duration-300 ease-out group-hover:scale-[1.03]"
         style={{
           background: palette.innerBoxBg,
           borderColor: palette.borderSoft,
@@ -327,7 +335,7 @@ function StationMicroVisual({
       >
         <div className="w-12 sm:w-[82px] flex flex-col gap-[4.5px] sm:gap-[5px]">
           <span
-            className="block h-[5px] rounded-full"
+            className="block h-[5px] rounded-full transition-transform duration-300 origin-right group-hover:scale-x-105"
             style={{ width: "65%", background: palette.accent1 }}
           />
           <span
@@ -335,7 +343,7 @@ function StationMicroVisual({
             style={{ width: "92%", background: palette.textMuted }}
           />
           <span
-            className="block h-[10px] rounded-[4px] border"
+            className="block h-[10px] rounded-[4px] border transition-transform duration-300 origin-right group-hover:scale-x-[1.04]"
             style={{
               width: "82%",
               background: palette.docCodeBg,
@@ -354,11 +362,11 @@ function StationMicroVisual({
   if (visual === "summary") {
     return (
       <span
-        className="shrink-0 px-2.5 sm:px-3 py-1.5 rounded-[10px] border text-[10px] sm:text-[11px] font-extrabold whitespace-nowrap"
+        className="shrink-0 px-2.5 sm:px-3 py-1.5 rounded-[10px] border text-[10px] sm:text-[11px] font-extrabold whitespace-nowrap transition-transform duration-300 ease-out group-hover:scale-[1.04]"
         style={{
           background: palette.summaryPillBg,
           borderColor: palette.summaryPillBorder,
-          color: palette.terracotta,
+          color: palette.summaryPillText,
         }}
       >
         استرجاع في دقائق
@@ -368,7 +376,7 @@ function StationMicroVisual({
 
   return (
     <div
-      className="shrink-0 rounded-[11px] sm:rounded-[13px] border p-1.5 sm:p-2"
+      className="shrink-0 rounded-[11px] sm:rounded-[13px] border p-1.5 sm:p-2 transition-transform duration-300 ease-out group-hover:scale-[1.03]"
       style={{
         background: palette.innerBoxBg,
         borderColor: palette.borderSoft,
@@ -408,13 +416,28 @@ export function ExpandingToolsStrips() {
   );
   const prefersReducedMotion = Boolean(useReducedMotion());
 
-  const [activeIdx, setActiveIdx] = useState(0);
+  // Starts at -1 in normal motion so all nodes begin subtle/dim until scrolled into view.
+  const [activeIdx, setActiveIdx] = useState<number>(() =>
+    prefersReducedMotion ? 0 : -1
+  );
 
   const sectionRef = useRef<HTMLElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const railRef = useRef<HTMLDivElement | null>(null);
   const threadFillRef = useRef<HTMLDivElement | null>(null);
   const rowRefs = useRef<Array<HTMLDivElement | null>>([
+    null,
+    null,
+    null,
+    null,
+  ]);
+  const cardWrapRefs = useRef<Array<HTMLDivElement | null>>([
+    null,
+    null,
+    null,
+    null,
+  ]);
+  const sideMetaRefs = useRef<Array<HTMLDivElement | null>>([
     null,
     null,
     null,
@@ -435,9 +458,10 @@ export function ExpandingToolsStrips() {
     if (!target) return;
 
     if (window.__lenis) {
-      const centerOffset = -Math.round(window.innerHeight * 0.34);
+      // Position target comfortably above the 78% reveal trigger so thread + card reveal cleanly.
+      const revealOffset = -Math.round(window.innerHeight * 0.42);
       window.__lenis.scrollTo(target, {
-        offset: centerOffset,
+        offset: revealOffset,
         duration: 0.95,
       });
     } else {
@@ -496,13 +520,29 @@ export function ExpandingToolsStrips() {
 
     const ro =
       typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver(() => syncRailGeometry())
+        ? new ResizeObserver(() => {
+            syncRailGeometry();
+            try {
+              ScrollTrigger.refresh();
+            } catch {
+              // ignore if plugin not initialized yet
+            }
+          })
         : null;
     ro?.observe(stageEl);
     window.addEventListener("resize", syncRailGeometry, { passive: true });
 
     if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(syncRailGeometry).catch(() => {});
+      document.fonts.ready
+        .then(() => {
+          syncRailGeometry();
+          try {
+            ScrollTrigger.refresh();
+          } catch {
+            // ignore
+          }
+        })
+        .catch(() => {});
     }
 
     return () => {
@@ -511,12 +551,12 @@ export function ExpandingToolsStrips() {
     };
   }, []);
 
-  // GSAP ScrollTrigger: 1:1 scrubbed thread fill + progressive station activation + card glide reveals
+  // GSAP ScrollTrigger: 1:1 scrubbed thread fill + one-by-one reversible station reveal
   useEffect(() => {
     const sectionEl = sectionRef.current;
-    const stageEl = stageRef.current;
+    const railEl = railRef.current;
     const fillEl = threadFillRef.current;
-    if (!sectionEl || !stageEl || !fillEl) return;
+    if (!sectionEl || !railEl || !fillEl) return;
 
     const reduced =
       prefersReducedMotion ||
@@ -524,10 +564,16 @@ export function ExpandingToolsStrips() {
 
     if (reduced) {
       fillEl.style.transform = "scaleY(1)";
-      rowRefs.current.forEach((row) => {
-        if (row) {
-          row.style.opacity = "1";
-          row.style.transform = "none";
+      cardWrapRefs.current.forEach((el) => {
+        if (el) {
+          el.style.opacity = "1";
+          el.style.transform = "none";
+        }
+      });
+      sideMetaRefs.current.forEach((el) => {
+        if (el) {
+          el.style.opacity = "1";
+          el.style.transform = "none";
         }
       });
       return;
@@ -536,7 +582,7 @@ export function ExpandingToolsStrips() {
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
-      // 1. Scrub the glowing thread line 1:1 with scroll (GPU-composited scaleY from top)
+      // 1. Scrub the glowing 2px vertical thread 1:1 from Node 01 center to Node 04 center at viewport 78%
       gsap.fromTo(
         fillEl,
         { scaleY: 0 },
@@ -544,41 +590,73 @@ export function ExpandingToolsStrips() {
           scaleY: 1,
           ease: "none",
           scrollTrigger: {
-            trigger: stageEl,
-            start: "top 68%",
-            end: "bottom 56%",
-            scrub: 0.55,
+            trigger: railEl,
+            start: "top 78%",
+            end: "bottom 78%",
+            scrub: 0.45,
             invalidateOnRefresh: true,
-            onUpdate: (self) => {
-              const p = self.progress;
-              const nextIdx =
-                p < 0.28 ? 0 : p < 0.56 ? 1 : p < 0.82 ? 2 : 3;
-              setActiveIdx((prev) => (prev === nextIdx ? prev : nextIdx));
-            },
           },
         }
       );
 
-      // 2. Smooth editorial reveal for each station row without layout jitter
-      rowRefs.current.forEach((row, i) => {
-        if (!row) return;
-        gsap.fromTo(
-          row,
-          { opacity: 0, y: 22 },
+      // 2. Hidden until scrolled to — reveal each station's card + side meta one by one and reverse when scrolling up
+      STATIONS.forEach((station) => {
+        const rowEl = rowRefs.current[station.idx];
+        const cardWrap = cardWrapRefs.current[station.idx];
+        const sideMeta = sideMetaRefs.current[station.idx];
+        if (!rowEl || !cardWrap) return;
+
+        const targets: HTMLElement[] = sideMeta
+          ? [cardWrap, sideMeta]
+          : [cardWrap];
+
+        gsap.set(targets, {
+          opacity: 0,
+          y: 42,
+          scale: 0.96,
+          willChange: "transform, opacity",
+        });
+
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: rowEl,
+            start: "top 78%",
+            toggleActions: "play none none reverse",
+            invalidateOnRefresh: true,
+            onEnter: () => {
+              setActiveIdx(station.idx);
+            },
+            onLeaveBack: () => {
+              setActiveIdx(station.idx - 1);
+            },
+          },
+        });
+
+        tl.to(
+          cardWrap,
           {
             opacity: 1,
             y: 0,
-            duration: 0.68,
-            delay: i === 0 ? 0 : 0.04,
+            scale: 1,
+            duration: 0.65,
             ease: "power3.out",
-            clearProps: "transform",
-            scrollTrigger: {
-              trigger: row,
-              start: "top 88%",
-              once: true,
-            },
-          }
+          },
+          0
         );
+
+        if (sideMeta) {
+          tl.to(
+            sideMeta,
+            {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.6,
+              ease: "power3.out",
+            },
+            0.08
+          );
+        }
       });
     }, sectionRef);
 
@@ -595,6 +673,11 @@ export function ExpandingToolsStrips() {
       ctx.revert();
     };
   }, [prefersReducedMotion]);
+
+  const effectiveActiveIdx = prefersReducedMotion
+    ? Math.max(0, activeIdx)
+    : activeIdx;
+  const displayedStep = Math.max(0, effectiveActiveIdx + 1);
 
   return (
     <section
@@ -623,7 +706,7 @@ export function ExpandingToolsStrips() {
 
       {/* Whisper-Soft Ambient Atelier Glow */}
       <div
-        className="pointer-events-none absolute top-[22%] left-[20%] w-[520px] sm:w-[640px] h-[380px] sm:h-[460px] rounded-full blur-[56px]"
+        className="pointer-events-none absolute top-[20%] left-[20%] w-[520px] sm:w-[660px] h-[380px] sm:h-[480px] rounded-full blur-[58px]"
         style={{
           background: `radial-gradient(circle, ${palette.glowA} 0%, ${palette.glowB} 50%, transparent 74%)`,
         }}
@@ -631,9 +714,9 @@ export function ExpandingToolsStrips() {
       />
 
       {/* Main Content Container */}
-      <div className="relative z-10 max-w-[1260px] mx-auto px-4 sm:px-6 lg:px-10 py-14 sm:py-18 lg:py-22">
+      <div className="relative z-10 max-w-[1260px] mx-auto px-4 sm:px-6 lg:px-10 py-16 sm:py-22 lg:py-28">
         {/* Section Header */}
-        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-10 sm:mb-12 lg:mb-14">
+        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-12 sm:mb-16 lg:mb-20">
           <div className="max-w-2xl">
             <div
               className="inline-flex items-center gap-2 text-[11px] sm:text-[12px] font-extrabold tracking-wide"
@@ -676,7 +759,7 @@ export function ExpandingToolsStrips() {
             <span>CONNECTED SCROLL THREAD</span>
             <span className="opacity-45">·</span>
             <span className="tabular-nums">
-              0{activeIdx + 1} / 0{STATIONS.length}
+              0{displayedStep} / 0{STATIONS.length}
             </span>
           </div>
         </header>
@@ -707,11 +790,11 @@ export function ExpandingToolsStrips() {
             />
           </div>
 
-          {/* 4 Universal Stations */}
-          <ol className="relative z-10 flex flex-col gap-3.5 sm:gap-4 lg:gap-5 list-none m-0 p-0">
+          {/* 4 Universal Stations with Generous Scroll Step Spacing */}
+          <ol className="relative z-10 space-y-12 lg:space-y-16 list-none m-0 p-0">
             {STATIONS.map((station) => {
-              const isDone = station.idx < activeIdx;
-              const isActive = station.idx === activeIdx;
+              const isDone = station.idx < effectiveActiveIdx;
+              const isActive = station.idx === effectiveActiveIdx;
               const tagColor = getStationTagColor(station.idx, palette);
               const sideKickerColor = getSideKickerColor(
                 station.idx,
@@ -720,28 +803,19 @@ export function ExpandingToolsStrips() {
                 palette
               );
 
-              const cardStyle: React.CSSProperties = station.isPaper
-                ? {
-                    background: palette.paperBg,
-                    borderColor: isActive
-                      ? palette.paperActiveBorder
-                      : palette.paperBorder,
-                    boxShadow: isActive
-                      ? palette.paperActiveShadow
-                      : palette.paperIdleShadow,
-                    color: palette.paperInk,
-                  }
-                : {
-                    background: isActive
-                      ? palette.cardActiveBg
-                      : palette.cardBg,
-                    borderColor: isActive
-                      ? palette.borderActive
-                      : palette.borderSoft,
-                    boxShadow: isActive ? palette.cardShadow : "none",
-                  };
+              const cardStyle = {
+                background: isActive ? palette.cardActiveBg : palette.cardBg,
+                "--card-border": isActive
+                  ? palette.borderActive
+                  : palette.borderSoft,
+                "--card-border-hover": palette.borderHover,
+                "--card-shadow": isActive
+                  ? palette.cardActiveShadow
+                  : palette.cardIdleShadow,
+                "--card-shadow-hover": palette.cardHoverShadow,
+              } as CSSProperties;
 
-              const nodeStyle: React.CSSProperties = isActive
+              const nodeStyle: CSSProperties = isActive
                 ? {
                     background: palette.nodeActiveBg,
                     borderColor: palette.nodeActiveBorder,
@@ -757,67 +831,68 @@ export function ExpandingToolsStrips() {
                     }
                   : {
                       background: palette.nodeIdleBg,
-                      borderColor: palette.borderSoft,
-                      color: palette.textMuted,
+                      borderColor: palette.nodeIdleBorder,
+                      color: palette.nodeIdleText,
                       boxShadow: "none",
                     };
 
               const cardElement = (
-                <article
-                  onClick={() => setActiveIdx(station.idx)}
-                  className="relative flex-1 min-w-0 rounded-[16px] lg:rounded-[20px] border p-3.5 sm:p-4 lg:px-[22px] lg:py-[18px] flex items-center justify-between gap-3 sm:gap-4 lg:gap-[18px] backdrop-blur-md transition-[border-color,box-shadow,background-color] duration-300 cursor-pointer overflow-hidden"
-                  style={cardStyle}
+                <div
+                  ref={(el) => {
+                    cardWrapRefs.current[station.idx] = el;
+                  }}
+                  className="flex-1 min-w-0"
                 >
-                  {/* Delicate 1px Top Specular Rim on Active Non-Paper Cards */}
-                  {isActive && !station.isPaper && (
+                  <article
+                    onClick={() => setActiveIdx(station.idx)}
+                    className="group relative w-full min-w-0 rounded-[16px] lg:rounded-[20px] border [border-color:var(--card-border)] hover:[border-color:var(--card-border-hover)] [box-shadow:var(--card-shadow)] hover:[box-shadow:var(--card-shadow-hover)] hover:-translate-y-1 p-4 sm:p-5 lg:px-6 lg:py-5 flex items-center justify-between gap-3 sm:gap-4 lg:gap-[18px] backdrop-blur-md transition-[transform,border-color,box-shadow,background-color] duration-300 ease-out cursor-pointer overflow-hidden will-change-transform"
+                    style={cardStyle}
+                  >
+                    {/* Delicate 1px Top Specular Rim */}
                     <span
-                      className="pointer-events-none absolute inset-x-0 top-0 h-px"
+                      className={`pointer-events-none absolute inset-x-0 top-0 h-px transition-opacity duration-300 ${
+                        isActive
+                          ? "opacity-100"
+                          : "opacity-0 group-hover:opacity-80"
+                      }`}
                       style={{ background: palette.specularTop }}
                       aria-hidden="true"
                     />
-                  )}
 
-                  <div className="min-w-0 flex-1">
-                    <div
-                      dir="ltr"
-                      className="inline-block font-mono text-[9.5px] sm:text-[10.5px] font-extrabold tracking-[0.04em]"
-                      style={{ color: tagColor }}
-                    >
-                      {station.tag}
+                    <div className="min-w-0 flex-1">
+                      <div
+                        dir="ltr"
+                        className="inline-block font-mono text-[9.5px] sm:text-[10.5px] font-extrabold tracking-[0.04em]"
+                        style={{ color: tagColor }}
+                      >
+                        {station.tag}
+                      </div>
+                      <h3
+                        className="mt-0.5 text-[15px] sm:text-[17px] lg:text-[18.5px] font-black leading-snug"
+                        style={{ color: palette.textMain }}
+                      >
+                        {station.title}
+                      </h3>
+                      <p
+                        className="mt-1.5 text-[11.5px] sm:text-[12.5px] lg:text-[13px] leading-[1.68]"
+                        style={{ color: palette.textSub }}
+                      >
+                        {station.desc}
+                      </p>
                     </div>
-                    <h3
-                      className="mt-0.5 text-[15px] sm:text-[17px] lg:text-[18px] font-black leading-snug"
-                      style={{
-                        color: station.isPaper
-                          ? palette.paperInk
-                          : palette.textMain,
-                      }}
-                    >
-                      {station.title}
-                    </h3>
-                    <p
-                      className="mt-1 text-[11.5px] sm:text-[12.5px] lg:text-[13px] leading-[1.65]"
-                      style={{
-                        color: station.isPaper
-                          ? palette.paperSub
-                          : palette.textSub,
-                      }}
-                    >
-                      {station.desc}
-                    </p>
-                  </div>
 
-                  <StationMicroVisual
-                    visual={station.visual}
-                    palette={palette}
-                    isActive={isActive}
-                    prefersReducedMotion={prefersReducedMotion}
-                  />
-                </article>
+                    <StationMicroVisual
+                      visual={station.visual}
+                      palette={palette}
+                      isActive={isActive}
+                      prefersReducedMotion={prefersReducedMotion}
+                    />
+                  </article>
+                </div>
               );
 
               const nodeElement = (
-                <div className="relative z-20 flex justify-center items-start lg:items-center pt-3 lg:pt-0 w-8 lg:w-auto shrink-0 order-first lg:order-none">
+                <div className="relative z-20 flex justify-center items-start lg:items-center pt-3.5 lg:pt-0 w-8 lg:w-auto shrink-0 order-first lg:order-none">
                   <motion.button
                     ref={(el) => {
                       nodeRefs.current[station.idx] = el;
@@ -829,11 +904,13 @@ export function ExpandingToolsStrips() {
                     animate={
                       prefersReducedMotion
                         ? undefined
-                        : { scale: isActive ? 1.08 : 1 }
+                        : {
+                            scale: isActive ? 1.09 : isDone ? 1 : 0.94,
+                          }
                     }
-                    transition={{ duration: 0.3, ease: EDITORIAL_EASE }}
+                    transition={{ duration: 0.34, ease: EDITORIAL_EASE }}
                     dir="ltr"
-                    className="relative z-20 w-8 h-8 lg:w-[36px] lg:h-[36px] rounded-full border-[1.5px] flex items-center justify-center font-mono text-[10px] lg:text-[11px] font-extrabold transition-[background-color,border-color,color,box-shadow] duration-300 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4"
+                    className="relative z-20 w-8 h-8 lg:w-[38px] lg:h-[38px] rounded-full border-[1.5px] flex items-center justify-center font-mono text-[10px] lg:text-[11px] font-extrabold transition-[background-color,border-color,color,box-shadow] duration-300 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4"
                     style={nodeStyle}
                   >
                     {station.num}
@@ -843,20 +920,23 @@ export function ExpandingToolsStrips() {
 
               const sideMetaElement = (
                 <div
-                  className={`hidden lg:flex flex-col gap-1 px-5 transition-opacity duration-300 ${
+                  ref={(el) => {
+                    sideMetaRefs.current[station.idx] = el;
+                  }}
+                  className={`hidden lg:flex flex-col gap-1 px-6 ${
                     station.cardOnStart
                       ? "text-right items-start"
                       : "text-left items-end"
-                  } ${isActive ? "opacity-100" : "opacity-75"}`}
+                  }`}
                 >
                   <span
-                    className="text-[11.5px] font-extrabold leading-snug transition-colors duration-300"
+                    className="text-[12px] font-extrabold leading-snug transition-colors duration-300"
                     style={{ color: sideKickerColor }}
                   >
                     {station.sideKicker}
                   </span>
                   <span
-                    className="text-[12px] leading-relaxed"
+                    className="text-[12.5px] leading-relaxed"
                     style={{ color: palette.textMuted }}
                   >
                     {station.sideText}
@@ -870,7 +950,7 @@ export function ExpandingToolsStrips() {
                     ref={(el) => {
                       rowRefs.current[station.idx] = el;
                     }}
-                    className="flex items-start gap-3 lg:grid lg:grid-cols-[1fr_78px_1fr] lg:items-center lg:gap-0"
+                    className="flex items-start gap-3.5 lg:grid lg:grid-cols-[1fr_84px_1fr] lg:items-center lg:gap-0"
                   >
                     {station.cardOnStart ? (
                       <>

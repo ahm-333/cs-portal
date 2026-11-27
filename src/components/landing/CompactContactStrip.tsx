@@ -112,12 +112,12 @@ export function CompactContactStrip() {
           duration: prefersReducedMotion ? 0.15 : 0.65,
           ease: EDITORIAL_EASE,
         }}
-        className="relative overflow-hidden rounded-[22px] sm:rounded-[28px] border border-[#1e355c]/30 dark:border-[#d8b07a]/30 px-5 py-7 sm:px-10 sm:py-9 text-white shadow-[0_28px_66px_rgba(0,0,0,0.24)] bg-[radial-gradient(circle_at_12%_50%,rgba(194,94,51,0.22)_0%,transparent_56%),radial-gradient(circle_at_86%_20%,rgba(102,199,166,0.14)_0%,transparent_52%),linear-gradient(165deg,#1b2d4d_0%,#101c33_100%)] dark:bg-[radial-gradient(circle_at_12%_50%,rgba(216,176,122,0.14)_0%,transparent_56%),radial-gradient(circle_at_86%_18%,rgba(110,196,163,0.09)_0%,transparent_52%),linear-gradient(165deg,#171a24_0%,#0e1016_100%)]"
+        className="group/cta relative overflow-hidden rounded-[22px] sm:rounded-[28px] border border-[#1e355c]/35 dark:border-[#d8b07a]/28 dark:hover:border-[#d8b07a]/45 px-5 py-7 sm:px-10 sm:py-9 text-white transition-[border-color,box-shadow] duration-500 shadow-[0_24px_60px_rgba(14,26,48,0.28),0_4px_16px_rgba(14,26,48,0.12)] hover:shadow-[0_28px_68px_rgba(14,26,48,0.34),0_6px_20px_rgba(14,26,48,0.16)] dark:shadow-[0_28px_66px_rgba(0,0,0,0.44),0_0_0_1px_rgba(216,176,122,0.06)] dark:hover:shadow-[0_32px_76px_rgba(0,0,0,0.54),0_0_34px_rgba(216,176,122,0.12)] bg-[radial-gradient(circle_at_12%_50%,rgba(194,94,51,0.24)_0%,transparent_56%),radial-gradient(circle_at_86%_20%,rgba(102,199,166,0.14)_0%,transparent_52%),linear-gradient(165deg,#14233d_0%,#0c172b_100%)] dark:bg-[radial-gradient(circle_at_12%_50%,rgba(216,176,122,0.15)_0%,transparent_56%),radial-gradient(circle_at_86%_18%,rgba(110,196,163,0.1)_0%,transparent_52%),linear-gradient(165deg,#171a24_0%,#0e1016_100%)]"
       >
         {/* 1px Top Specular Hairline */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute top-0 left-[12%] right-[12%] h-px bg-gradient-to-r from-transparent via-[#eed2a4]/55 to-transparent"
+          className="pointer-events-none absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-[#eed2a4]/60 to-transparent"
         />
 
         {/* Signature Visual Echo: Architectural Swiss Dial SVG Arc (Left Edge Bookend) */}
@@ -125,13 +125,13 @@ export function CompactContactStrip() {
           aria-hidden="true"
           viewBox="0 0 310 310"
           fill="none"
-          className="pointer-events-none absolute -left-[70px] sm:-left-[65px] top-1/2 -translate-y-1/2 w-[200px] h-[200px] sm:w-[310px] sm:h-[310px] opacity-55 sm:opacity-90"
+          className="pointer-events-none absolute -left-[70px] sm:-left-[65px] top-1/2 -translate-y-1/2 w-[200px] h-[200px] sm:w-[310px] sm:h-[310px] opacity-55 sm:opacity-90 transition-transform duration-700 ease-out motion-safe:group-hover/cta:rotate-[6deg]"
         >
           <circle
             cx="155"
             cy="155"
             r="140"
-            className="stroke-white/[0.14] dark:stroke-[#d8b07a]/[0.16]"
+            className="stroke-white/[0.15] dark:stroke-[#d8b07a]/[0.18]"
             strokeWidth="1"
             strokeDasharray="3 6"
           />
@@ -147,7 +147,7 @@ export function CompactContactStrip() {
             stroke="#d8b07a"
             strokeWidth="2"
             strokeLinecap="round"
-            opacity="0.7"
+            opacity="0.75"
           />
         </svg>
 
@@ -167,7 +167,7 @@ export function CompactContactStrip() {
               <BrandName inverted size="lg" />
               <span
                 dir="ltr"
-                className="font-mono-code text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/15 bg-white/[0.06] text-[#e2e8f0]/80"
+                className="font-mono-code text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/15 bg-white/[0.07] text-[#e2e8f0]/85"
               >
                 AI · ZU
               </span>
@@ -189,16 +189,16 @@ export function CompactContactStrip() {
           <div className="flex flex-col items-stretch sm:items-center lg:items-end gap-3 shrink-0">
             <Link
               href="/courses"
-              className="h-[44px] sm:h-[46px] px-6 rounded-[12px] sm:rounded-[14px] text-[13.5px] sm:text-[14px] font-extrabold inline-flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:scale-[0.985] bg-[linear-gradient(135deg,#c25e33_0%,#a54b24_100%)] text-white shadow-[0_10px_26px_rgba(194,94,51,0.3)] dark:bg-[linear-gradient(135deg,#d6a96c_0%,#b88749_100%)] dark:text-[#101115] dark:shadow-[0_10px_26px_rgba(214,169,108,0.26)]"
+              className="group h-[44px] sm:h-[46px] px-6 rounded-[12px] sm:rounded-[14px] text-[13.5px] sm:text-[14px] font-extrabold inline-flex items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.985] bg-[linear-gradient(135deg,#c96437_0%,#a54b24_100%)] text-white shadow-[0_12px_28px_rgba(194,94,51,0.34)] hover:shadow-[0_16px_36px_rgba(194,94,51,0.48)] dark:bg-[linear-gradient(135deg,#d8ad70_0%,#b88749_100%)] dark:text-[#101115] dark:shadow-[0_12px_28px_rgba(214,169,108,0.28)] dark:hover:shadow-[0_16px_36px_rgba(214,169,108,0.42)]"
             >
               <span>تصفّح مكتبة المقررات</span>
-              <ArrowLeft className="w-4 h-4 shrink-0" />
+              <ArrowLeft className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:-translate-x-1" />
             </Link>
 
             <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2">
               {SITE_CONFIG.socialLinks.map((item) => {
                 const pillClass =
-                  "px-3.5 py-2 rounded-full border border-white/15 dark:border-white/[0.11] bg-white/[0.08] dark:bg-white/[0.05] hover:bg-white/[0.14] hover:border-[#d8b07a]/45 text-[11.5px] font-bold text-white dark:text-[#f1f5f9] inline-flex items-center gap-1.5 transition-all hover:-translate-y-0.5 cursor-pointer backdrop-blur-md";
+                  "px-3.5 py-2 rounded-full border border-white/15 dark:border-white/[0.12] bg-white/[0.08] dark:bg-white/[0.05] text-[11.5px] font-bold text-white dark:text-[#f1f5f9] inline-flex items-center gap-1.5 backdrop-blur-md cursor-pointer transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] hover:bg-white/[0.16] dark:hover:bg-[#d8b07a]/[0.12] hover:border-[#e7c694]/60 hover:shadow-[0_6px_18px_rgba(216,176,122,0.18)]";
 
                 if (item.url) {
                   return (

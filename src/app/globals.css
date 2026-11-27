@@ -12,20 +12,20 @@
   color-scheme: light;
 
   /* Core Daylight Ivory Atelier Palette (Light) */
-  --bg-canvas: #f7f5ef;
+  --bg-canvas: #efeae0;
   --bg-surface: #ffffff;
-  --bg-subtle: #ede9df;
-  --bg-hover: #f0ede5;
-  --border-soft: rgba(30, 53, 92, 0.11);
-  --border-strong: rgba(30, 53, 92, 0.22);
+  --bg-subtle: #e6dfd2;
+  --bg-hover: #ebe5d8;
+  --border-soft: rgba(24, 38, 66, 0.12);
+  --border-strong: rgba(22, 40, 71, 0.24);
   --text-primary: #131c2b;
-  --text-secondary: #3c485c;
-  --text-muted: #626e82;
+  --text-secondary: #374357;
+  --text-muted: #5d6a7f;
 
-  --brand-primary: #1e355c;
-  --brand-primary-hover: #132442;
-  --brand-soft: #e7eef8;
-  --brand-soft-text: #1c3663;
+  --brand-primary: #162847;
+  --brand-primary-hover: #0e1c33;
+  --brand-soft: #e4ecf7;
+  --brand-soft-text: #162847;
 
   --accent-warm: #c25e33;
   --accent-warm-soft: #faece5;
@@ -34,57 +34,58 @@
   --danger-fg: #c25e33;
   --danger-soft: #faece5;
 
-  --success-fg: #1d6b52;
-  --success-soft: #e3f2ec;
+  --success-fg: #15664b;
+  --success-soft: #e0f1ea;
 
-  --hero-bg: #1e355c;
-  --hero-bg-end: #132442;
+  --hero-bg: #162847;
+  --hero-bg-end: #0d182d;
 
-  --shadow-card: 0 1px 2px rgba(18, 28, 45, 0.04), 0 8px 24px rgba(18, 28, 45, 0.045);
-  --shadow-hover: 0 14px 32px rgba(18, 28, 45, 0.09);
+  --shadow-card: 0 2px 4px rgba(18, 28, 45, 0.04), 0 14px 36px rgba(18, 28, 45, 0.08);
+  --shadow-hover: 0 18px 42px rgba(18, 28, 45, 0.12);
 
   /* Dedicated Landing / Atelier Tokens (Daylight Ivory) */
-  --atelier-bg: linear-gradient(175deg, #f9f7f2 0%, #f2eee5 56%, #ebe6da 100%);
-  --atelier-grid: rgba(30, 53, 92, 0.05);
-  --atelier-glow-a: rgba(194, 94, 51, 0.08);
-  --atelier-glow-b: rgba(29, 107, 82, 0.075);
-  --atelier-topbar-bg: rgba(255, 253, 249, 0.82);
-  --atelier-topbar-border: rgba(30, 53, 92, 0.1);
-  --atelier-topbar-shadow: 0 10px 28px rgba(18, 28, 45, 0.06);
-  --atelier-border-mid: rgba(30, 53, 92, 0.16);
-  --atelier-title-grad: linear-gradient(270deg, #c25e33 0%, #1e355c 56%, #1d6b52 100%);
+  --atelier-bg: linear-gradient(175deg, #f4f0e6 0%, #ebe5d8 56%, #e5dfd1 100%);
+  --atelier-dot: rgba(22, 40, 71, 0.13);
+  --atelier-grid: rgba(22, 40, 71, 0.055);
+  --atelier-glow-a: rgba(194, 94, 51, 0.09);
+  --atelier-glow-b: rgba(21, 102, 75, 0.085);
+  --atelier-topbar-bg: rgba(255, 253, 249, 0.86);
+  --atelier-topbar-border: rgba(24, 38, 66, 0.12);
+  --atelier-topbar-shadow: 0 12px 30px rgba(18, 28, 45, 0.08);
+  --atelier-border-mid: rgba(24, 38, 66, 0.17);
+  --atelier-title-grad: linear-gradient(270deg, #c25e33 0%, #162847 56%, #15664b 100%);
   --atelier-accent-1: #c25e33;
-  --atelier-accent-2: #1d6b52;
-  --atelier-accent-3: #1e355c;
-  --atelier-cta-bg: linear-gradient(135deg, #1e355c 0%, #132442 100%);
+  --atelier-accent-2: #15664b;
+  --atelier-accent-3: #162847;
+  --atelier-cta-bg: linear-gradient(135deg, #162847 0%, #0e1c33 100%);
   --atelier-cta-fg: #ffffff;
-  --atelier-cta-shadow: 0 12px 28px rgba(30, 53, 92, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.16);
-  --atelier-sec-bg: rgba(255, 255, 255, 0.78);
-  --atelier-sec-fg: #1e355c;
-  --atelier-pill-bg: rgba(30, 53, 92, 0.055);
-  --atelier-rim-glint: linear-gradient(90deg, transparent 10%, rgba(255, 255, 255, 0.95) 50%, transparent 90%);
-  --atelier-ring-outer: rgba(30, 53, 92, 0.15);
-  --atelier-ring-inner: rgba(30, 53, 92, 0.1);
-  --atelier-tick-color: rgba(30, 53, 92, 0.24);
-  --atelier-core-bg: radial-gradient(circle at 34% 20%, #ffffff 0%, #f5f2ea 82%);
-  --atelier-core-border: rgba(30, 53, 92, 0.15);
-  --atelier-core-halo: rgba(30, 53, 92, 0.035);
-  --atelier-core-shadow: 0 26px 58px rgba(24, 34, 52, 0.13), 0 4px 14px rgba(194, 94, 51, 0.05);
-  --atelier-node-bg: rgba(255, 255, 255, 0.95);
-  --atelier-node-active-bg: #1e355c;
-  --atelier-node-active-border: #1e355c;
+  --atelier-cta-shadow: 0 12px 28px rgba(22, 40, 71, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  --atelier-sec-bg: rgba(255, 255, 255, 0.88);
+  --atelier-sec-fg: #162847;
+  --atelier-pill-bg: rgba(22, 40, 71, 0.06);
+  --atelier-rim-glint: linear-gradient(90deg, transparent 10%, rgba(255, 255, 255, 0.96) 50%, transparent 90%);
+  --atelier-ring-outer: rgba(22, 40, 71, 0.17);
+  --atelier-ring-inner: rgba(22, 40, 71, 0.11);
+  --atelier-tick-color: rgba(22, 40, 71, 0.26);
+  --atelier-core-bg: radial-gradient(circle at 35% 20%, #1d3257 0%, #0e1a30 82%);
+  --atelier-core-border: rgba(22, 40, 71, 0.24);
+  --atelier-core-halo: rgba(22, 40, 71, 0.055);
+  --atelier-core-shadow: 0 28px 60px rgba(18, 28, 45, 0.18), 0 4px 14px rgba(194, 94, 51, 0.08);
+  --atelier-node-bg: rgba(255, 255, 255, 0.97);
+  --atelier-node-active-bg: #162847;
+  --atelier-node-active-border: #162847;
   --atelier-node-active-fg: #ffffff;
-  --atelier-node-active-sub: rgba(226, 232, 240, 0.8);
-  --atelier-node-paper-bg: #faece5;
-  --atelier-node-paper-ink: #8f3d1c;
-  --atelier-node-paper-sub: #a05537;
-  --atelier-node-shadow: 0 10px 26px rgba(18, 28, 45, 0.09);
-  --atelier-dock-bg: rgba(255, 253, 249, 0.88);
-  --atelier-dock-border: rgba(30, 53, 92, 0.12);
-  --atelier-dock-active-bg: #1e355c;
-  --atelier-dock-active-fg: #ffffff;
-  --atelier-dock-shadow: 0 14px 36px rgba(18, 28, 45, 0.14);
-  --atelier-grain-opacity: 0.04;
+  --atelier-node-active-sub: rgba(226, 232, 240, 0.84);
+  --atelier-node-paper-bg: #ffffff;
+  --atelier-node-paper-ink: #131c2b;
+  --atelier-node-paper-sub: #5d6a7f;
+  --atelier-node-shadow: 0 12px 28px rgba(18, 28, 45, 0.1);
+  --atelier-dock-bg: rgba(255, 253, 249, 0.94);
+  --atelier-dock-border: rgba(24, 38, 66, 0.12);
+  --atelier-dock-active-bg: rgba(22, 40, 71, 0.1);
+  --atelier-dock-active-fg: #162847;
+  --atelier-dock-shadow: 0 -8px 28px rgba(18, 28, 45, 0.08);
+  --atelier-grain-opacity: 0.035;
 
   /* Backward-Compatibility Token Aliases */
   --bg: var(--bg-canvas);
@@ -173,6 +174,7 @@ html.dark,
 
   /* Dedicated Landing / Atelier Tokens (Obsidian & Champagne) */
   --atelier-bg: linear-gradient(175deg, #08090c 0%, #111319 54%, #0a0c10 100%);
+  --atelier-dot: rgba(216, 176, 122, 0.14);
   --atelier-grid: rgba(216, 176, 122, 0.038);
   --atelier-glow-a: rgba(216, 176, 122, 0.11);
   --atelier-glow-b: rgba(110, 196, 163, 0.08);
@@ -207,11 +209,11 @@ html.dark,
   --atelier-node-paper-ink: #171614;
   --atelier-node-paper-sub: #5c574f;
   --atelier-node-shadow: 0 14px 34px rgba(0, 0, 0, 0.48);
-  --atelier-dock-bg: rgba(18, 20, 26, 0.86);
-  --atelier-dock-border: rgba(216, 176, 122, 0.2);
+  --atelier-dock-bg: rgba(14, 16, 22, 0.92);
+  --atelier-dock-border: rgba(216, 176, 122, 0.18);
   --atelier-dock-active-bg: rgba(216, 176, 122, 0.16);
   --atelier-dock-active-fg: #e7c694;
-  --atelier-dock-shadow: 0 14px 36px rgba(0, 0, 0, 0.42);
+  --atelier-dock-shadow: 0 -10px 30px rgba(0, 0, 0, 0.42);
   --atelier-grain-opacity: 0.03;
 
   /* Dark Compat Overrides */
@@ -529,7 +531,7 @@ html.dark,
   height: 2px;
   width: 100%;
   z-index: 60;
-  background: linear-gradient(90deg, #1e355c 0%, #c25e33 100%);
+  background: linear-gradient(90deg, #162847 0%, #c25e33 100%);
   transform: scaleX(0);
   transform-origin: right center;
   will-change: transform;
@@ -548,13 +550,25 @@ html.dark #scrollProgressBar,
    ========================================================================== */
 
 .atelier-blueprint-grid {
-  background-image:
-    linear-gradient(to right, var(--atelier-grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--atelier-grid) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 80% 76% at 34% 50%, #000 28%, transparent 100%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 76% at 34% 50%, #000 28%, transparent 100%);
+  background-image: radial-gradient(circle, var(--atelier-dot) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(ellipse 82% 76% at 50% 45%, #000 32%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 82% 76% at 50% 45%, #000 32%, transparent 100%);
   pointer-events: none;
+}
+
+.atelier-card-hover {
+  transform: translate3d(0, 0, 0);
+  transition:
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.22s ease,
+    box-shadow 0.24s ease;
+}
+
+.atelier-card-hover:hover {
+  transform: translate3d(0, -2px, 0);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-hover);
 }
 
 .atelier-grain {
@@ -2217,6 +2231,7 @@ table.clean-table tr:last-child td {
   .exp-expanded,
   .reality-metric-card,
   .hover-lift,
+  .atelier-card-hover,
   .desk-cinema-wrap,
   .chaos-chip,
   .feature-pop-card {

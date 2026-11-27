@@ -23,11 +23,11 @@ const THEME_EVENT = "cs-portal-theme-updated";
 const READING_KEY = "cs_portal_reading_prefs";
 const READING_EVENT = "cs-portal-reading-updated";
 
-const DEFAULT_THEME: ThemeMode = "light";
+const DEFAULT_THEME: ThemeMode = "dark";
 const DEFAULT_READING: ReadingPrefs = { fontScale: 100, relaxedSpacing: false };
 
 function normalizeTheme(val: unknown): ThemeMode {
-  return val === "dark" ? "dark" : "light";
+  return val === "light" ? "light" : "dark";
 }
 
 export function getStoredTheme(): ThemeMode {

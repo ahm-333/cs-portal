@@ -36,7 +36,7 @@ const dancingScript = Dancing_Script({
   display: "swap",
 });
 
-const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("cs_portal_theme");var isDark=t==="dark";document.documentElement.dataset.theme=isDark?"dark":"light";if(isDark){document.documentElement.classList.add("dark");}else{document.documentElement.classList.remove("dark");}}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("cs_portal_theme");var isDark=t!=="light";document.documentElement.dataset.theme=isDark?"dark":"light";if(isDark){document.documentElement.classList.add("dark");}else{document.documentElement.classList.remove("dark");}}catch(e){}})();`;
 
 function getSafeMetadataBase(): URL {
   try {
@@ -92,8 +92,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f5f1" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f1319" },
+    { media: "(prefers-color-scheme: light)", color: "#efeae0" },
+    { media: "(prefers-color-scheme: dark)", color: "#090a0d" },
   ],
 };
 
@@ -106,9 +106,9 @@ export default function RootLayout({
     <html
       lang="ar"
       dir="rtl"
-      data-theme="light"
+      data-theme="dark"
       suppressHydrationWarning
-      className={`${cairo.variable} ${inter.variable} ${jetbrainsMono.variable} ${dancingScript.variable}`}
+      className={`dark ${cairo.variable} ${inter.variable} ${jetbrainsMono.variable} ${dancingScript.variable}`}
     >
       <head>
         {/* Static anti-flash theme bootstrap script — reads user preference before paint */}

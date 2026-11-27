@@ -43,7 +43,16 @@ export function LandingFaqSection() {
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-12 items-start">
         {/* Sticky Editorial Header Column (RTL Right) */}
-        <div className="lg:col-span-4 lg:sticky lg:top-28 space-y-3 text-right">
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{
+            duration: prefersReducedMotion ? 0.15 : 0.55,
+            ease: EDITORIAL_EASE,
+          }}
+          className="lg:col-span-4 lg:sticky lg:top-28 space-y-3 text-right"
+        >
           <span className="inline-flex items-center gap-2 text-[11.5px] font-extrabold tracking-wide text-[#c25e33] dark:text-[#d8b07a]">
             <span
               aria-hidden="true"
@@ -52,17 +61,11 @@ export function LandingFaqSection() {
             <span>الأسئلة الشائعة</span>
           </span>
 
-          <h2
-            className="text-[22px] sm:text-[31px] font-black tracking-[-0.02em] leading-[1.3]"
-            style={{ color: "var(--text-primary)" }}
-          >
+          <h2 className="text-[22px] sm:text-[31px] font-black tracking-[-0.02em] leading-[1.3] text-[#14233d] dark:text-[#f6f4ef]">
             <MaskedLineReveal>كل ما تحتاج معرفته قبل البدء</MaskedLineReveal>
           </h2>
 
-          <p
-            className="text-[13px] sm:text-[13.5px] leading-[1.75]"
-            style={{ color: "var(--text-secondary)" }}
-          >
+          <p className="text-[13px] sm:text-[13.5px] leading-[1.75] text-[#3c485c] dark:text-[#d4cfc5]">
             إجابات واضحة ومختصرة حول نظام المحاضرات، المعاينة المجانية، وتجربة
             الاستخدام على الهاتف.
           </p>
@@ -70,29 +73,34 @@ export function LandingFaqSection() {
           <div className="pt-1.5">
             <Link
               href="/courses"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[12.5px] font-extrabold transition-all bg-[#1e355c]/[0.055] dark:bg-[#fff5e6]/[0.045] border-[#1e355c]/20 dark:border-[#d8b07a]/25 hover:bg-[#1e355c]/[0.09] dark:hover:bg-[#fff5e6]/[0.08] hover:border-[#c25e33]/50 dark:hover:border-[#d8b07a]/55"
-              style={{ color: "var(--text-primary)" }}
+              className="group inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[12.5px] font-extrabold transition-all duration-200 hover:-translate-y-0.5 bg-white/80 dark:bg-[#fff5e6]/[0.045] border-[#1e355c]/20 dark:border-[#d8b07a]/25 text-[#14233d] dark:text-[#f6f4ef] shadow-[0_2px_10px_rgba(20,35,61,0.05)] dark:shadow-none hover:bg-white dark:hover:bg-[#d8b07a]/[0.09] hover:border-[#c25e33]/55 dark:hover:border-[#d8b07a]/55 hover:shadow-[0_8px_22px_rgba(20,35,61,0.09)] dark:hover:shadow-[0_8px_22px_rgba(216,176,122,0.1)]"
             >
               <span>ابدأ المعاينة المجانية</span>
-              <ArrowLeft className="w-3.5 h-3.5 text-[#c25e33] dark:text-[#d8b07a]" />
+              <ArrowLeft className="w-3.5 h-3.5 text-[#c25e33] dark:text-[#d8b07a] transition-transform duration-200 group-hover:-translate-x-1" />
             </Link>
           </div>
-        </div>
+        </motion.div>
 
         {/* Hairline Editorial Accordion (RTL Left) */}
-        <div
-          className="lg:col-span-8 border-t"
-          style={{ borderColor: "var(--border-soft)" }}
-        >
+        <div className="lg:col-span-8 border-t border-[#1e355c]/14 dark:border-[#fff5e6]/10">
           {FAQ_ITEMS.map((item, idx) => {
             const isOpen = openIdx === idx;
             return (
-              <div
+              <motion.div
                 key={item.num}
-                className={`relative border-b transition-[padding] duration-300 ${
-                  isOpen ? "pr-4 sm:pr-[18px] pl-1" : "px-1"
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{
+                  duration: prefersReducedMotion ? 0.15 : 0.48,
+                  delay: prefersReducedMotion ? 0 : idx * 0.06,
+                  ease: EDITORIAL_EASE,
+                }}
+                className={`relative border-b border-[#1e355c]/14 dark:border-[#fff5e6]/10 transition-[padding,background-color] duration-300 ${
+                  isOpen
+                    ? "pr-4 sm:pr-[18px] pl-2 bg-white/55 dark:bg-[#d8b07a]/[0.03]"
+                    : "px-2 hover:bg-[#1e355c]/[0.035] dark:hover:bg-[#d8b07a]/[0.035]"
                 }`}
-                style={{ borderColor: "var(--border-soft)" }}
               >
                 {/* Animated Vertical 2.5px Accent Bar on RTL Right Edge */}
                 <AnimatePresence initial={false}>
@@ -115,7 +123,7 @@ export function LandingFaqSection() {
                           ? { duration: 0.15 }
                           : { type: "spring", stiffness: 380, damping: 28 }
                       }
-                      className="pointer-events-none absolute right-0 top-3.5 bottom-3.5 w-[2.5px] rounded-full origin-top bg-[#c25e33] dark:bg-[#d8b07a]"
+                      className="pointer-events-none absolute right-0 top-3 bottom-3 w-[2.5px] rounded-full origin-top bg-[#c25e33] dark:bg-[#d8b07a]"
                     />
                   )}
                 </AnimatePresence>
@@ -132,14 +140,17 @@ export function LandingFaqSection() {
                       className={`font-mono-code text-[11px] font-extrabold shrink-0 transition-colors duration-200 ${
                         isOpen
                           ? "text-[#c25e33] dark:text-[#d8b07a]"
-                          : "text-[var(--text-muted)]"
+                          : "text-[#626e82] dark:text-[#989389] group-hover:text-[#c25e33] dark:group-hover:text-[#d8b07a]"
                       }`}
                     >
                       {item.num}
                     </span>
                     <span
-                      className="text-[14px] sm:text-[15.5px] font-extrabold leading-snug transition-colors duration-200 group-hover:text-[#c25e33] dark:group-hover:text-[#eed2a4]"
-                      style={{ color: "var(--text-primary)" }}
+                      className={`text-[14px] sm:text-[15.5px] font-extrabold leading-snug transition-colors duration-200 ${
+                        isOpen
+                          ? "text-[#14233d] dark:text-[#f6f4ef]"
+                          : "text-[#14233d] dark:text-[#f6f4ef] group-hover:text-[#c25e33] dark:group-hover:text-[#eed2a4]"
+                      }`}
                     >
                       {item.q}
                     </span>
@@ -152,10 +163,10 @@ export function LandingFaqSection() {
                         ? { duration: 0.12 }
                         : { type: "spring", stiffness: 340, damping: 24 }
                     }
-                    className={`w-7 h-7 rounded-full border flex items-center justify-center shrink-0 transition-colors duration-200 ${
+                    className={`w-7 h-7 rounded-full border flex items-center justify-center shrink-0 transition-all duration-200 ${
                       isOpen
-                        ? "border-[#c25e33] dark:border-[#d8b07a] bg-[#c25e33]/10 dark:bg-[#d8b07a]/12 text-[#c25e33] dark:text-[#d8b07a]"
-                        : "border-[var(--border-soft)] bg-[#1e355c]/[0.05] dark:bg-[#fff5e6]/[0.045] text-[var(--text-secondary)]"
+                        ? "border-[#c25e33] dark:border-[#d8b07a] bg-[#c25e33]/12 dark:bg-[#d8b07a]/14 text-[#c25e33] dark:text-[#d8b07a] ring-2 ring-[#c25e33]/15 dark:ring-[#d8b07a]/15"
+                        : "border-[#1e355c]/16 dark:border-[#fff5e6]/12 bg-white/70 dark:bg-[#fff5e6]/[0.045] text-[#3c485c] dark:text-[#d4cfc5] group-hover:border-[#c25e33]/60 dark:group-hover:border-[#d8b07a]/60 group-hover:bg-[#c25e33]/10 dark:group-hover:bg-[#d8b07a]/12 group-hover:text-[#c25e33] dark:group-hover:text-[#d8b07a] group-hover:ring-2 group-hover:ring-[#c25e33]/15 dark:group-hover:ring-[#d8b07a]/15"
                     }`}
                   >
                     <Plus className="w-3.5 h-3.5" strokeWidth={2.25} />
@@ -183,16 +194,13 @@ export function LandingFaqSection() {
                       }}
                       className="overflow-hidden"
                     >
-                      <p
-                        className="pb-4 sm:pb-5 pr-6 sm:pr-7 pl-2 text-[12.5px] sm:text-[13.5px] leading-[1.8]"
-                        style={{ color: "var(--text-secondary)" }}
-                      >
+                      <p className="pb-4 sm:pb-5 pr-6 sm:pr-7 pl-2 text-[12.5px] sm:text-[13.5px] leading-[1.8] text-[#3c485c] dark:text-[#d4cfc5]">
                         {item.a}
                       </p>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             );
           })}
         </div>
