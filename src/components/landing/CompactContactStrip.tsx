@@ -1,31 +1,39 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import { motion, useReducedMotion } from "motion/react";
 import { ArrowLeft, MessageCircle, Send } from "lucide-react";
-import { BrandLogo } from "@/components/layout/BrandLogo";
 import { BrandName } from "@/components/layout/BrandName";
 import { SITE_CONFIG, type SocialLinkItem } from "@/lib/config";
 import { emitToast } from "@/lib/stores/events";
-import { MaskedLineReveal } from "@/components/ui/AwwwardsPrimitives";
+import {
+  EDITORIAL_EASE,
+  MaskedLineReveal,
+} from "@/components/ui/AwwwardsPrimitives";
 
-function SocialIcon({
-  icon,
-  color,
-}: {
-  icon: SocialLinkItem["icon"];
-  color: string;
-}) {
+const ICON_TINT: Record<SocialLinkItem["icon"], string> = {
+  send: "#38bdf8",
+  "message-circle": "#6ec4a3",
+  youtube: "#f87171",
+  linkedin: "#93c5fd",
+  github: "#e2e8f0",
+};
+
+function SocialIcon({ icon }: { icon: SocialLinkItem["icon"] }) {
+  const color = ICON_TINT[icon];
+
   if (icon === "send") {
-    return <Send className="w-4 h-4 shrink-0" style={{ color }} />;
+    return <Send className="w-3.5 h-3.5 shrink-0" style={{ color }} />;
   }
   if (icon === "message-circle") {
-    return <MessageCircle className="w-4 h-4 shrink-0" style={{ color }} />;
+    return <MessageCircle className="w-3.5 h-3.5 shrink-0" style={{ color }} />;
   }
   if (icon === "youtube") {
     return (
       <svg
-        width="16"
-        height="16"
+        width="14"
+        height="14"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -44,8 +52,8 @@ function SocialIcon({
   if (icon === "linkedin") {
     return (
       <svg
-        width="16"
-        height="16"
+        width="14"
+        height="14"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -64,8 +72,8 @@ function SocialIcon({
   }
   return (
     <svg
-      width="16"
-      height="16"
+      width="14"
+      height="14"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -83,6 +91,8 @@ function SocialIcon({
 }
 
 export function CompactContactStrip() {
+  const prefersReducedMotion = useReducedMotion();
+
   const handlePlaceholder = (label: string) => {
     emitToast(`رابط ${label} الخاص بـ ${SITE_CONFIG.name} جاهز للإضافة`);
   };
@@ -90,83 +100,105 @@ export function CompactContactStrip() {
   return (
     <section
       id="community"
-      className="reveal max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-16"
+      className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-12 sm:pb-16"
     >
-      <div
-        className="awwwards-beam relative overflow-hidden rounded-[32px] border border-white/12 p-7 sm:p-10 lg:p-12 text-white shadow-[0_28px_70px_rgba(8,14,26,0.34)]"
-        style={{
-          background:
-            "linear-gradient(155deg, #070e1c 0%, #101f3b 55%, #0c172b 100%)",
+      <motion.div
+        initial={
+          prefersReducedMotion ? false : { opacity: 0, y: 20, scale: 0.985 }
+        }
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{
+          duration: prefersReducedMotion ? 0.15 : 0.65,
+          ease: EDITORIAL_EASE,
         }}
+        className="relative overflow-hidden rounded-[22px] sm:rounded-[28px] border border-[#1e355c]/30 dark:border-[#d8b07a]/30 px-5 py-7 sm:px-10 sm:py-9 text-white shadow-[0_28px_66px_rgba(0,0,0,0.24)] bg-[radial-gradient(circle_at_12%_50%,rgba(194,94,51,0.22)_0%,transparent_56%),radial-gradient(circle_at_86%_20%,rgba(102,199,166,0.14)_0%,transparent_52%),linear-gradient(165deg,#1b2d4d_0%,#101c33_100%)] dark:bg-[radial-gradient(circle_at_12%_50%,rgba(216,176,122,0.14)_0%,transparent_56%),radial-gradient(circle_at_86%_18%,rgba(110,196,163,0.09)_0%,transparent_52%),linear-gradient(165deg,#171a24_0%,#0e1016_100%)]"
       >
-        {/* Architectural Blueprint Grid + Grain + Glows (Bookend Symmetry with Hero) */}
+        {/* 1px Top Specular Hairline */}
         <div
           aria-hidden="true"
-          className="hero-blueprint-mesh pointer-events-none absolute inset-0 opacity-75"
-        />
-        <div
-          aria-hidden="true"
-          className="editorial-grain pointer-events-none absolute inset-0 opacity-[0.045] mix-blend-overlay"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-20 -right-16 w-[320px] h-[320px] rounded-full blur-3xl opacity-[0.22]"
-          style={{
-            background:
-              "radial-gradient(circle, #c25e33 0%, transparent 70%)",
-          }}
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -bottom-24 -left-12 w-[320px] h-[320px] rounded-full blur-3xl opacity-[0.18]"
-          style={{
-            background:
-              "radial-gradient(circle, #66c7a6 0%, transparent 70%)",
-          }}
+          className="pointer-events-none absolute top-0 left-[12%] right-[12%] h-px bg-gradient-to-r from-transparent via-[#eed2a4]/55 to-transparent"
         />
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-          <div className="space-y-4 text-center lg:text-right max-w-xl mx-auto lg:mx-0">
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
-              <BrandLogo size="md" inverted />
+        {/* Signature Visual Echo: Architectural Swiss Dial SVG Arc (Left Edge Bookend) */}
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 310 310"
+          fill="none"
+          className="pointer-events-none absolute -left-[70px] sm:-left-[65px] top-1/2 -translate-y-1/2 w-[200px] h-[200px] sm:w-[310px] sm:h-[310px] opacity-55 sm:opacity-90"
+        >
+          <circle
+            cx="155"
+            cy="155"
+            r="140"
+            className="stroke-white/[0.14] dark:stroke-[#d8b07a]/[0.16]"
+            strokeWidth="1"
+            strokeDasharray="3 6"
+          />
+          <circle
+            cx="155"
+            cy="155"
+            r="102"
+            className="stroke-white/[0.14] dark:stroke-[#d8b07a]/[0.16]"
+            strokeWidth="1"
+          />
+          <path
+            d="M 155 15 A 140 140 0 0 1 295 155"
+            stroke="#d8b07a"
+            strokeWidth="2"
+            strokeLinecap="round"
+            opacity="0.7"
+          />
+        </svg>
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-9">
+          {/* Copy Column */}
+          <div className="max-w-[560px] flex flex-col gap-2.5 text-center lg:text-right mx-auto lg:mx-0">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
+              <div className="relative w-8 h-8 rounded-full overflow-hidden ring-[1.5px] ring-[#d8b07a] shrink-0 bg-[#132138] shadow-sm">
+                <Image
+                  src="/images/founder.jpg"
+                  alt="Eng. Ahmed Amir"
+                  fill
+                  sizes="32px"
+                  className="object-cover object-[50%_15%]"
+                />
+              </div>
               <BrandName inverted size="lg" />
               <span
                 dir="ltr"
-                className="font-mono-code text-[10.5px] font-bold px-2.5 py-0.5 rounded-full bg-white/[0.08] border border-white/14 text-slate-200"
+                className="font-mono-code text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/15 bg-white/[0.06] text-[#e2e8f0]/80"
               >
-                {SITE_CONFIG.universityBadge}
+                AI · ZU
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight text-white">
+            <h2 className="text-[20px] sm:text-[28px] font-black tracking-tight leading-[1.3] text-white">
               <MaskedLineReveal>
-                جاهز تبدأ مذاكرة منظمة من غير تشتيت؟
+                مساحة مذاكرة منظّمة.. تبدأ بخطوة واحدة
               </MaskedLineReveal>
             </h2>
 
-            <p className="text-[13.5px] sm:text-[14.5px] text-slate-300/85 leading-relaxed">
-              ادخل مكتبة المقررات دلوقتي أو تابع القنوات وجروبات المراجعة
-              والتنبيهات قبل الامتحانات.
+            <p className="text-[12.5px] sm:text-[13.5px] leading-[1.7] text-[#e2e8f0]/85 dark:text-[#dcd7ce]/80">
+              تصفّح مكتبة المقررات الآن، أو انضم لقنوات المراجعة والتنبيهات قبل
+              الامتحانات.
             </p>
           </div>
 
-          <div className="flex flex-col items-center lg:items-end gap-4">
+          {/* Actions Column */}
+          <div className="flex flex-col items-stretch sm:items-center lg:items-end gap-3 shrink-0">
             <Link
               href="/courses"
-              className="magnetic-btn cta-shimmer h-12 px-7 rounded-2xl text-[14px] font-extrabold text-white inline-flex items-center justify-center gap-2.5 shadow-[0_14px_34px_rgba(194,94,51,0.38)] transition-transform hover:-translate-y-0.5"
-              style={{
-                background:
-                  "linear-gradient(135deg, #cf6739 0%, #b34f26 100%)",
-              }}
+              className="h-[44px] sm:h-[46px] px-6 rounded-[12px] sm:rounded-[14px] text-[13.5px] sm:text-[14px] font-extrabold inline-flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:scale-[0.985] bg-[linear-gradient(135deg,#c25e33_0%,#a54b24_100%)] text-white shadow-[0_10px_26px_rgba(194,94,51,0.3)] dark:bg-[linear-gradient(135deg,#d6a96c_0%,#b88749_100%)] dark:text-[#101115] dark:shadow-[0_10px_26px_rgba(214,169,108,0.26)]"
             >
-              <span>افتح مكتبة المقررات</span>
+              <span>تصفّح مكتبة المقررات</span>
               <ArrowLeft className="w-4 h-4 shrink-0" />
             </Link>
 
             <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2">
               {SITE_CONFIG.socialLinks.map((item) => {
-                const cls =
-                  "magnetic-btn min-h-[40px] px-3.5 py-2 rounded-xl border border-white/12 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[#e58a62]/60 text-[12px] font-bold text-slate-100 inline-flex items-center gap-2 transition-all hover:-translate-y-0.5 cursor-pointer backdrop-blur-md";
+                const pillClass =
+                  "px-3.5 py-2 rounded-full border border-white/15 dark:border-white/[0.11] bg-white/[0.08] dark:bg-white/[0.05] hover:bg-white/[0.14] hover:border-[#d8b07a]/45 text-[11.5px] font-bold text-white dark:text-[#f1f5f9] inline-flex items-center gap-1.5 transition-all hover:-translate-y-0.5 cursor-pointer backdrop-blur-md";
 
                 if (item.url) {
                   return (
@@ -175,9 +207,9 @@ export function CompactContactStrip() {
                       href={item.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={cls}
+                      className={pillClass}
                     >
-                      <SocialIcon icon={item.icon} color={item.color} />
+                      <SocialIcon icon={item.icon} />
                       <span className="font-en">{item.label}</span>
                     </a>
                   );
@@ -188,9 +220,9 @@ export function CompactContactStrip() {
                     key={item.id}
                     type="button"
                     onClick={() => handlePlaceholder(item.label)}
-                    className={cls}
+                    className={pillClass}
                   >
-                    <SocialIcon icon={item.icon} color={item.color} />
+                    <SocialIcon icon={item.icon} />
                     <span className="font-en">{item.label}</span>
                   </button>
                 );
@@ -198,7 +230,7 @@ export function CompactContactStrip() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

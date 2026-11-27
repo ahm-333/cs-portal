@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, Menu, Moon, Sun, X } from "lucide-react";
+import { motion } from "motion/react";
+import { ArrowLeft, Moon, Sun } from "lucide-react";
 import { BrandName } from "@/components/layout/BrandName";
 import { toggleTheme, useTheme } from "@/components/layout/themeStore";
+import { usePortalState } from "@/lib/stores/portalStore";
 import { SITE_CONFIG } from "@/lib/config";
-import { EDITORIAL_EASE } from "@/components/ui/AwwwardsPrimitives";
 
 const NAV_LINKS = [
   { id: "interactive-showcase", href: "#interactive-showcase", label: "الأركان" },
@@ -20,25 +20,22 @@ const NAV_LINKS = [
 
 export function LandingTopbar() {
   const theme = useTheme();
-  const [isOverHero, setIsOverHero] = useState(true);
-  const [activeId, setActiveId] = useState<string>("");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const portal = usePortalState();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [activeId, setActiveId] = useState<string>("interactive-showcase");
 
   useEffect(() => {
     const syncScroll = () => {
-      const heroEl = document.getElementById("top");
-      const overHero = heroEl
-        ? heroEl.getBoundingClientRect().bottom > 88
-        : window.scrollY < 480;
-      setIsOverHero(overHero);
+      const y = window.scrollY;
+      setIsScrolled(y > 28);
 
-      const probeY = window.scrollY + 210;
-      let current = "";
+      const probeY = y + 220;
+      let current = "interactive-showcase";
       for (const item of NAV_LINKS) {
         if (item.href.startsWith("/")) continue;
         const el = document.getElementById(item.id);
         if (!el) continue;
-        const top = el.getBoundingClientRect().top + window.scrollY;
+        const top = el.getBoundingClientRect().top + y;
         if (probeY >= top) current = item.id;
       }
       setActiveId(current);
@@ -54,164 +51,159 @@ export function LandingTopbar() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!mobileMenuOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMobileMenuOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [mobileMenuOpen]);
-
   const isDark = theme === "dark";
+  const lastVisited = portal.lastVisited;
+
+  // Dual Atelier Palette Tokens (Obsidian & Champagne vs Daylight Ivory)
+  const capsuleBg = isDark
+    ? isScrolled
+      ? "rgba(14, 16, 22, 0.88)"
+      : "rgba(16, 18, 24, 0.72)"
+    : isScrolled
+      ? "rgba(255, 253, 249, 0.94)"
+      : "rgba(255, 253, 249, 0.82)";
+
+  const capsuleBorder = isDark
+    ? isScrolled
+      ? "rgba(216, 176, 122, 0.16)"
+      : "rgba(255, 244, 226, 0.09)"
+    : isScrolled
+      ? "rgba(30, 53, 92, 0.14)"
+      : "rgba(30, 53, 92, 0.1)";
+
+  const capsuleShadow = isDark
+    ? "0 12px 32px rgba(0, 0, 0, 0.36)"
+    : "0 10px 28px rgba(18, 28, 45, 0.06)";
+
+  const pillBg = isDark
+    ? "rgba(255, 245, 230, 0.055)"
+    : "rgba(30, 53, 92, 0.055)";
+
+  const activePillBg = isDark
+    ? "rgba(216, 176, 122, 0.13)"
+    : "rgba(30, 53, 92, 0.085)";
+
+  const borderSoft = isDark
+    ? "rgba(255, 245, 230, 0.09)"
+    : "rgba(30, 53, 92, 0.11)";
+
+  const borderMid = isDark
+    ? "rgba(216, 176, 122, 0.22)"
+    : "rgba(30, 53, 92, 0.16)";
+
+  const textMain = isDark ? "#f6f4ef" : "#131c2b";
+  const textSub = isDark ? "rgba(220, 215, 206, 0.82)" : "#3c485c";
+  const textMuted = isDark ? "rgba(160, 155, 146, 0.78)" : "#626e82";
+  const avatarRingColor = isDark ? "#d8b07a" : "#1d6b52";
+  const liveDotColor = isDark ? "#6ec4a3" : "#1d6b52";
+
+  const ctaBg = isDark
+    ? "linear-gradient(135deg, #d6a96c 0%, #b88749 100%)"
+    : "linear-gradient(135deg, #1e355c 0%, #132442 100%)";
+
+  const ctaText = isDark ? "#101115" : "#ffffff";
+
+  const ctaShadow = isDark
+    ? "0 10px 26px rgba(214, 169, 108, 0.26), inset 0 1px 0 rgba(255, 250, 240, 0.35)"
+    : "0 10px 24px rgba(30, 53, 92, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.16)";
 
   return (
     <header
       id="mainTopbar"
-      className={`fixed top-0 inset-x-0 z-40 transition-all duration-200 ${
-        isOverHero ? "px-0 pt-0" : "px-3 sm:px-5 pt-2.5"
-      }`}
+      className="fixed top-0 inset-x-0 z-40 px-4 md:px-7 pt-3 md:pt-4 pointer-events-none"
     >
+      {/* Desktop: Floating Architectural Glass Capsule | Mobile: Ultra-Calm Minimal Header */}
       <div
-        className={`mx-auto backdrop-blur-2xl border transition-all duration-200 ${
-          isOverHero
-            ? "max-w-full rounded-none border-x-0 border-t-0"
-            : "max-w-[1180px] rounded-2xl md:rounded-full"
+        className={`pointer-events-auto mx-auto max-w-[1180px] rounded-full transition-all duration-300 ${
+          isScrolled
+            ? "backdrop-blur-xl border"
+            : "md:backdrop-blur-xl md:border bg-transparent border-transparent shadow-none"
         }`}
-        style={
-          isOverHero
+        style={{
+          // On desktop always glass capsule; on mobile transparent until scrolled
+          ...(isScrolled
             ? {
-                background: "rgba(7, 13, 25, 0.72)",
-                borderColor: "rgba(255, 255, 255, 0.08)",
-                color: "#ffffff",
+                background: capsuleBg,
+                borderColor: capsuleBorder,
+                boxShadow: capsuleShadow,
               }
-            : {
-                background: isDark
-                  ? "rgba(12, 18, 30, 0.86)"
-                  : "rgba(255, 253, 248, 0.88)",
-                borderColor: "var(--border-soft)",
-                boxShadow: isDark
-                  ? "0 12px 34px rgba(0, 0, 0, 0.42)"
-                  : "0 12px 34px rgba(15, 23, 42, 0.08)",
-              }
-        }
+            : {}),
+        }}
       >
-        <div
-          className={`mx-auto flex items-center justify-between gap-2 sm:gap-4 transition-all duration-500 ${
-            isOverHero
-              ? "max-w-[1280px] px-4 sm:px-6 lg:px-8 h-14 md:h-16"
-              : "px-3.5 sm:px-5 h-13 md:h-14"
-          }`}
-        >
-          {/* Right (RTL Start): Founder Avatar + Eng. Ahmed Amir */}
-          <div className="flex items-center gap-2 min-w-0">
-            <button
-              id="mobileMenuBtn"
-              type="button"
-              onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className={`md:hidden w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
-                isOverHero
-                  ? "hover:bg-white/10"
-                  : "hover:bg-[var(--bg-hover)]"
-              }`}
+        {/* Desktop-always surface wrapper so mobile stays transparent at top while md+ always shows glass capsule */}
+        <div className="relative flex items-center justify-between gap-3 h-12 md:h-[58px] px-2.5 md:px-4 md:ps-3 rounded-full transition-all duration-300">
+          {/* Desktop glass backdrop layer (visible on md+ even when !isScrolled) */}
+          {!isScrolled && (
+            <div
+              aria-hidden="true"
+              className="hidden md:block pointer-events-none absolute inset-0 rounded-full backdrop-blur-xl border"
               style={{
-                color: isOverHero ? "#ffffff" : "var(--text-primary)",
+                background: capsuleBg,
+                borderColor: capsuleBorder,
+                boxShadow: capsuleShadow,
               }}
-              aria-label={mobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
-              aria-expanded={mobileMenuOpen}
-            >
-              {mobileMenuOpen ? (
-                <X className="w-4 h-4 shrink-0" />
-              ) : (
-                <Menu className="w-4 h-4 shrink-0" />
-              )}
-            </button>
+            />
+          )}
 
-            <a
-              href="#top"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2.5 min-w-0 group"
+          {/* Right (RTL Start): Founder Avatar + BrandName + CS PORTAL */}
+          <a
+            href="#top"
+            className="relative z-10 flex items-center gap-2.5 min-w-0 group"
+          >
+            <div
+              className="relative w-8 h-8 md:w-[34px] md:h-[34px] rounded-full overflow-hidden shrink-0 transition-transform duration-200 group-hover:scale-105"
+              style={{
+                border: `1.5px solid ${avatarRingColor}`,
+                boxShadow: isDark
+                  ? "0 2px 10px rgba(0, 0, 0, 0.45)"
+                  : "0 2px 8px rgba(18, 28, 45, 0.12)",
+              }}
             >
-              <div
-                className={`relative w-8 h-8 rounded-full overflow-hidden ring-2 shrink-0 transition-transform duration-200 group-hover:scale-105 ${
-                  isOverHero ? "ring-[#e58a62]/85" : "ring-[#c25e33]"
-                }`}
-              >
-                <Image
-                  src="/images/founder.jpg"
-                  alt={SITE_CONFIG.name}
-                  fill
-                  sizes="32px"
-                  className="object-cover object-[50%_15%]"
-                />
-              </div>
-              <BrandName inverted={isOverHero} size="md" />
-              <span
-                className="hidden lg:inline-block h-3.5 w-px shrink-0"
-                style={{
-                  background: isOverHero
-                    ? "rgba(255, 255, 255, 0.18)"
-                    : "var(--border-strong)",
-                }}
-                aria-hidden="true"
+              <Image
+                src="/images/founder.jpg"
+                alt={SITE_CONFIG.name}
+                fill
+                sizes="34px"
+                className="object-cover object-[50%_15%]"
               />
-              <span
-                className="hidden lg:inline-block font-mono-code text-[10px] font-bold tracking-widest whitespace-nowrap shrink-0 uppercase"
-                style={{
-                  color: isOverHero
-                    ? "rgba(148, 163, 184, 0.9)"
-                    : "var(--text-muted)",
-                }}
-              >
-                CS PORTAL
-              </span>
-            </a>
-          </div>
+            </div>
 
-          {/* Center: Sleek Recessed Pill Navigation Capsule with layoutId Spring Indicator */}
+            <BrandName size="md" />
+
+            <span
+              className="hidden lg:inline-block w-px h-3.5 shrink-0"
+              style={{ background: borderMid }}
+              aria-hidden="true"
+            />
+            <span
+              dir="ltr"
+              className="hidden lg:inline-block font-mono-code text-[10px] font-bold tracking-[0.12em] uppercase whitespace-nowrap shrink-0"
+              style={{ color: textMuted }}
+            >
+              CS PORTAL
+            </span>
+          </a>
+
+          {/* Center (Desktop Only): Quiet Pill Navigation with Motion layoutId */}
           <nav
-            className="hidden md:flex items-center gap-0.5 p-1 rounded-full border transition-colors"
-            style={
-              isOverHero
-                ? {
-                    background: "rgba(255, 255, 255, 0.05)",
-                    borderColor: "rgba(255, 255, 255, 0.09)",
-                  }
-                : {
-                    background: "var(--bg-subtle)",
-                    borderColor: "var(--border-soft)",
-                  }
-            }
+            className="relative z-10 hidden md:flex items-center gap-0.5"
             aria-label="أقسام الصفحة"
           >
             {NAV_LINKS.map((item) => {
               const isActive = activeId === item.id;
-              const cls = `relative px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-colors ${
-                isOverHero
-                  ? "hover:text-white"
-                  : "hover:text-[var(--text-primary)]"
-              }`;
-              const textColor = isOverHero
-                ? isActive
-                  ? "#ffffff"
-                  : "rgba(226, 232, 240, 0.78)"
-                : isActive
-                  ? "var(--text-primary)"
-                  : "var(--text-secondary)";
+              const linkClass =
+                "relative px-3.5 py-1.5 rounded-full text-[12.5px] font-bold transition-colors whitespace-nowrap";
+              const linkColor = isActive ? textMain : textSub;
 
-              const activeBg = isActive ? (
+              const activeIndicator = isActive ? (
                 <motion.span
                   layoutId="topbarActivePill"
                   transition={{ type: "spring", stiffness: 380, damping: 32 }}
                   className="absolute inset-0 rounded-full"
-                  style={
-                    isOverHero
-                      ? { background: "rgba(255, 255, 255, 0.14)" }
-                      : {
-                          background: "var(--bg-surface)",
-                          boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-                        }
-                  }
+                  style={{
+                    background: activePillBg,
+                    border: `1px solid ${borderSoft}`,
+                  }}
                 />
               ) : null;
 
@@ -220,50 +212,89 @@ export function LandingTopbar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={cls}
-                    style={{ color: textColor }}
+                    className={linkClass}
+                    style={{ color: linkColor }}
                   >
-                    {activeBg}
+                    {activeIndicator}
                     <span className="relative z-10">{item.label}</span>
                   </Link>
                 );
               }
+
               return (
                 <a
                   key={item.href}
                   href={item.href}
-                  className={cls}
-                  style={{ color: textColor }}
+                  className={linkClass}
+                  style={{ color: linkColor }}
                 >
-                  {activeBg}
+                  {activeIndicator}
                   <span className="relative z-10">{item.label}</span>
                 </a>
               );
             })}
           </nav>
 
-          {/* Left (RTL End): Circular Theme Toggle + Pill Primary CTA */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Left (RTL End): Desktop Smart Resume/Login + Theme Toggle + Primary CTA | Mobile: Theme Toggle ONLY */}
+          <div className="relative z-10 flex items-center gap-2 shrink-0">
+            {/* Smart Resume Pill OR Subtle Login Link (Desktop Only) */}
+            {lastVisited ? (
+              <Link
+                href={`/courses/${lastVisited.courseSlug}/${lastVisited.lessonId}`}
+                title={`أكمل: ${lastVisited.lessonTitle}`}
+                className="hidden md:inline-flex h-[34px] px-3 rounded-full items-center gap-2 text-[11.5px] font-bold transition-opacity hover:opacity-90 whitespace-nowrap"
+                style={{
+                  background: pillBg,
+                  border: `1px solid ${borderSoft}`,
+                  color: textSub,
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{
+                    background: liveDotColor,
+                    boxShadow: `0 0 8px ${liveDotColor}`,
+                  }}
+                  aria-hidden="true"
+                />
+                <span>
+                  كمّل:{" "}
+                  <strong
+                    dir="ltr"
+                    className="font-mono-code font-bold"
+                    style={{ color: textMain }}
+                  >
+                    {lastVisited.courseCode}
+                  </strong>
+                </span>
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden md:inline-flex h-[34px] px-3.5 rounded-full items-center justify-center text-[12px] font-bold transition-colors whitespace-nowrap hover:opacity-90"
+                style={{
+                  background: pillBg,
+                  border: `1px solid ${borderSoft}`,
+                  color: textSub,
+                }}
+              >
+                دخول
+              </Link>
+            )}
+
+            {/* Theme Toggle Button (Visible on BOTH Mobile and Desktop) */}
             <button
               id="themeToggleBtn"
               type="button"
               onClick={() => toggleTheme()}
-              title="تبديل المظهر"
-              aria-label={isDark ? "الوضع الفاتح" : "الوضع الداكن"}
-              className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
-                isOverHero
-                  ? "border-white/12 bg-white/[0.06] hover:bg-white/[0.14]"
-                  : "hover:bg-[var(--bg-subtle)]"
-              }`}
-              style={
-                isOverHero
-                  ? { color: "rgba(226, 232, 240, 0.92)" }
-                  : {
-                      borderColor: "var(--border-soft)",
-                      background: "var(--bg-canvas)",
-                      color: "var(--text-secondary)",
-                    }
-              }
+              title={isDark ? "التبديل إلى الوضع النهاري" : "التبديل إلى الوضع الليلي"}
+              aria-label={isDark ? "التبديل إلى الوضع النهاري" : "التبديل إلى الوضع الليلي"}
+              className="w-[34px] h-[34px] rounded-full flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+              style={{
+                background: pillBg,
+                border: `1px solid ${borderSoft}`,
+                color: textSub,
+              }}
             >
               {isDark ? (
                 <Sun className="w-4 h-4 shrink-0" />
@@ -272,100 +303,21 @@ export function LandingTopbar() {
               )}
             </button>
 
+            {/* Primary CTA (Desktop Only — Mobile uses Floating Bottom Dock) */}
             <Link
               href="/courses"
-              className="magnetic-btn h-9 px-3.5 sm:px-4 rounded-full text-[11.5px] sm:text-[12px] font-extrabold text-white inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+              className="hidden md:inline-flex h-9 px-4 rounded-full text-[12px] font-extrabold items-center gap-1.5 whitespace-nowrap shrink-0 transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
               style={{
-                background: "linear-gradient(135deg, #cf6739 0%, #b5532a 100%)",
-                boxShadow: "0 6px 18px rgba(194, 94, 51, 0.34)",
+                background: ctaBg,
+                color: ctaText,
+                boxShadow: ctaShadow,
               }}
             >
-              <span>ابدأ</span>
-              <span className="hidden sm:inline">المذاكرة</span>
+              <span>ابدأ المذاكرة</span>
               <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
             </Link>
           </div>
         </div>
-
-        {/* Spring Mobile Dropdown */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.28, ease: EDITORIAL_EASE }}
-              className="md:hidden border-t overflow-hidden rounded-b-2xl"
-              style={
-                isOverHero
-                  ? {
-                      background: "rgba(11, 19, 34, 0.96)",
-                      borderColor: "rgba(255, 255, 255, 0.1)",
-                    }
-                  : {
-                      background: "var(--bg-surface)",
-                      borderColor: "var(--border-soft)",
-                    }
-              }
-            >
-              <div className="px-4 py-3 space-y-1 max-h-[calc(100svh-4rem)] overflow-y-auto">
-                {NAV_LINKS.map((item) => {
-                  const cls = `block px-3 py-2.5 rounded-xl text-[13.5px] font-bold transition-colors ${
-                    isOverHero
-                      ? "text-white hover:bg-white/10"
-                      : "hover:bg-[var(--bg-subtle)]"
-                  }`;
-                  const st = isOverHero
-                    ? undefined
-                    : { color: "var(--text-primary)" };
-
-                  if (item.href.startsWith("/")) {
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={cls}
-                        style={st}
-                      >
-                        {item.label}
-                      </Link>
-                    );
-                  }
-                  return (
-                    <a
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cls}
-                      style={st}
-                    >
-                      {item.label}
-                    </a>
-                  );
-                })}
-                <div
-                  className="pt-2 mt-1 border-t"
-                  style={{
-                    borderColor: isOverHero
-                      ? "rgba(255, 255, 255, 0.1)"
-                      : "var(--border-soft)",
-                  }}
-                >
-                  <Link
-                    href="/courses"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-extrabold text-white"
-                    style={{ background: "#c25e33" }}
-                  >
-                    <span>مكتبة المقررات</span>
-                    <ArrowLeft className="w-4 h-4 shrink-0" />
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </header>
   );

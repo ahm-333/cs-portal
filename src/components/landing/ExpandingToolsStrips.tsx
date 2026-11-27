@@ -1,861 +1,896 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion, useReducedMotion } from "motion/react";
+import { Play } from "lucide-react";
+import { useTheme } from "@/components/layout/themeStore";
 import {
-  ArrowLeft,
-  BookOpen,
-  CheckSquare,
-  Clock,
-  Cpu,
-  Gauge,
-  PenLine,
-  PlayCircle,
-  RefreshCw,
-  Sparkles,
-  StickyNote,
-} from "lucide-react";
-import { EDITORIAL_EASE, MaskedLineReveal } from "@/components/ui/AwwwardsPrimitives";
+  EDITORIAL_EASE,
+  MaskedLineReveal,
+} from "@/components/ui/AwwwardsPrimitives";
 
-interface LineDemo {
-  label: string;
-  p0: string;
-  from: [number, number];
-  to: [number, number];
-  pixels: readonly [number, number][];
+type StationVisualType = "video" | "guide" | "summary" | "quiz";
+
+interface ThreadStation {
+  readonly idx: number;
+  readonly num: string;
+  readonly tag: string;
+  readonly title: string;
+  readonly desc: string;
+  readonly sideKicker: string;
+  readonly sideText: string;
+  readonly visual: StationVisualType;
+  readonly isPaper?: boolean;
+  /** On desktop lg+, stations alternate Right (start) / Left (end) across the center thread. */
+  readonly cardOnStart: boolean;
 }
 
-const BRESENHAM_DEMOS: readonly LineDemo[] = [
+const STATIONS: readonly ThreadStation[] = [
   {
-    label: "(0,0) → (7,4)",
-    p0: "p₀ = 2(4) − 7 = +1",
-    from: [0, 0],
-    to: [7, 4],
-    pixels: [
-      [0, 0],
-      [1, 1],
-      [2, 1],
-      [3, 2],
-      [4, 2],
-      [5, 3],
-      [6, 3],
-      [7, 4],
-    ],
+    idx: 0,
+    num: "01",
+    tag: "01 · VIDEO LECTURE",
+    title: "فيديو الشرح",
+    desc: "المحاضرة كاملة مقسّمة إلى فصول زمنية واضحة — تنتقل للجزئية التي تحتاجها مباشرة وبدون إعلانات.",
+    sideKicker: "✓ استمع للشرح بالترتيب",
+    sideText: "تحكّم كامل في السرعة وجودة مريحة للعين",
+    visual: "video",
+    cardOnStart: true,
   },
   {
-    label: "(0,0) → (7,2)",
-    p0: "p₀ = 2(2) − 7 = −3",
-    from: [0, 0],
-    to: [7, 2],
-    pixels: [
-      [0, 0],
-      [1, 0],
-      [2, 1],
-      [3, 1],
-      [4, 1],
-      [5, 1],
-      [6, 2],
-      [7, 2],
-    ],
+    idx: 1,
+    num: "02",
+    tag: "02 · FULL CHAPTER GUIDE",
+    title: "اقرأ شرح الفصل",
+    desc: "شرح مكتوب ومتكامل للفصل بالرسومات والأكواد كبديل كامل للفيديو — مع شريط تحكّم في حجم الخط لراحة عينيك.",
+    sideKicker: "● بديل كامل للفيديو",
+    sideText: "اقرأ الفصل بالتفصيل متى شئت",
+    visual: "guide",
+    cardOnStart: false,
   },
   {
-    label: "(0,1) → (7,4)",
-    p0: "p₀ = 2(3) − 7 = −1",
-    from: [0, 1],
-    to: [7, 4],
-    pixels: [
-      [0, 1],
-      [1, 1],
-      [2, 2],
-      [3, 2],
-      [4, 3],
-      [5, 3],
-      [6, 4],
-      [7, 4],
-    ],
+    idx: 2,
+    num: "03",
+    tag: "03 · QUICK REVISION",
+    title: "ملخص سريع",
+    desc: "راجعت الفصل وتريد استرجاعه سريعاً قبل الامتحان؟ أهم القوانين والفروق والنقاط الجوهرية في صفحة واحدة.",
+    sideKicker: "ليلة الامتحان بدون تشتّت",
+    sideText: "مراجعة مركّزة بعيداً عن التفاصيل الطويلة",
+    visual: "summary",
+    isPaper: true,
+    cardOnStart: true,
+  },
+  {
+    idx: 3,
+    num: "04",
+    tag: "04 · QUESTIONS & QUIZZES",
+    title: "أسئلة وكويزات",
+    desc: "كمّ كبير من الأسئلة والاختبارات المتدرّجة على كل فصل مع تصحيح لحظي وبنك أخطاء تلقائي للمراجعة.",
+    sideKicker: "ثبّت فهمك بالتطبيق",
+    sideText: "شرح فوري لسبب كل إجابة",
+    visual: "quiz",
+    cardOnStart: false,
   },
 ] as const;
 
-const VIDEO_HIGHLIGHTS = [
-  {
-    Icon: Clock,
-    title: "فصول زمنية دقيقة",
-    desc: "تنط للجزئية اللي واقفة معاك في ثانية بدون لف.",
-    accent: "var(--accent-warm)",
-    softBg: "var(--accent-warm-soft)",
-  },
-  {
-    Icon: Gauge,
-    title: "تحكم كامل بدون إعلانات",
-    desc: "سرعات 1.0x لـ 2.0x وشاشة هادية مريحة للعين.",
-    accent: "var(--success-fg)",
-    softBg: "var(--success-soft)",
-  },
-  {
-    Icon: StickyNote,
-    title: "بومودورو ونوتس جنبك",
-    desc: "اكتب ملاحظاتك واحفظها على جهازك وأنت بتسمع.",
-    accent: "var(--brand-primary)",
-    softBg: "var(--brand-soft)",
-  },
-] as const;
+const WAVEFORM_BAR_HEIGHTS = [7, 14, 18, 10, 15, 8] as const;
 
-const PILLAR_STEPS = [
-  { idx: 0, num: "01", label: "فيديو الشرح", accent: "var(--accent-warm)" },
-  { idx: 1, num: "02", label: "الشرح التفاعلي", accent: "var(--success-fg)" },
-  { idx: 2, num: "03", label: "كشكول الملخص", accent: "var(--brand-primary)" },
-  { idx: 3, num: "04", label: "الكويزات والأخطاء", accent: "var(--success-fg)" },
-] as const;
+interface ThreadPalette {
+  bgGrad: string;
+  gridLine: string;
+  glowA: string;
+  glowB: string;
+  cardBg: string;
+  cardActiveBg: string;
+  cardShadow: string;
+  borderSoft: string;
+  borderActive: string;
+  textMain: string;
+  textSub: string;
+  textMuted: string;
+  accent1: string;
+  accent1Bright: string;
+  accent2: string;
+  accent3: string;
+  terracotta: string;
+  paperBg: string;
+  paperInk: string;
+  paperSub: string;
+  paperBorder: string;
+  paperActiveBorder: string;
+  paperIdleShadow: string;
+  paperActiveShadow: string;
+  threadTrack: string;
+  threadFill: string;
+  threadGlow: string;
+  /** Strictly opaque solid fills so the vertical thread never bleeds inside nodes. */
+  nodeIdleBg: string;
+  nodeDoneBg: string;
+  nodeActiveBg: string;
+  nodeActiveBorder: string;
+  nodeActiveFg: string;
+  nodeHalo: string;
+  chipBg: string;
+  innerBoxBg: string;
+  playBg: string;
+  playBorder: string;
+  docCodeBg: string;
+  docCodeBorder: string;
+  quizOkBg: string;
+  summaryPillBg: string;
+  summaryPillBorder: string;
+  specularTop: string;
+}
+
+const DARK_PALETTE: ThreadPalette = {
+  bgGrad: "linear-gradient(175deg, #08090c 0%, #101218 55%, #090b0f 100%)",
+  gridLine: "rgba(216, 176, 122, 0.032)",
+  glowA: "rgba(216, 176, 122, 0.08)",
+  glowB: "rgba(110, 196, 163, 0.06)",
+  cardBg: "rgba(19, 22, 30, 0.86)",
+  cardActiveBg: "linear-gradient(165deg, #1a1e29 0%, #11141c 100%)",
+  cardShadow: "0 20px 48px rgba(0, 0, 0, 0.44)",
+  borderSoft: "rgba(255, 245, 230, 0.08)",
+  borderActive: "rgba(216, 176, 122, 0.36)",
+  textMain: "#f6f4ef",
+  textSub: "rgba(220, 215, 206, 0.82)",
+  textMuted: "rgba(160, 155, 146, 0.78)",
+  accent1: "#d8b07a",
+  accent1Bright: "#ebd0a3",
+  accent2: "#6ec4a3",
+  accent3: "#b4a7d6",
+  terracotta: "#c25e33",
+  paperBg: "#f6f5f1",
+  paperInk: "#121721",
+  paperSub: "#3b4454",
+  paperBorder: "rgba(255, 255, 255, 0.65)",
+  paperActiveBorder: "rgba(216, 176, 122, 0.78)",
+  paperIdleShadow: "0 14px 32px rgba(0, 0, 0, 0.28)",
+  paperActiveShadow:
+    "0 22px 52px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(216, 176, 122, 0.35)",
+  threadTrack: "rgba(255, 255, 255, 0.08)",
+  threadFill: "linear-gradient(180deg, #d8b07a 0%, #6ec4a3 60%, #d8b07a 100%)",
+  threadGlow: "0 0 12px rgba(216, 176, 122, 0.35)",
+  nodeIdleBg: "#12151e",
+  nodeDoneBg: "#1b2c2a",
+  nodeActiveBg: "#d8b07a",
+  nodeActiveBorder: "#d8b07a",
+  nodeActiveFg: "#101115",
+  nodeHalo: "rgba(216, 176, 122, 0.18)",
+  chipBg: "rgba(255, 245, 230, 0.055)",
+  innerBoxBg: "rgba(9, 11, 16, 0.75)",
+  playBg: "rgba(194, 94, 51, 0.16)",
+  playBorder: "rgba(229, 138, 98, 0.45)",
+  docCodeBg: "rgba(110, 196, 163, 0.22)",
+  docCodeBorder: "rgba(110, 196, 163, 0.4)",
+  quizOkBg: "rgba(110, 196, 163, 0.18)",
+  summaryPillBg: "rgba(194, 94, 51, 0.12)",
+  summaryPillBorder: "rgba(194, 94, 51, 0.22)",
+  specularTop:
+    "linear-gradient(90deg, transparent 8%, rgba(235, 208, 163, 0.38) 50%, transparent 92%)",
+};
+
+const LIGHT_PALETTE: ThreadPalette = {
+  bgGrad: "linear-gradient(175deg, #f9f7f2 0%, #f2eee5 56%, #ebe6da 100%)",
+  gridLine: "rgba(30, 53, 92, 0.045)",
+  glowA: "rgba(194, 94, 51, 0.07)",
+  glowB: "rgba(29, 107, 82, 0.06)",
+  cardBg: "rgba(255, 255, 255, 0.88)",
+  cardActiveBg: "#ffffff",
+  cardShadow: "0 18px 44px rgba(18, 28, 45, 0.09)",
+  borderSoft: "rgba(30, 53, 92, 0.1)",
+  borderActive: "rgba(30, 53, 92, 0.28)",
+  textMain: "#131c2b",
+  textSub: "#3c485c",
+  textMuted: "#626e82",
+  accent1: "#c25e33",
+  accent1Bright: "#9e4722",
+  accent2: "#1d6b52",
+  accent3: "#1e355c",
+  terracotta: "#c25e33",
+  paperBg: "#faece5",
+  paperInk: "#131c2b",
+  paperSub: "#573528",
+  paperBorder: "rgba(194, 94, 51, 0.26)",
+  paperActiveBorder: "rgba(194, 94, 51, 0.54)",
+  paperIdleShadow: "0 10px 26px rgba(194, 94, 51, 0.07)",
+  paperActiveShadow: "0 18px 42px rgba(194, 94, 51, 0.14)",
+  threadTrack: "rgba(30, 53, 92, 0.12)",
+  threadFill: "linear-gradient(180deg, #1e355c 0%, #1d6b52 55%, #c25e33 100%)",
+  threadGlow: "0 0 12px rgba(30, 53, 92, 0.2)",
+  nodeIdleBg: "#ffffff",
+  nodeDoneBg: "#e3f0eb",
+  nodeActiveBg: "#1e355c",
+  nodeActiveBorder: "#1e355c",
+  nodeActiveFg: "#ffffff",
+  nodeHalo: "rgba(30, 53, 92, 0.15)",
+  chipBg: "rgba(30, 53, 92, 0.055)",
+  innerBoxBg: "rgba(242, 238, 229, 0.82)",
+  playBg: "rgba(194, 94, 51, 0.12)",
+  playBorder: "rgba(194, 94, 51, 0.34)",
+  docCodeBg: "rgba(29, 107, 82, 0.16)",
+  docCodeBorder: "rgba(29, 107, 82, 0.36)",
+  quizOkBg: "rgba(29, 107, 82, 0.14)",
+  summaryPillBg: "rgba(194, 94, 51, 0.13)",
+  summaryPillBorder: "rgba(194, 94, 51, 0.26)",
+  specularTop:
+    "linear-gradient(90deg, transparent 10%, rgba(30, 53, 92, 0.2) 50%, transparent 90%)",
+};
+
+function getStationTagColor(idx: number, palette: ThreadPalette): string {
+  switch (idx) {
+    case 0:
+      return palette.accent2;
+    case 1:
+      return palette.accent1;
+    case 2:
+      return palette.terracotta;
+    default:
+      return palette.accent3;
+  }
+}
+
+function getSideKickerColor(
+  idx: number,
+  isActive: boolean,
+  isDone: boolean,
+  palette: ThreadPalette
+): string {
+  if (idx === 0) return palette.accent2;
+  if (idx === 1) return palette.accent1Bright;
+  if (isActive) return palette.accent1Bright;
+  if (isDone) return palette.accent2;
+  return palette.textSub;
+}
+
+interface StationMicroVisualProps {
+  visual: StationVisualType;
+  palette: ThreadPalette;
+  isActive: boolean;
+  prefersReducedMotion: boolean;
+}
+
+function StationMicroVisual({
+  visual,
+  palette,
+  isActive,
+  prefersReducedMotion,
+}: StationMicroVisualProps) {
+  if (visual === "video") {
+    return (
+      <div
+        className="shrink-0 rounded-[11px] sm:rounded-[13px] border p-2 sm:px-3 sm:py-2.5 flex items-center gap-2.5"
+        style={{
+          background: palette.innerBoxBg,
+          borderColor: palette.borderSoft,
+        }}
+        aria-hidden="true"
+      >
+        <span
+          className="w-7 h-7 sm:w-[34px] sm:h-[34px] rounded-full border flex items-center justify-center shrink-0 transition-transform duration-300"
+          style={{
+            background: palette.playBg,
+            borderColor: palette.playBorder,
+            color: palette.accent1,
+            transform: isActive ? "scale(1.05)" : "scale(1)",
+          }}
+        >
+          <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current translate-x-[0.5px]" />
+        </span>
+        <div
+          dir="ltr"
+          className="hidden sm:flex items-center gap-[3px] h-[18px]"
+        >
+          {WAVEFORM_BAR_HEIGHTS.map((heightPx, barIdx) => (
+            <motion.span
+              key={barIdx}
+              className="w-[2.5px] rounded-full block"
+              style={{
+                height: `${heightPx}px`,
+                background: palette.accent1,
+                opacity: isActive ? 0.92 : 0.68,
+              }}
+              animate={
+                isActive && !prefersReducedMotion
+                  ? { scaleY: [0.78, 1.15, 0.82] }
+                  : { scaleY: 1 }
+              }
+              transition={
+                isActive && !prefersReducedMotion
+                  ? {
+                      duration: 1.5 + barIdx * 0.14,
+                      repeat: Infinity,
+                      repeatType: "mirror",
+                      ease: "easeInOut",
+                      delay: barIdx * 0.08,
+                    }
+                  : { duration: 0.25 }
+              }
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (visual === "guide") {
+    return (
+      <div
+        className="shrink-0 rounded-[11px] sm:rounded-[13px] border p-2 sm:px-3 sm:py-2.5 flex items-center"
+        style={{
+          background: palette.innerBoxBg,
+          borderColor: palette.borderSoft,
+        }}
+        aria-hidden="true"
+      >
+        <div className="w-12 sm:w-[82px] flex flex-col gap-[4.5px] sm:gap-[5px]">
+          <span
+            className="block h-[5px] rounded-full"
+            style={{ width: "65%", background: palette.accent1 }}
+          />
+          <span
+            className="block h-[4px] rounded-full opacity-45"
+            style={{ width: "92%", background: palette.textMuted }}
+          />
+          <span
+            className="block h-[10px] rounded-[4px] border"
+            style={{
+              width: "82%",
+              background: palette.docCodeBg,
+              borderColor: palette.docCodeBorder,
+            }}
+          />
+          <span
+            className="block h-[4px] rounded-full opacity-45"
+            style={{ width: "70%", background: palette.textMuted }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (visual === "summary") {
+    return (
+      <span
+        className="shrink-0 px-2.5 sm:px-3 py-1.5 rounded-[10px] border text-[10px] sm:text-[11px] font-extrabold whitespace-nowrap"
+        style={{
+          background: palette.summaryPillBg,
+          borderColor: palette.summaryPillBorder,
+          color: palette.terracotta,
+        }}
+      >
+        استرجاع في دقائق
+      </span>
+    );
+  }
+
+  return (
+    <div
+      className="shrink-0 rounded-[11px] sm:rounded-[13px] border p-1.5 sm:p-2"
+      style={{
+        background: palette.innerBoxBg,
+        borderColor: palette.borderSoft,
+      }}
+      aria-hidden="true"
+    >
+      <div className="flex flex-col gap-1 min-w-[76px] sm:min-w-[96px]">
+        <span
+          className="text-[9.5px] sm:text-[10px] font-extrabold px-2 py-[3px] rounded-[6px] inline-flex items-center justify-between gap-1 whitespace-nowrap"
+          style={{
+            background: palette.quizOkBg,
+            color: palette.accent2,
+          }}
+        >
+          <span>✓ تصحيح فوري</span>
+        </span>
+        <span
+          className="text-[9.5px] sm:text-[10px] font-extrabold px-2 py-[3px] rounded-[6px] inline-flex items-center justify-between gap-1 whitespace-nowrap"
+          style={{
+            background: palette.chipBg,
+            color: palette.textMuted,
+          }}
+        >
+          <span>+40 سؤال</span>
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export function ExpandingToolsStrips() {
-  const [activeStrip, setActiveStrip] = useState(0);
+  const theme = useTheme();
+  const isDark = theme === "dark";
+  const palette = useMemo(
+    () => (isDark ? DARK_PALETTE : LIGHT_PALETTE),
+    [isDark]
+  );
+  const prefersReducedMotion = Boolean(useReducedMotion());
+
+  const [activeIdx, setActiveIdx] = useState(0);
+
   const sectionRef = useRef<HTMLElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const railRef = useRef<HTMLDivElement | null>(null);
+  const threadFillRef = useRef<HTMLDivElement | null>(null);
+  const rowRefs = useRef<Array<HTMLDivElement | null>>([
+    null,
+    null,
+    null,
+    null,
+  ]);
+  const nodeRefs = useRef<Array<HTMLButtonElement | null>>([
+    null,
+    null,
+    null,
+    null,
+  ]);
 
-  // Strip 02: Live Interactive Bresenham Pixel Grid Demo
-  const [lineDemoIdx, setLineDemoIdx] = useState(0);
-  const currentDemo = BRESENHAM_DEMOS[lineDemoIdx] ?? BRESENHAM_DEMOS[0];
-  const pixelSet = new Set(currentDemo.pixels.map(([x, y]) => `${x},${y}`));
+  const scrollToStation = useCallback((idx: number) => {
+    const clamped = Math.min(STATIONS.length - 1, Math.max(0, idx));
+    setActiveIdx(clamped);
 
-  // Strip 03: Student Notebook Pen Notes Demo
-  const [showPenNotes, setShowPenNotes] = useState(true);
+    const target = rowRefs.current[clamped] ?? sectionRef.current;
+    if (!target) return;
 
-  // Strip 04: Real Exam Quiz Demo
-  const [quizAnswer, setQuizAnswer] = useState<"ok" | "no" | null>(null);
-
-  const selectPillar = useCallback((idx: number) => {
-    setActiveStrip(idx);
+    if (window.__lenis) {
+      const centerOffset = -Math.round(window.innerHeight * 0.34);
+      window.__lenis.scrollTo(target, {
+        offset: centerOffset,
+        duration: 0.95,
+      });
+    } else {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   }, []);
 
-  // Listen to Hero Bottom Dock pillar clicks
+  // Listen to Hero pillar jump events and scroll smoothly straight to that station
   useEffect(() => {
     const onJumpPillar = (event: Event) => {
       const custom = event as CustomEvent<{ index?: number }>;
-      const idx = Math.min(3, Math.max(0, custom.detail?.index ?? 0));
-      setActiveStrip(idx);
-      const section = sectionRef.current;
-      if (section) {
-        if (window.__lenis) {
-          window.__lenis.scrollTo(section, { offset: -72, duration: 0.95 });
-        } else {
-          section.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }
+      const idx = custom.detail?.index ?? 0;
+      scrollToStation(idx);
     };
 
     window.addEventListener("cs-portal:jump-pillar", onJumpPillar);
     return () => {
       window.removeEventListener("cs-portal:jump-pillar", onJumpPillar);
     };
+  }, [scrollToStation]);
+
+  // Keep the 2px vertical rail pinned strictly from Node 01 center to Node 04 center (transform-immune layout math)
+  useEffect(() => {
+    const stageEl = stageRef.current;
+    const railEl = railRef.current;
+    if (!stageEl || !railEl) return;
+
+    const getOffsetTopRelativeTo = (el: HTMLElement, ancestor: HTMLElement) => {
+      let top = 0;
+      let curr: HTMLElement | null = el;
+      while (curr && curr !== ancestor) {
+        top += curr.offsetTop;
+        curr = curr.offsetParent as HTMLElement | null;
+      }
+      return top;
+    };
+
+    const syncRailGeometry = () => {
+      const firstNode = nodeRefs.current[0];
+      const lastNode = nodeRefs.current[STATIONS.length - 1];
+      if (!firstNode || !lastNode) return;
+
+      const startY =
+        getOffsetTopRelativeTo(firstNode, stageEl) + firstNode.offsetHeight / 2;
+      const endY =
+        getOffsetTopRelativeTo(lastNode, stageEl) + lastNode.offsetHeight / 2;
+
+      if (endY > startY) {
+        railEl.style.top = `${startY}px`;
+        railEl.style.bottom = "auto";
+        railEl.style.height = `${endY - startY}px`;
+      }
+    };
+
+    syncRailGeometry();
+
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => syncRailGeometry())
+        : null;
+    ro?.observe(stageEl);
+    window.addEventListener("resize", syncRailGeometry, { passive: true });
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(syncRailGeometry).catch(() => {});
+    }
+
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", syncRailGeometry);
+    };
   }, []);
 
-  const handleStripClick = (
-    idx: number,
-    e: React.MouseEvent<HTMLElement>
-  ) => {
-    if ((e.target as HTMLElement).closest("button, a")) return;
-    selectPillar(idx);
-  };
+  // GSAP ScrollTrigger: 1:1 scrubbed thread fill + progressive station activation + card glide reveals
+  useEffect(() => {
+    const sectionEl = sectionRef.current;
+    const stageEl = stageRef.current;
+    const fillEl = threadFillRef.current;
+    if (!sectionEl || !stageEl || !fillEl) return;
 
-  const handleStripKeyDown = (
-    idx: number,
-    e: React.KeyboardEvent<HTMLElement>
-  ) => {
-    if (activeStrip === idx) return;
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      selectPillar(idx);
-    }
-  };
+    const reduced =
+      prefersReducedMotion ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const handleQuizAnswer = async (choice: "ok" | "no") => {
-    setQuizAnswer(choice);
-    if (choice === "ok") {
-      try {
-        const reducedMotion = window.matchMedia(
-          "(prefers-reduced-motion: reduce)"
-        ).matches;
-        if (!reducedMotion) {
-          const confettiModule = await import("canvas-confetti");
-          const confetti = confettiModule.default;
-          confetti({
-            particleCount: 44,
-            spread: 60,
-            origin: { y: 0.72 },
-            colors: ["#c25e33", "#66c7a6", "#7ca7f0"],
-          });
+    if (reduced) {
+      fillEl.style.transform = "scaleY(1)";
+      rowRefs.current.forEach((row) => {
+        if (row) {
+          row.style.opacity = "1";
+          row.style.transform = "none";
         }
-      } catch {
-        // ignore if confetti fails to load
-      }
+      });
+      return;
     }
-  };
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const ctx = gsap.context(() => {
+      // 1. Scrub the glowing thread line 1:1 with scroll (GPU-composited scaleY from top)
+      gsap.fromTo(
+        fillEl,
+        { scaleY: 0 },
+        {
+          scaleY: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: stageEl,
+            start: "top 68%",
+            end: "bottom 56%",
+            scrub: 0.55,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => {
+              const p = self.progress;
+              const nextIdx =
+                p < 0.28 ? 0 : p < 0.56 ? 1 : p < 0.82 ? 2 : 3;
+              setActiveIdx((prev) => (prev === nextIdx ? prev : nextIdx));
+            },
+          },
+        }
+      );
+
+      // 2. Smooth editorial reveal for each station row without layout jitter
+      rowRefs.current.forEach((row, i) => {
+        if (!row) return;
+        gsap.fromTo(
+          row,
+          { opacity: 0, y: 22 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.68,
+            delay: i === 0 ? 0 : 0.04,
+            ease: "power3.out",
+            clearProps: "transform",
+            scrollTrigger: {
+              trigger: row,
+              start: "top 88%",
+              once: true,
+            },
+          }
+        );
+      });
+    }, sectionRef);
+
+    const refreshId = requestAnimationFrame(() => {
+      try {
+        ScrollTrigger.refresh();
+      } catch {
+        // ignore if ScrollTrigger is unmounted
+      }
+    });
+
+    return () => {
+      cancelAnimationFrame(refreshId);
+      ctx.revert();
+    };
+  }, [prefersReducedMotion]);
 
   return (
     <section
       id="interactive-showcase"
       ref={sectionRef}
-      className="relative max-w-[1220px] mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8 space-y-6"
+      aria-labelledby="thread-showcase-title"
+      className="relative w-full overflow-x-clip border-y transition-colors duration-300"
+      style={{
+        background: palette.bgGrad,
+        borderColor: palette.borderSoft,
+      }}
     >
-      {/* Architectural Header + Primary Link */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="max-w-2xl space-y-1.5">
-          <div className="flex items-center gap-2">
-            <span
-              className="text-[12px] font-extrabold tracking-wide"
-              style={{ color: "var(--accent-warm)" }}
-            >
-              داخل كل فصل
-            </span>
-          </div>
+      {/* Subtle Architectural Drafting Grid */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: `linear-gradient(to right, ${palette.gridLine} 1px, transparent 1px), linear-gradient(to bottom, ${palette.gridLine} 1px, transparent 1px)`,
+          backgroundSize: "50px 50px",
+          maskImage:
+            "radial-gradient(ellipse 84% 82% at 50% 50%, #000 32%, transparent 100%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 84% 82% at 50% 50%, #000 32%, transparent 100%)",
+        }}
+        aria-hidden="true"
+      />
 
-          <h2
-            className="text-2xl sm:text-4xl font-black tracking-tight leading-tight"
-            style={{ color: "var(--text-primary)" }}
-          >
-            <MaskedLineReveal>
-              4 أركان تفتحلك مع كل خطوة مذاكرة
-            </MaskedLineReveal>
-          </h2>
-          <p
-            className="text-[14px] leading-relaxed"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            تجربة مذاكرة متكاملة — جرّب كل ركن بنفسك هنا قبل ما تدخل المقررات.
-          </p>
-        </div>
+      {/* Whisper-Soft Ambient Atelier Glow */}
+      <div
+        className="pointer-events-none absolute top-[22%] left-[20%] w-[520px] sm:w-[640px] h-[380px] sm:h-[460px] rounded-full blur-[56px]"
+        style={{
+          background: `radial-gradient(circle, ${palette.glowA} 0%, ${palette.glowB} 50%, transparent 74%)`,
+        }}
+        aria-hidden="true"
+      />
 
-        <Link
-          href="/courses"
-          className="start-study-cta magnetic-btn self-start md:self-auto px-5 py-2.5 rounded-xl text-[13px] font-extrabold text-white inline-flex items-center gap-2 shadow-sm"
-          style={{ background: "var(--hero-bg)" }}
-        >
-          <span>ادخل صفحة المواد</span>
-          <ArrowLeft className="w-4 h-4" />
-        </Link>
-      </div>
-
-      {/* Pillar Step Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {PILLAR_STEPS.map((step) => {
-            const isActive = activeStrip === step.idx;
-            return (
-              <button
-                key={step.num}
-                type="button"
-                onClick={() => selectPillar(step.idx)}
-                className="relative px-3.5 py-1.5 rounded-full text-[12px] font-extrabold transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                style={{
-                  color: isActive ? "#ffffff" : "var(--text-secondary)",
-                }}
-              >
-                {isActive && (
-                  <motion.span
-                    layoutId="activePillarPill"
-                    transition={{
-                      type: "spring",
-                      stiffness: 360,
-                      damping: 30,
-                    }}
-                    className="absolute inset-0 rounded-full"
-                    style={{ background: "var(--hero-bg)" }}
-                  />
-                )}
-                <span
-                  dir="ltr"
-                  className="relative z-10 font-mono-code text-[10.5px] opacity-85"
-                  style={{
-                    color: isActive ? "#f0a786" : step.accent,
-                  }}
-                >
-                  {step.num}
-                </span>
-                <span className="relative z-10">{step.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <span
-          dir="ltr"
-          className="hidden lg:inline-block font-mono-code text-[11px] font-bold"
-          style={{ color: "var(--text-muted)" }}
-        >
-          0{activeStrip + 1} / 04
-        </span>
-      </div>
-
-      {/* 4 Horizontal Expanding Architectural Strips */}
-      <div id="expGallery" className="exp-gallery">
-        {/* STRIP 01: Video Lectures */}
-        <article
-          data-strip="0"
-          role="region"
-          aria-label="فيديو الشرح"
-          tabIndex={activeStrip === 0 ? -1 : 0}
-          onClick={(e) => handleStripClick(0, e)}
-          onKeyDown={(e) => handleStripKeyDown(0, e)}
-          className={`exp-strip spotlight-card ${
-            activeStrip === 0 ? "active awwwards-beam" : ""
-          }`}
-        >
-          <div className="exp-collapsed">
-            <span
-              className="font-en text-[12px] font-black"
-              style={{ color: "var(--accent-warm)" }}
-            >
-              01
-            </span>
-            <span className="exp-vertical-title">فيديو الشرح</span>
+      {/* Main Content Container */}
+      <div className="relative z-10 max-w-[1260px] mx-auto px-4 sm:px-6 lg:px-10 py-14 sm:py-18 lg:py-22">
+        {/* Section Header */}
+        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-10 sm:mb-12 lg:mb-14">
+          <div className="max-w-2xl">
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{
-                background: "var(--accent-warm-soft)",
-                color: "var(--accent-warm-text)",
-              }}
+              className="inline-flex items-center gap-2 text-[11px] sm:text-[12px] font-extrabold tracking-wide"
+              style={{ color: palette.accent1 }}
             >
-              <PlayCircle className="w-4 h-4" />
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ background: palette.accent1 }}
+                aria-hidden="true"
+              />
+              <span>داخل كل محاضرة · في أي مادة</span>
             </div>
+
+            <h2
+              id="thread-showcase-title"
+              className="mt-1.5 text-[24px] sm:text-[32px] lg:text-[36px] font-black tracking-tight leading-[1.24]"
+              style={{ color: palette.textMain }}
+            >
+              <MaskedLineReveal>4 أركان تتكشّف خطوة بخطوة</MaskedLineReveal>
+            </h2>
+
+            <p
+              className="mt-1.5 text-[13px] sm:text-[14.5px] leading-relaxed"
+              style={{ color: palette.textSub }}
+            >
+              نظام مذاكرة هادئ ومنظّم يرافقك في كل فصل وكل مقرر على المنصة.
+            </p>
           </div>
 
-          <div className="exp-expanded">
-            <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <span
-                  className="font-en text-[11px] font-extrabold tracking-widest uppercase"
-                  style={{ color: "var(--accent-warm)" }}
-                >
-                  01 · VIDEO LECTURES
-                </span>
-                <h3
-                  className="text-xl sm:text-2xl font-black"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  فيديو شرح صافي ومنظم
-                </h3>
-              </div>
-              <span
-                className="font-en text-4xl font-black opacity-[0.1] select-none"
-                style={{ color: "var(--text-primary)" }}
-                aria-hidden="true"
-              >
-                01
-              </span>
-            </div>
+          {/* Architectural Progress Badge (Desktop) */}
+          <div
+            dir="ltr"
+            className="hidden lg:inline-flex items-center gap-2.5 self-start lg:self-auto px-3.5 py-1.5 rounded-full border font-mono text-[11px] font-bold tracking-[0.04em]"
+            style={{
+              background: palette.chipBg,
+              borderColor: palette.borderActive,
+              color: palette.accent1Bright,
+            }}
+          >
+            <span>CONNECTED SCROLL THREAD</span>
+            <span className="opacity-45">·</span>
+            <span className="tabular-nums">
+              0{activeIdx + 1} / 0{STATIONS.length}
+            </span>
+          </div>
+        </header>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 my-2">
-              {VIDEO_HIGHLIGHTS.map((item, cardIdx) => {
-                const Icon = item.Icon;
-                return (
-                  <motion.div
-                    key={item.title}
-                    initial={false}
-                    animate={
-                      activeStrip === 0
-                        ? { opacity: 1, y: 0 }
-                        : { opacity: 0.5, y: 8 }
+        {/* Connected 4-Station Architectural Thread Stage */}
+        <div ref={stageRef} className="relative py-2">
+          {/* Stationary 2px Rail Wrapper (Right RTL rail on < lg, Centerline on lg+) */}
+          <div
+            ref={railRef}
+            className="pointer-events-none absolute top-7 bottom-20 lg:top-12 lg:bottom-12 right-[15px] lg:right-auto lg:left-1/2 lg:-translate-x-1/2 w-[2px] z-[1]"
+            aria-hidden="true"
+          >
+            {/* Track Line */}
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{ background: palette.threadTrack }}
+            />
+
+            {/* Scrubbed Glowing Fill Line (pure GPU scaleY from top, zero transform conflicts) */}
+            <div
+              ref={threadFillRef}
+              className="absolute inset-0 rounded-full origin-top will-change-transform"
+              style={{
+                background: palette.threadFill,
+                boxShadow: palette.threadGlow,
+                transform: "scaleY(0)",
+              }}
+            />
+          </div>
+
+          {/* 4 Universal Stations */}
+          <ol className="relative z-10 flex flex-col gap-3.5 sm:gap-4 lg:gap-5 list-none m-0 p-0">
+            {STATIONS.map((station) => {
+              const isDone = station.idx < activeIdx;
+              const isActive = station.idx === activeIdx;
+              const tagColor = getStationTagColor(station.idx, palette);
+              const sideKickerColor = getSideKickerColor(
+                station.idx,
+                isActive,
+                isDone,
+                palette
+              );
+
+              const cardStyle: React.CSSProperties = station.isPaper
+                ? {
+                    background: palette.paperBg,
+                    borderColor: isActive
+                      ? palette.paperActiveBorder
+                      : palette.paperBorder,
+                    boxShadow: isActive
+                      ? palette.paperActiveShadow
+                      : palette.paperIdleShadow,
+                    color: palette.paperInk,
+                  }
+                : {
+                    background: isActive
+                      ? palette.cardActiveBg
+                      : palette.cardBg,
+                    borderColor: isActive
+                      ? palette.borderActive
+                      : palette.borderSoft,
+                    boxShadow: isActive ? palette.cardShadow : "none",
+                  };
+
+              const nodeStyle: React.CSSProperties = isActive
+                ? {
+                    background: palette.nodeActiveBg,
+                    borderColor: palette.nodeActiveBorder,
+                    color: palette.nodeActiveFg,
+                    boxShadow: `0 0 0 7px ${palette.nodeHalo}`,
+                  }
+                : isDone
+                  ? {
+                      background: palette.nodeDoneBg,
+                      borderColor: palette.accent2,
+                      color: palette.accent2,
+                      boxShadow: "none",
                     }
-                    transition={{
-                      duration: 0.45,
-                      delay: activeStrip === 0 ? cardIdx * 0.06 : 0,
-                      ease: EDITORIAL_EASE,
-                    }}
-                    className="p-3.5 rounded-2xl border space-y-2 transition-colors hover:border-[var(--border-strong)]"
-                    style={{
-                      background: "var(--bg-canvas)",
-                      borderColor: "var(--border-soft)",
-                    }}
-                  >
+                  : {
+                      background: palette.nodeIdleBg,
+                      borderColor: palette.borderSoft,
+                      color: palette.textMuted,
+                      boxShadow: "none",
+                    };
+
+              const cardElement = (
+                <article
+                  onClick={() => setActiveIdx(station.idx)}
+                  className="relative flex-1 min-w-0 rounded-[16px] lg:rounded-[20px] border p-3.5 sm:p-4 lg:px-[22px] lg:py-[18px] flex items-center justify-between gap-3 sm:gap-4 lg:gap-[18px] backdrop-blur-md transition-[border-color,box-shadow,background-color] duration-300 cursor-pointer overflow-hidden"
+                  style={cardStyle}
+                >
+                  {/* Delicate 1px Top Specular Rim on Active Non-Paper Cards */}
+                  {isActive && !station.isPaper && (
+                    <span
+                      className="pointer-events-none absolute inset-x-0 top-0 h-px"
+                      style={{ background: palette.specularTop }}
+                      aria-hidden="true"
+                    />
+                  )}
+
+                  <div className="min-w-0 flex-1">
                     <div
-                      className="w-8 h-8 rounded-xl flex items-center justify-center"
+                      dir="ltr"
+                      className="inline-block font-mono text-[9.5px] sm:text-[10.5px] font-extrabold tracking-[0.04em]"
+                      style={{ color: tagColor }}
+                    >
+                      {station.tag}
+                    </div>
+                    <h3
+                      className="mt-0.5 text-[15px] sm:text-[17px] lg:text-[18px] font-black leading-snug"
                       style={{
-                        background: item.softBg,
-                        color: item.accent,
+                        color: station.isPaper
+                          ? palette.paperInk
+                          : palette.textMain,
                       }}
                     >
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <div
-                      className="text-[13px] font-extrabold leading-snug"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      {item.title}
-                    </div>
+                      {station.title}
+                    </h3>
                     <p
-                      className="text-[11.5px] leading-relaxed"
-                      style={{ color: "var(--text-secondary)" }}
+                      className="mt-1 text-[11.5px] sm:text-[12.5px] lg:text-[13px] leading-[1.65]"
+                      style={{
+                        color: station.isPaper
+                          ? palette.paperSub
+                          : palette.textSub,
+                      }}
                     >
-                      {item.desc}
+                      {station.desc}
                     </p>
-                  </motion.div>
-                );
-              })}
-            </div>
+                  </div>
 
-            <div className="flex items-center justify-between gap-3 pt-1">
-              <p
-                className="text-[12.5px] leading-relaxed"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                مساحة هادية تذاكر فيها المحاضرة كاملة من غير ما تتشتت في يوتيوب.
-              </p>
-              <Link
-                href="/courses/operating-systems"
-                className="hidden sm:inline-flex items-center gap-1.5 text-[12px] font-extrabold whitespace-nowrap shrink-0 hover:underline"
-                style={{ color: "var(--accent-warm)" }}
-              >
-                <span>جرّبها الآن</span>
-                <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-              </Link>
-            </div>
-          </div>
-        </article>
+                  <StationMicroVisual
+                    visual={station.visual}
+                    palette={palette}
+                    isActive={isActive}
+                    prefersReducedMotion={prefersReducedMotion}
+                  />
+                </article>
+              );
 
-        {/* STRIP 02: Interactive Explanation — Live Bresenham Pixel Grid Visualizer */}
-        <article
-          data-strip="1"
-          role="region"
-          aria-label="الشرح التفاعلي"
-          tabIndex={activeStrip === 1 ? -1 : 0}
-          onClick={(e) => handleStripClick(1, e)}
-          onKeyDown={(e) => handleStripKeyDown(1, e)}
-          className={`exp-strip spotlight-card ${
-            activeStrip === 1 ? "active awwwards-beam awwwards-beam-mint" : ""
-          }`}
-        >
-          <div className="exp-collapsed">
-            <span
-              className="font-en text-[12px] font-black"
-              style={{ color: "var(--success-fg)" }}
-            >
-              02
-            </span>
-            <span className="exp-vertical-title">الشرح التفاعلي</span>
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{
-                background: "var(--success-soft)",
-                color: "var(--success-fg)",
-              }}
-            >
-              <Cpu className="w-4 h-4" />
-            </div>
-          </div>
-
-          <div className="exp-expanded">
-            <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <span
-                  className="font-en text-[11px] font-extrabold tracking-widest uppercase"
-                  style={{ color: "var(--success-fg)" }}
-                >
-                  02 · INTERACTIVE LABS
-                </span>
-                <h3
-                  className="text-xl sm:text-2xl font-black"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  شرح تفاعلي تفهمه من أول مرة
-                </h3>
-              </div>
-              <span
-                className="font-en text-4xl font-black opacity-[0.1] select-none"
-                style={{ color: "var(--text-primary)" }}
-                aria-hidden="true"
-              >
-                02
-              </span>
-            </div>
-
-            <div
-              className="p-4 rounded-2xl border my-2 flex flex-col sm:flex-row items-center justify-between gap-4"
-              style={{
-                background: "var(--bg-canvas)",
-                borderColor: "var(--border-soft)",
-              }}
-            >
-              <div className="space-y-2.5 text-right flex-1 min-w-0 w-full">
-                <div className="flex items-center justify-between sm:justify-start gap-2">
-                  <span
-                    dir="ltr"
-                    className="font-mono-code text-[10.5px] font-extrabold px-2.5 py-0.5 rounded-full"
-                    style={{
-                      background: "var(--success-soft)",
-                      color: "var(--success-fg)",
+              const nodeElement = (
+                <div className="relative z-20 flex justify-center items-start lg:items-center pt-3 lg:pt-0 w-8 lg:w-auto shrink-0 order-first lg:order-none">
+                  <motion.button
+                    ref={(el) => {
+                      nodeRefs.current[station.idx] = el;
                     }}
-                  >
-                    CS-321 · Bresenham Live
-                  </span>
-                  <span
-                    dir="ltr"
-                    className="font-mono-code text-[11px] font-bold"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    {currentDemo.label}
-                  </span>
-                </div>
-
-                <motion.div
-                  key={currentDemo.p0}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, ease: EDITORIAL_EASE }}
-                  dir="ltr"
-                  className="font-mono-code inline-block text-[12px] font-extrabold px-3 py-1 rounded-xl border"
-                  style={{
-                    background: "var(--bg-surface)",
-                    borderColor: "var(--border-soft)",
-                    color: "var(--text-primary)",
-                  }}
-                >
-                  {currentDemo.p0}
-                </motion.div>
-
-                <div>
-                  <button
                     type="button"
-                    onClick={() =>
-                      setLineDemoIdx((i) => (i + 1) % BRESENHAM_DEMOS.length)
+                    onClick={() => scrollToStation(station.idx)}
+                    aria-label={`المحطة ${station.num}: ${station.title}`}
+                    aria-current={isActive ? "step" : undefined}
+                    animate={
+                      prefersReducedMotion
+                        ? undefined
+                        : { scale: isActive ? 1.08 : 1 }
                     }
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11.5px] font-extrabold text-white cursor-pointer transition-transform active:scale-95 hover:brightness-110"
-                    style={{ background: "var(--success-fg)" }}
+                    transition={{ duration: 0.3, ease: EDITORIAL_EASE }}
+                    dir="ltr"
+                    className="relative z-20 w-8 h-8 lg:w-[36px] lg:h-[36px] rounded-full border-[1.5px] flex items-center justify-center font-mono text-[10px] lg:text-[11px] font-extrabold transition-[background-color,border-color,color,box-shadow] duration-300 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4"
+                    style={nodeStyle}
                   >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>جرّب ميل خط تاني</span>
-                  </button>
+                    {station.num}
+                  </motion.button>
                 </div>
-              </div>
+              );
 
-              {/* Spring-Animated 8x5 Pixel Grid */}
-              <div
-                dir="ltr"
-                className="grid grid-cols-8 gap-1 p-2.5 rounded-xl border shrink-0"
-                style={{
-                  background: "var(--bg-surface)",
-                  borderColor: "var(--border-soft)",
-                }}
-                aria-label="شبكة رسم خط Bresenham"
-              >
-                {[4, 3, 2, 1, 0].map((y) =>
-                  [0, 1, 2, 3, 4, 5, 6, 7].map((x) => {
-                    const isLit = pixelSet.has(`${x},${y}`);
-                    const isEndpoint =
-                      (x === currentDemo.from[0] && y === currentDemo.from[1]) ||
-                      (x === currentDemo.to[0] && y === currentDemo.to[1]);
-                    return (
-                      <motion.span
-                        key={`${x}-${y}`}
-                        animate={{
-                          scale: isEndpoint ? 1.08 : isLit ? 1 : 0.92,
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 420,
-                          damping: 22,
-                          delay: isLit ? x * 0.025 : 0,
-                        }}
-                        className="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-[5px] transition-colors duration-300"
-                        style={
-                          isEndpoint
-                            ? {
-                                background: "var(--accent-warm)",
-                                boxShadow: "0 0 10px rgba(194,94,51,0.45)",
-                              }
-                            : isLit
-                              ? {
-                                  background: "var(--success-fg)",
-                                  boxShadow: "0 0 8px rgba(102,199,166,0.35)",
-                                }
-                              : {
-                                  background: "var(--bg-subtle)",
-                                }
-                        }
-                      />
-                    );
-                  })
-                )}
-              </div>
-            </div>
-
-            <p
-              className="text-[13px] leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              تفتح بوضع التركيز الكامل تلقائياً مع سلايدات منظمة، مراجعة ذكية
-              للمصطلحات، وحاسبة تفاعلية لمسائل الامتحان خطوة بخطوة.
-            </p>
-          </div>
-        </article>
-
-        {/* STRIP 03: Student Study Notebook Summary */}
-        <article
-          data-strip="2"
-          role="region"
-          aria-label="كشكول الملخص"
-          tabIndex={activeStrip === 2 ? -1 : 0}
-          onClick={(e) => handleStripClick(2, e)}
-          onKeyDown={(e) => handleStripKeyDown(2, e)}
-          className={`exp-strip spotlight-card ${
-            activeStrip === 2 ? "active awwwards-beam" : ""
-          }`}
-        >
-          <div className="exp-collapsed">
-            <span
-              className="font-en text-[12px] font-black"
-              style={{ color: "var(--brand-primary)" }}
-            >
-              03
-            </span>
-            <span className="exp-vertical-title">كشكول الملخص</span>
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{
-                background: "var(--brand-soft)",
-                color: "var(--brand-soft-text)",
-              }}
-            >
-              <BookOpen className="w-4 h-4" />
-            </div>
-          </div>
-
-          <div className="exp-expanded">
-            <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <span
-                  className="font-en text-[11px] font-extrabold tracking-widest uppercase"
-                  style={{ color: "var(--brand-primary)" }}
+              const sideMetaElement = (
+                <div
+                  className={`hidden lg:flex flex-col gap-1 px-5 transition-opacity duration-300 ${
+                    station.cardOnStart
+                      ? "text-right items-start"
+                      : "text-left items-end"
+                  } ${isActive ? "opacity-100" : "opacity-75"}`}
                 >
-                  03 · STUDY NOTEBOOK
-                </span>
-                <h3
-                  className="text-xl sm:text-2xl font-black"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  كشكول ملخص لليلة الامتحان
-                </h3>
-              </div>
-              <span
-                className="font-en text-4xl font-black opacity-[0.1] select-none"
-                style={{ color: "var(--text-primary)" }}
-                aria-hidden="true"
-              >
-                03
-              </span>
-            </div>
-
-            <div className="notebook-paper rounded-2xl border p-4 my-2 space-y-2.5">
-              <div className="flex items-center justify-between gap-2 pb-2 border-b border-dashed border-amber-500/30">
-                <span
-                  dir="ltr"
-                  className="font-mono-code text-[10.5px] font-extrabold text-amber-700 dark:text-amber-300 inline-flex items-center gap-1"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  CS-311 · Ch.1 Notes
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowPenNotes((prev) => !prev)}
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg border text-[11px] font-extrabold cursor-pointer transition-colors hover:border-[var(--brand-primary)]"
-                  style={{
-                    background: "var(--bg-surface)",
-                    borderColor: "var(--border-soft)",
-                    color: "var(--text-primary)",
-                  }}
-                >
-                  <PenLine className="w-3 h-3 text-blue-600 dark:text-sky-400" />
-                  <span>
-                    {showPenNotes ? "إخفاء شرح القلم" : "إظهار شرح القلم"}
-                  </span>
-                </button>
-              </div>
-
-              <div className="space-y-1.5">
-                <p
-                  dir="ltr"
-                  className="text-left text-[12.5px] sm:text-[13px] font-semibold leading-relaxed"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  <span className="nb-marker-yellow font-bold">Kernel:</span>{" "}
-                  The one program running at all times on the computer.
-                </p>
-                <AnimatePresence initial={false}>
-                  {showPenNotes && (
-                    <motion.p
-                      key="pen-note"
-                      initial={{ opacity: 0, height: 0, y: -4 }}
-                      animate={{ opacity: 1, height: "auto", y: 0 }}
-                      exit={{ opacity: 0, height: 0, y: -4 }}
-                      transition={{ duration: 0.32, ease: EDITORIAL_EASE }}
-                      className="nb-ink-ar text-[12.5px] font-bold leading-relaxed flex items-start gap-1.5 overflow-hidden"
-                    >
-                      <span>✏️</span>
-                      <span>
-                        النواة هي «عقل النظام» اللي شغّال طول الوقت في الخلفية
-                        بيدير المعالج والرامات.
-                      </span>
-                    </motion.p>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-
-            <p
-              className="text-[13px] leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              كل سطر إنجليزي مهم معمول عليه ماركر وتحته شرحه بالقلم الأزرق
-              بالعامية مع تريكات الامتحان وإمكانية طباعته PDF بضغطة زر.
-            </p>
-          </div>
-        </article>
-
-        {/* STRIP 04: Instant Quizzes & Mistake Bank */}
-        <article
-          data-strip="3"
-          role="region"
-          aria-label="الكويزات وبنك الأخطاء"
-          tabIndex={activeStrip === 3 ? -1 : 0}
-          onClick={(e) => handleStripClick(3, e)}
-          onKeyDown={(e) => handleStripKeyDown(3, e)}
-          className={`exp-strip spotlight-card ${
-            activeStrip === 3 ? "active awwwards-beam awwwards-beam-mint" : ""
-          }`}
-        >
-          <div className="exp-collapsed">
-            <span
-              className="font-en text-[12px] font-black"
-              style={{ color: "var(--success-fg)" }}
-            >
-              04
-            </span>
-            <span className="exp-vertical-title">الكويزات والأخطاء</span>
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{
-                background: "var(--success-soft)",
-                color: "var(--success-fg)",
-              }}
-            >
-              <CheckSquare className="w-4 h-4" />
-            </div>
-          </div>
-
-          <div className="exp-expanded">
-            <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <span
-                  className="font-en text-[11px] font-extrabold tracking-widest uppercase"
-                  style={{ color: "var(--success-fg)" }}
-                >
-                  04 · QUIZZES &amp; MISTAKE BANK
-                </span>
-                <h3
-                  className="text-xl sm:text-2xl font-black"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  كويزات فورية وبنك أخطاء
-                </h3>
-              </div>
-              <span
-                className="font-en text-4xl font-black opacity-[0.1] select-none"
-                style={{ color: "var(--text-primary)" }}
-                aria-hidden="true"
-              >
-                04
-              </span>
-            </div>
-
-            <div
-              className="p-4 rounded-2xl border space-y-3 my-2"
-              style={{
-                background: "var(--bg-canvas)",
-                borderColor: "var(--border-soft)",
-              }}
-            >
-              <div
-                className="text-[13px] font-extrabold leading-relaxed"
-                style={{ color: "var(--text-primary)" }}
-              >
-                أي خوارزمية رسم خط أسرع لأنها تعتمد على الأعداد الصحيحة فقط بدون
-                تقريب (Rounding)؟
-              </div>
-              <div className="grid grid-cols-2 gap-2" dir="ltr">
-                <button
-                  type="button"
-                  onClick={() => void handleQuizAnswer("ok")}
-                  className="strip-q-btn px-3 py-2 rounded-xl border text-[12px] font-mono-code font-bold transition-all cursor-pointer active:scale-[0.98]"
-                  style={
-                    quizAnswer !== null
-                      ? {
-                          background: "var(--success-soft)",
-                          borderColor: "var(--success-fg)",
-                          color: "var(--text-primary)",
-                        }
-                      : {
-                          background: "var(--bg-surface)",
-                          borderColor: "var(--border-soft)",
-                          color: "var(--text-primary)",
-                        }
-                  }
-                >
-                  A) Bresenham
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleQuizAnswer("no")}
-                  className="strip-q-btn px-3 py-2 rounded-xl border text-[12px] font-mono-code font-bold transition-all cursor-pointer active:scale-[0.98]"
-                  style={
-                    quizAnswer === "no"
-                      ? {
-                          background: "var(--accent-warm-soft)",
-                          borderColor: "var(--accent-warm)",
-                          color: "var(--text-primary)",
-                        }
-                      : {
-                          background: "var(--bg-surface)",
-                          borderColor: "var(--border-soft)",
-                          color: "var(--text-primary)",
-                        }
-                  }
-                >
-                  B) DDA
-                </button>
-              </div>
-              <AnimatePresence mode="wait">
-                {quizAnswer !== null && (
-                  <motion.div
-                    key={quizAnswer}
-                    id="stripQuizFb"
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.28, ease: EDITORIAL_EASE }}
-                    className="text-[12px] font-bold"
-                    style={{
-                      color:
-                        quizAnswer === "ok"
-                          ? "var(--success-fg)"
-                          : "var(--accent-warm-text)",
-                    }}
+                  <span
+                    className="text-[11.5px] font-extrabold leading-snug transition-colors duration-300"
+                    style={{ color: sideKickerColor }}
                   >
-                    {quizAnswer === "ok"
-                      ? "عاش! Bresenham بتستخدم جمع وطرح أعداد صحيحة فقط فبتكون أسرع بكتير ✓"
-                      : "الإجابة الصح Bresenham (الـ DDA فيها كسور وتقريب) — والسؤال بيتحفظلك تلقائياً في بنك الأخطاء."}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                    {station.sideKicker}
+                  </span>
+                  <span
+                    className="text-[12px] leading-relaxed"
+                    style={{ color: palette.textMuted }}
+                  >
+                    {station.sideText}
+                  </span>
+                </div>
+              );
 
-            <p
-              className="text-[13px] leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              تصحيح فوري مع شرح سبب الإجابة الصح، وأي سؤال تغلط فيه يتحفظ
-              تلقائياً في بنك الأخطاء ووضع ليلة الامتحان.
-            </p>
-          </div>
-        </article>
+              return (
+                <li key={station.num}>
+                  <div
+                    ref={(el) => {
+                      rowRefs.current[station.idx] = el;
+                    }}
+                    className="flex items-start gap-3 lg:grid lg:grid-cols-[1fr_78px_1fr] lg:items-center lg:gap-0"
+                  >
+                    {station.cardOnStart ? (
+                      <>
+                        {cardElement}
+                        {nodeElement}
+                        {sideMetaElement}
+                      </>
+                    ) : (
+                      <>
+                        {sideMetaElement}
+                        {nodeElement}
+                        {cardElement}
+                      </>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
       </div>
     </section>
   );

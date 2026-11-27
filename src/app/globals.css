@@ -2,33 +2,34 @@
 @custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
 
 /* ==========================================================================
-   CS Portal — Warm Editorial Navy Design System (Light & Dark)
-   Matched 100% to the Editorial Prototype + Backward-Compat Token Aliases
+   CS Portal — Dual Atelier Design System
+   Light Mode: Daylight Ivory Atelier | Dark Mode: Obsidian & Champagne Atelier
+   Includes all backward-compat aliases for /courses, /admin, /login
    ========================================================================== */
 
 :root,
 [data-theme="light"] {
   color-scheme: light;
 
-  /* Core Warm Editorial Navy Palette (Light) */
-  --bg-canvas: #f6f5f1;
+  /* Core Daylight Ivory Atelier Palette (Light) */
+  --bg-canvas: #f7f5ef;
   --bg-surface: #ffffff;
-  --bg-subtle: #ebe8df;
+  --bg-subtle: #ede9df;
   --bg-hover: #f0ede5;
-  --border-soft: #dcd7cb;
-  --border-strong: #c3bdb0;
-  --text-primary: #121721;
-  --text-secondary: #3b4454;
-  --text-muted: #5c6676;
+  --border-soft: rgba(30, 53, 92, 0.11);
+  --border-strong: rgba(30, 53, 92, 0.22);
+  --text-primary: #131c2b;
+  --text-secondary: #3c485c;
+  --text-muted: #626e82;
 
   --brand-primary: #1e355c;
-  --brand-primary-hover: #162847;
+  --brand-primary-hover: #132442;
   --brand-soft: #e7eef8;
   --brand-soft-text: #1c3663;
 
   --accent-warm: #c25e33;
   --accent-warm-soft: #faece5;
-  --accent-warm-text: #9e4722;
+  --accent-warm-text: #8f3d1c;
 
   --danger-fg: #c25e33;
   --danger-soft: #faece5;
@@ -36,11 +37,54 @@
   --success-fg: #1d6b52;
   --success-soft: #e3f2ec;
 
-  --hero-bg: #182947;
-  --hero-bg-end: #0f1c32;
+  --hero-bg: #1e355c;
+  --hero-bg-end: #132442;
 
-  --shadow-card: 0 1px 2px rgba(18, 28, 45, 0.04), 0 8px 24px rgba(18, 28, 45, 0.04);
+  --shadow-card: 0 1px 2px rgba(18, 28, 45, 0.04), 0 8px 24px rgba(18, 28, 45, 0.045);
   --shadow-hover: 0 14px 32px rgba(18, 28, 45, 0.09);
+
+  /* Dedicated Landing / Atelier Tokens (Daylight Ivory) */
+  --atelier-bg: linear-gradient(175deg, #f9f7f2 0%, #f2eee5 56%, #ebe6da 100%);
+  --atelier-grid: rgba(30, 53, 92, 0.05);
+  --atelier-glow-a: rgba(194, 94, 51, 0.08);
+  --atelier-glow-b: rgba(29, 107, 82, 0.075);
+  --atelier-topbar-bg: rgba(255, 253, 249, 0.82);
+  --atelier-topbar-border: rgba(30, 53, 92, 0.1);
+  --atelier-topbar-shadow: 0 10px 28px rgba(18, 28, 45, 0.06);
+  --atelier-border-mid: rgba(30, 53, 92, 0.16);
+  --atelier-title-grad: linear-gradient(270deg, #c25e33 0%, #1e355c 56%, #1d6b52 100%);
+  --atelier-accent-1: #c25e33;
+  --atelier-accent-2: #1d6b52;
+  --atelier-accent-3: #1e355c;
+  --atelier-cta-bg: linear-gradient(135deg, #1e355c 0%, #132442 100%);
+  --atelier-cta-fg: #ffffff;
+  --atelier-cta-shadow: 0 12px 28px rgba(30, 53, 92, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  --atelier-sec-bg: rgba(255, 255, 255, 0.78);
+  --atelier-sec-fg: #1e355c;
+  --atelier-pill-bg: rgba(30, 53, 92, 0.055);
+  --atelier-rim-glint: linear-gradient(90deg, transparent 10%, rgba(255, 255, 255, 0.95) 50%, transparent 90%);
+  --atelier-ring-outer: rgba(30, 53, 92, 0.15);
+  --atelier-ring-inner: rgba(30, 53, 92, 0.1);
+  --atelier-tick-color: rgba(30, 53, 92, 0.24);
+  --atelier-core-bg: radial-gradient(circle at 34% 20%, #ffffff 0%, #f5f2ea 82%);
+  --atelier-core-border: rgba(30, 53, 92, 0.15);
+  --atelier-core-halo: rgba(30, 53, 92, 0.035);
+  --atelier-core-shadow: 0 26px 58px rgba(24, 34, 52, 0.13), 0 4px 14px rgba(194, 94, 51, 0.05);
+  --atelier-node-bg: rgba(255, 255, 255, 0.95);
+  --atelier-node-active-bg: #1e355c;
+  --atelier-node-active-border: #1e355c;
+  --atelier-node-active-fg: #ffffff;
+  --atelier-node-active-sub: rgba(226, 232, 240, 0.8);
+  --atelier-node-paper-bg: #faece5;
+  --atelier-node-paper-ink: #8f3d1c;
+  --atelier-node-paper-sub: #a05537;
+  --atelier-node-shadow: 0 10px 26px rgba(18, 28, 45, 0.09);
+  --atelier-dock-bg: rgba(255, 253, 249, 0.88);
+  --atelier-dock-border: rgba(30, 53, 92, 0.12);
+  --atelier-dock-active-bg: #1e355c;
+  --atelier-dock-active-fg: #ffffff;
+  --atelier-dock-shadow: 0 14px 36px rgba(18, 28, 45, 0.14);
+  --atelier-grain-opacity: 0.04;
 
   /* Backward-Compatibility Token Aliases */
   --bg: var(--bg-canvas);
@@ -95,56 +139,99 @@ html.dark,
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* Core Warm Editorial Navy Palette (Dark) */
-  --bg-canvas: #0c1017;
-  --bg-surface: #141b25;
-  --bg-subtle: #1c2533;
-  --bg-hover: #222d3e;
-  --border-soft: #273345;
-  --border-strong: #3a4a62;
-  --text-primary: #f4f7fb;
-  --text-secondary: #c2cddb;
-  --text-muted: #93a1b5;
+  /* Core Obsidian & Champagne Atelier Palette (Dark) */
+  --bg-canvas: #090a0d;
+  --bg-surface: #12141b;
+  --bg-subtle: #181b24;
+  --bg-hover: #1f232e;
+  --border-soft: rgba(255, 245, 230, 0.085);
+  --border-strong: rgba(216, 176, 122, 0.28);
+  --text-primary: #f6f4ef;
+  --text-secondary: #d4cfc5;
+  --text-muted: #989389;
 
-  --brand-primary: #7ca7f0;
-  --brand-primary-hover: #6494e8;
-  --brand-soft: rgba(124, 167, 240, 0.14);
-  --brand-soft-text: #9dc0f7;
+  --brand-primary: #d8b07a;
+  --brand-primary-hover: #c99d62;
+  --brand-soft: rgba(216, 176, 122, 0.14);
+  --brand-soft-text: #eed2a4;
 
-  --accent-warm: #e58a62;
-  --accent-warm-soft: rgba(229, 138, 98, 0.15);
-  --accent-warm-text: #f0a786;
+  --accent-warm: #d8b07a;
+  --accent-warm-soft: rgba(216, 176, 122, 0.15);
+  --accent-warm-text: #eed2a4;
 
   --danger-fg: #e58a62;
   --danger-soft: rgba(229, 138, 98, 0.15);
 
-  --success-fg: #66c7a6;
-  --success-soft: rgba(102, 199, 166, 0.14);
+  --success-fg: #6ec4a3;
+  --success-soft: rgba(110, 196, 163, 0.14);
 
-  --hero-bg: #152238;
-  --hero-bg-end: #0c1524;
+  --hero-bg: #111319;
+  --hero-bg-end: #08090c;
 
-  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.3);
-  --shadow-hover: 0 16px 36px rgba(0, 0, 0, 0.48);
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.34);
+  --shadow-hover: 0 16px 36px rgba(0, 0, 0, 0.52);
+
+  /* Dedicated Landing / Atelier Tokens (Obsidian & Champagne) */
+  --atelier-bg: linear-gradient(175deg, #08090c 0%, #111319 54%, #0a0c10 100%);
+  --atelier-grid: rgba(216, 176, 122, 0.038);
+  --atelier-glow-a: rgba(216, 176, 122, 0.11);
+  --atelier-glow-b: rgba(110, 196, 163, 0.08);
+  --atelier-topbar-bg: rgba(16, 18, 24, 0.72);
+  --atelier-topbar-border: rgba(255, 244, 226, 0.09);
+  --atelier-topbar-shadow: 0 12px 32px rgba(0, 0, 0, 0.36);
+  --atelier-border-mid: rgba(216, 176, 122, 0.22);
+  --atelier-title-grad: linear-gradient(270deg, #e7c694 0%, #f7e8d0 46%, #79d2ad 100%);
+  --atelier-accent-1: #d8b07a;
+  --atelier-accent-2: #6ec4a3;
+  --atelier-accent-3: #b4a7d6;
+  --atelier-cta-bg: linear-gradient(135deg, #d6a96c 0%, #b88749 100%);
+  --atelier-cta-fg: #101115;
+  --atelier-cta-shadow: 0 10px 28px rgba(214, 169, 108, 0.28), inset 0 1px 0 rgba(255, 250, 240, 0.35);
+  --atelier-sec-bg: rgba(255, 255, 255, 0.045);
+  --atelier-sec-fg: #f3efe8;
+  --atelier-pill-bg: rgba(255, 245, 230, 0.055);
+  --atelier-rim-glint: linear-gradient(90deg, transparent 10%, rgba(245, 224, 188, 0.62) 50%, transparent 90%);
+  --atelier-ring-outer: rgba(216, 176, 122, 0.16);
+  --atelier-ring-inner: rgba(255, 255, 255, 0.075);
+  --atelier-tick-color: rgba(216, 176, 122, 0.32);
+  --atelier-core-bg: radial-gradient(circle at 36% 18%, #1e222c 0%, #0d0f14 78%);
+  --atelier-core-border: rgba(216, 176, 122, 0.28);
+  --atelier-core-halo: rgba(216, 176, 122, 0.04);
+  --atelier-core-shadow: 0 32px 72px rgba(0, 0, 0, 0.68);
+  --atelier-node-bg: rgba(19, 21, 27, 0.92);
+  --atelier-node-active-bg: rgba(29, 31, 40, 0.98);
+  --atelier-node-active-border: rgba(216, 176, 122, 0.68);
+  --atelier-node-active-fg: #ffffff;
+  --atelier-node-active-sub: rgba(226, 220, 210, 0.78);
+  --atelier-node-paper-bg: #f4efe6;
+  --atelier-node-paper-ink: #171614;
+  --atelier-node-paper-sub: #5c574f;
+  --atelier-node-shadow: 0 14px 34px rgba(0, 0, 0, 0.48);
+  --atelier-dock-bg: rgba(18, 20, 26, 0.86);
+  --atelier-dock-border: rgba(216, 176, 122, 0.2);
+  --atelier-dock-active-bg: rgba(216, 176, 122, 0.16);
+  --atelier-dock-active-fg: #e7c694;
+  --atelier-dock-shadow: 0 14px 36px rgba(0, 0, 0, 0.42);
+  --atelier-grain-opacity: 0.03;
 
   /* Dark Compat Overrides */
-  --code-bg: #0a0f18;
-  --code-header: #111826;
-  --code-border: rgba(255, 255, 255, 0.1);
+  --code-bg: #0c0e13;
+  --code-header: #13161e;
+  --code-border: rgba(255, 245, 230, 0.09);
 
   --tint-peach: rgba(229, 138, 98, 0.15);
   --spine-peach: #e58a62;
-  --tint-mint: rgba(102, 199, 166, 0.14);
-  --spine-mint: #66c7a6;
-  --tint-pink: #2b2415;
-  --spine-pink: #e5b755;
-  --tint-blue: rgba(124, 167, 240, 0.14);
-  --spine-blue: #7ca7f0;
-  --tint-purple: #221d33;
-  --spine-purple: #a78bfa;
-  --tint-sky: #122a2c;
-  --spine-sky: #38bdf8;
-  --tint-ink: #edf1f7;
+  --tint-mint: rgba(110, 196, 163, 0.14);
+  --spine-mint: #6ec4a3;
+  --tint-pink: #262014;
+  --spine-pink: #d8b07a;
+  --tint-blue: rgba(216, 176, 122, 0.14);
+  --spine-blue: #d8b07a;
+  --tint-purple: #201c2d;
+  --spine-purple: #b4a7d6;
+  --tint-sky: #132527;
+  --spine-sky: #6ec4a3;
+  --tint-ink: #f6f4ef;
 
   --shadow-pill: 0 2px 6px rgba(0, 0, 0, 0.34);
   --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.58);
@@ -439,20 +526,58 @@ html.dark,
   position: fixed;
   top: 0;
   inset-inline: 0;
-  height: 3px;
+  height: 2px;
   width: 100%;
   z-index: 60;
-  background: linear-gradient(90deg, #66c7a6 0%, #c25e33 52%, #7ca7f0 100%);
+  background: linear-gradient(90deg, #1e355c 0%, #c25e33 100%);
   transform: scaleX(0);
   transform-origin: right center;
   will-change: transform;
   pointer-events: none;
-  box-shadow: 0 0 12px rgba(194, 94, 51, 0.4);
+  box-shadow: 0 0 8px rgba(194, 94, 51, 0.28);
+}
+
+html.dark #scrollProgressBar,
+[data-theme="dark"] #scrollProgressBar {
+  background: linear-gradient(90deg, #d8b07a 0%, #6ec4a3 100%);
+  box-shadow: 0 0 10px rgba(216, 176, 122, 0.32);
 }
 
 /* ==========================================================================
-   Awwwards Architectural Textures, Border Beam & CSS Scroll-Driven Animations
+   Dual Atelier Architectural Textures, Specular Rim & Scroll-Driven Motion
    ========================================================================== */
+
+.atelier-blueprint-grid {
+  background-image:
+    linear-gradient(to right, var(--atelier-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--atelier-grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 76% at 34% 50%, #000 28%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 76% at 34% 50%, #000 28%, transparent 100%);
+  pointer-events: none;
+}
+
+.atelier-grain {
+  opacity: var(--atelier-grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.sapphire-rim {
+  position: relative;
+}
+
+.sapphire-rim::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 16%;
+  right: 16%;
+  height: 1px;
+  background: var(--atelier-rim-glint);
+  pointer-events: none;
+  z-index: 3;
+}
 
 .hero-blueprint-mesh {
   background-image:
@@ -532,12 +657,30 @@ html.dark,
   }
 }
 
+@keyframes atelierScrollLift {
+  from {
+    opacity: 0.4;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .css-scroll-card {
       animation: cssScrollRise linear both;
       animation-timeline: view();
       animation-range: entry 4% cover 28%;
+    }
+
+    .scroll-lift {
+      animation: atelierScrollLift linear both;
+      animation-timeline: view();
+      animation-range: entry 4% cover 26%;
+      will-change: transform, opacity;
     }
   }
 }
@@ -2081,7 +2224,10 @@ table.clean-table tr:last-child td {
   }
 
   .awwwards-beam::after,
-  .css-scroll-card {
+  .css-scroll-card,
+  .scroll-lift {
     animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

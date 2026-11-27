@@ -6,6 +6,7 @@ import { LandingFaqSection } from "@/components/landing/LandingFaqSection";
 import { LandingTopbar } from "@/components/landing/LandingTopbar";
 import { RealitySwitchSection } from "@/components/landing/RealitySwitchSection";
 import { Footer } from "@/components/layout/Footer";
+import { MobileBottomDock } from "@/components/layout/MobileBottomDock";
 
 export default function HomePage() {
   return (
@@ -22,6 +23,7 @@ export default function HomePage() {
       </main>
 
       <Footer />
+      <MobileBottomDock />
     </div>
   );
 }
