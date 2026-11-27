@@ -850,8 +850,8 @@ export function InteractiveDeskHero() {
       />
 
       {/* ==================== MAIN HERO GRID ==================== */}
-      <div className="relative z-10 flex-1 w-full max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-12 pt-[54px] pb-[68px] md:pt-[86px] md:pb-8 lg:pt-[84px] lg:pb-4 flex items-center">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr] items-center gap-3.5 sm:gap-5 lg:gap-12 xl:gap-20">
+      <div className="relative z-10 flex-1 w-full max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-[52px] pb-[60px] md:pt-[86px] md:pb-8 lg:pt-[84px] lg:pb-4 flex items-center">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-[1.12fr_0.88fr] items-center gap-6 sm:gap-7 lg:gap-12 xl:gap-16">
           {/* Copy Column (Right in RTL on Desktop, Centered on Mobile) */}
           <div
             ref={copyColRef}
@@ -1004,7 +1004,7 @@ export function InteractiveDeskHero() {
           {/* Progressive Swiss Study Dial Column */}
           <div
             ref={dialColRef}
-            className="flex flex-col items-center gap-2 sm:gap-3 lg:gap-4"
+            className="flex flex-col items-center mt-2 sm:mt-3 lg:mt-0 lg:justify-self-end gap-2 sm:gap-3 lg:gap-4"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => {
               setIsPaused(false);
@@ -1321,7 +1321,7 @@ export function InteractiveDeskHero() {
       </div>
 
       {/* Desktop Whisper-Quiet Footer Bar */}
-      <div className="hidden lg:block relative z-10 w-full max-w-[1360px] mx-auto px-12 pb-5">
+      <div className="hidden lg:block relative z-10 w-full max-w-[1480px] mx-auto px-8 xl:px-10 pb-5">
         <div
           className="pt-3 flex items-center justify-between text-[11px] font-semibold"
           style={{

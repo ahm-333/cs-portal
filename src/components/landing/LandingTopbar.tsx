@@ -125,7 +125,7 @@ export function LandingTopbar() {
         }}
       />
 
-      <div className="relative z-10 max-w-[1360px] mx-auto px-4 md:px-6 lg:px-12 h-12 md:h-16 flex items-center justify-between gap-3">
+      <div className="relative z-10 max-w-[1480px] mx-auto px-4 md:px-6 lg:px-8 xl:px-10 h-12 md:h-16 flex items-center justify-between gap-3">
         {/* Right (RTL Start): Founder Avatar + BrandName + CS PORTAL */}
         <a
           href="#top"
