@@ -1,18 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import confetti from "canvas-confetti";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import {
   Award,
-  Bookmark,
-  BookmarkCheck,
   CheckCircle2,
   Code2,
   HelpCircle,
+  Keyboard,
   RotateCcw,
   Sparkles,
+  Star,
   Trophy,
   XCircle,
 } from "lucide-react";
@@ -34,6 +34,8 @@ interface QuizEngineProps {
 }
 
 const OPTION_LETTERS = ["A", "B", "C", "D", "E", "F"] as const;
+const MUTED_ROSE = "#d96c79";
+const MUTED_ROSE_SOFT = "rgba(217, 108, 121, 0.14)";
 
 function isEnglishText(text: string): boolean {
   const hasArabic = /[\u0600-\u06FF]/.test(text);
@@ -41,17 +43,17 @@ function isEnglishText(text: string): boolean {
   return hasLatin && !hasArabic;
 }
 
-function fireQuizConfetti(particleCount = 45, spread = 60): void {
+function fireQuizFinishConfetti(): void {
   if (typeof window === "undefined") return;
   try {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
     }
     void confetti({
-      particleCount,
-      spread,
+      particleCount: 48,
+      spread: 64,
       origin: { y: 0.72 },
-      colors: ["#c25e33", "#66c7a6", "#7ca7f0"],
+      colors: ["#d8b07a", "#6ec4a3", "#c25e33"],
     });
   } catch {
     // ignore canvas-confetti environment errors
@@ -81,39 +83,184 @@ export default function QuizEngine({
   const [lastScore, setLastScore] = useState<number | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  if (sortedQuestions.length === 0) {
+  const totalCount = sortedQuestions.length;
+  const safeIndex = totalCount > 0 ? Math.min(currentIndex, totalCount - 1) : 0;
+  const currentQuestion = sortedQuestions[safeIndex] ?? null;
+  const selectedOption = currentQuestion
+    ? selectedAnswers[currentQuestion.id]
+    : undefined;
+  const hasAnswered = selectedOption !== undefined;
+  const isCorrectSelection =
+    Boolean(currentQuestion) &&
+    hasAnswered &&
+    selectedOption === currentQuestion?.correct_index;
+
+  const currentCorrectCount = useMemo(
+    () =>
+      sortedQuestions.reduce(
+        (acc, q) => acc + (selectedAnswers[q.id] === q.correct_index ? 1 : 0),
+        0
+      ),
+    [sortedQuestions, selectedAnswers]
+  );
+
+  const persistQuizScore = useCallback(
+    async (scorePercent: number) => {
+      setIsSyncing(true);
+      try {
+        await fetch("/api/progress", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            lesson_id: lessonId,
+            best_quiz_score: scorePercent,
+          }),
+        });
+      } catch {
+        // Best-effort server sync; local portalStore already persists the score
+      } finally {
+        setIsSyncing(false);
+      }
+    },
+    [lessonId]
+  );
+
+  const handleSelectOption = useCallback(
+    (optionIndex: number) => {
+      if (!currentQuestion || hasAnswered) return;
+      if (optionIndex < 0 || optionIndex >= currentQuestion.options.length) {
+        return;
+      }
+
+      setSelectedAnswers((prev) => ({
+        ...prev,
+        [currentQuestion.id]: optionIndex,
+      }));
+
+      const isRight = optionIndex === currentQuestion.correct_index;
+      if (!isRight) {
+        const added = addMistake({
+          courseId,
+          courseCode,
+          lessonId,
+          q: currentQuestion.question_text,
+          ansText:
+            currentQuestion.options[currentQuestion.correct_index] ?? "—",
+        });
+        if (added) {
+          emitToast("تم حفظ السؤال في بنك الأخطاء للمراجعة");
+        }
+      }
+    },
+    [currentQuestion, hasAnswered, courseId, courseCode, lessonId]
+  );
+
+  const handleNext = useCallback(() => {
+    if (!hasAnswered || totalCount === 0) return;
+
+    if (safeIndex + 1 < totalCount) {
+      setCurrentIndex(safeIndex + 1);
+      return;
+    }
+
+    const scorePercent = Math.round((currentCorrectCount / totalCount) * 100);
+    setLastScore(scorePercent);
+    setIsFinished(true);
+    saveQuizScore(lessonId, scorePercent);
+    onScoreUpdate(scorePercent);
+    if (scorePercent >= 80) {
+      fireQuizFinishConfetti();
+    }
+    void persistQuizScore(scorePercent);
+  }, [
+    hasAnswered,
+    totalCount,
+    safeIndex,
+    currentCorrectCount,
+    lessonId,
+    onScoreUpdate,
+    persistQuizScore,
+  ]);
+
+  // Keyboard shortcuts: A/B/C/D or 1/2/3/4 to answer, Enter/Space for Next
+  useEffect(() => {
+    if (isFinished || !currentQuestion) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (!hasAnswered) {
+        const key = e.key.toUpperCase();
+        const letterIdx = OPTION_LETTERS.indexOf(
+          key as (typeof OPTION_LETTERS)[number]
+        );
+        if (letterIdx >= 0 && letterIdx < currentQuestion.options.length) {
+          e.preventDefault();
+          handleSelectOption(letterIdx);
+          return;
+        }
+        const digit = Number(e.key);
+        if (
+          Number.isInteger(digit) &&
+          digit >= 1 &&
+          digit <= currentQuestion.options.length
+        ) {
+          e.preventDefault();
+          handleSelectOption(digit - 1);
+          return;
+        }
+      } else if (e.key === "Enter" || e.key === " ") {
+        // Avoid double-triggering if user focused a button and pressed Enter/Space
+        if (target?.tagName === "BUTTON") return;
+        e.preventDefault();
+        handleNext();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isFinished, currentQuestion, hasAnswered, handleSelectOption, handleNext]);
+
+  if (!currentQuestion) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-[var(--border-soft)] bg-[var(--bg-canvas)] px-6 py-14 text-center">
+      <div
+        className="flex flex-col items-center justify-center rounded-2xl border px-6 py-14 text-center"
+        style={{
+          background: "var(--bg-canvas)",
+          borderColor: "var(--border-soft)",
+        }}
+      >
         <div
           className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border"
           style={{
             borderColor: "var(--border-soft)",
             background: "var(--bg-subtle)",
-            color: "var(--brand-primary)",
+            color: "var(--accent-warm)",
           }}
         >
           <HelpCircle className="h-6 w-6" />
         </div>
         <h3 className="text-base font-extrabold text-[var(--text-primary)]">
-          لا توجد أسئلة كويز لهذا الدرس حالياً
+          لا توجد أسئلة كويز لهذا الفصل حالياً
         </h3>
         <p className="mt-1 max-w-sm text-sm text-[var(--text-muted)]">
-          ستُضاف أسئلة اختيار من متعدد لتقييم فهمك للدرس قريباً.
+          ستُضاف أسئلة اختيار من متعدد لتقييم فهمك للفصل قريباً.
         </p>
       </div>
     );
   }
-
-  const safeIndex = Math.min(currentIndex, sortedQuestions.length - 1);
-  const currentQuestion = sortedQuestions[safeIndex];
-  const selectedOption = selectedAnswers[currentQuestion.id];
-  const hasAnswered = selectedOption !== undefined;
-  const isCorrectSelection =
-    hasAnswered && selectedOption === currentQuestion.correct_index;
-
-  const currentCorrectCount = sortedQuestions.reduce((acc, q) => {
-    return acc + (selectedAnswers[q.id] === q.correct_index ? 1 : 0);
-  }, 0);
 
   const isBookmarked = portal.mistakes.some(
     (m) =>
@@ -121,41 +268,13 @@ export default function QuizEngine({
       (!courseId || m.courseId === courseId)
   );
 
-  const progressPercent = Math.round(
-    ((safeIndex + (hasAnswered ? 1 : 0)) / sortedQuestions.length) * 100
-  );
-
   const useTwoColOptions = currentQuestion.options.every(
     (opt) => opt.length <= 42
   );
   const isEnglishQuestion = isEnglishText(currentQuestion.question_text);
 
-  function handleSelectOption(optionIndex: number) {
-    if (hasAnswered) return;
-    setSelectedAnswers((prev) => ({
-      ...prev,
-      [currentQuestion.id]: optionIndex,
-    }));
-
-    const isRight = optionIndex === currentQuestion.correct_index;
-    if (isRight) {
-      fireQuizConfetti(45, 60);
-    } else {
-      const added = addMistake({
-        courseId,
-        courseCode,
-        lessonId,
-        q: currentQuestion.question_text,
-        ansText:
-          currentQuestion.options[currentQuestion.correct_index] ?? "—",
-      });
-      if (added) {
-        emitToast("تم حفظ السؤال في بنك الأخطاء للمراجعة");
-      }
-    }
-  }
-
   function handleBookmarkQuestion() {
+    if (!currentQuestion) return;
     const added = addMistake({
       courseId,
       courseCode,
@@ -164,50 +283,10 @@ export default function QuizEngine({
       ansText: currentQuestion.options[currentQuestion.correct_index] ?? "—",
     });
     if (added) {
-      emitToast("تم حفظ السؤال في بنك المراجعة ⭐");
+      emitToast("تم حفظ السؤال في بنك المراجعة ★");
     } else {
       emitToast("السؤال محفوظ بالفعل في بنك المراجعة");
     }
-  }
-
-  async function persistQuizScore(scorePercent: number) {
-    setIsSyncing(true);
-    try {
-      await fetch("/api/progress", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          lesson_id: lessonId,
-          best_quiz_score: scorePercent,
-        }),
-      });
-    } catch {
-      // Best-effort server sync; local portalStore already persists the score
-    } finally {
-      setIsSyncing(false);
-    }
-  }
-
-  function handleNext() {
-    if (safeIndex + 1 < sortedQuestions.length) {
-      setCurrentIndex(safeIndex + 1);
-      return;
-    }
-
-    const scorePercent = Math.round(
-      (currentCorrectCount / sortedQuestions.length) * 100
-    );
-
-    setLastScore(scorePercent);
-    setIsFinished(true);
-    saveQuizScore(lessonId, scorePercent);
-    onScoreUpdate(scorePercent);
-    if (scorePercent >= 80) {
-      fireQuizConfetti(60, 72);
-    }
-    void persistQuizScore(scorePercent);
   }
 
   function handleRetake() {
@@ -217,41 +296,49 @@ export default function QuizEngine({
     setLastScore(null);
   }
 
+  /* ==================== RESULTS VIEW ==================== */
   if (isFinished && lastScore !== null) {
     const bestStored = Math.max(bestScore ?? 0, lastScore);
     const feedbackTier =
-      lastScore >= 85
+      lastScore >= 80
         ? {
-            title: "ممتاز! إتقان رائع للدرس",
+            title: "ممتاز! إتقان رائع للفصل",
             subtitle:
-              "إجاباتك دقيقة جداً — أنت جاهز تماماً للانتقال للدرس التالي.",
+              "إجاباتك دقيقة جداً — أنت جاهز تماماً للانتقال للفصل التالي.",
             fg: "var(--success-fg)",
             bg: "var(--success-soft)",
           }
         : lastScore >= 60
           ? {
-              title: "أداء جيد جداً!",
+              title: "أداء جيد جداً",
               subtitle:
-                "فهمك ممتاز لمعظم المفاهيم، يمكنك مراجعة الأسئلة المحفوظة في بنك الأخطاء لرفع درجتك.",
-              fg: "var(--brand-primary)",
+                "فهمك ممتاز لمعظم المفاهيم، راجع الأسئلة المحفوظة في بنك الأخطاء لرفع درجتك.",
+              fg: "var(--brand-soft-text)",
               bg: "var(--brand-soft)",
             }
           : {
               title: "بداية جيدة — حاول مرة أخرى",
               subtitle:
-                "ننصحك بمراجعة الملخص وتجربة الشرح التفاعلي ثم إعادة الكويز.",
+                "ننصحك بمراجعة الملخص السريع وقراءة الفصل ثم إعادة الكويز.",
               fg: "var(--accent-warm-text)",
               bg: "var(--accent-warm-soft)",
             };
 
     return (
       <div className="space-y-5">
-        <div className="mx-auto flex max-w-2xl flex-col items-center rounded-2xl border border-[var(--border-soft)] bg-[var(--bg-canvas)] p-6 text-center sm:p-7">
+        <div
+          className="sapphire-rim mx-auto flex max-w-2xl flex-col items-center rounded-2xl border p-6 text-center sm:p-7"
+          style={{
+            background: "var(--bg-canvas)",
+            borderColor: "var(--border-soft)",
+          }}
+        >
           <div
             className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border"
             style={{
               background: feedbackTier.bg,
-              borderColor: feedbackTier.fg,
+              borderColor:
+                "color-mix(in srgb, var(--border-strong) 70%, transparent)",
               color: feedbackTier.fg,
             }}
           >
@@ -265,9 +352,31 @@ export default function QuizEngine({
             {feedbackTier.subtitle}
           </p>
 
+          {/* Segmented Final Summary Bar */}
+          <div className="mt-4 flex w-full items-center gap-1.5">
+            {sortedQuestions.map((q) => {
+              const ok = selectedAnswers[q.id] === q.correct_index;
+              return (
+                <span
+                  key={q.id}
+                  className="h-2 flex-1 rounded-full transition-colors"
+                  style={{
+                    background: ok ? "var(--success-fg)" : MUTED_ROSE,
+                  }}
+                />
+              );
+            })}
+          </div>
+
           {/* Score Metrics */}
           <div className="mt-5 grid w-full grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--bg-surface)] p-3.5">
+            <div
+              className="rounded-xl border p-3.5"
+              style={{
+                background: "var(--bg-surface)",
+                borderColor: "var(--border-soft)",
+              }}
+            >
               <p className="text-[11.5px] font-bold text-[var(--text-muted)]">
                 نتيجتك الآن
               </p>
@@ -278,17 +387,29 @@ export default function QuizEngine({
                 {lastScore}%
               </p>
             </div>
-            <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--bg-surface)] p-3.5">
+            <div
+              className="rounded-xl border p-3.5"
+              style={{
+                background: "var(--bg-surface)",
+                borderColor: "var(--border-soft)",
+              }}
+            >
               <p className="text-[11.5px] font-bold text-[var(--text-muted)]">
                 الإجابات الصحيحة
               </p>
               <p className="font-mono-code mt-1 text-2xl font-black text-[var(--text-primary)]">
-                {currentCorrectCount} / {sortedQuestions.length}
+                {currentCorrectCount} / {totalCount}
               </p>
             </div>
-            <div className="col-span-2 rounded-xl border border-[var(--border-soft)] bg-[var(--bg-surface)] p-3.5 sm:col-span-1">
+            <div
+              className="col-span-2 rounded-xl border p-3.5 sm:col-span-1"
+              style={{
+                background: "var(--bg-surface)",
+                borderColor: "var(--border-soft)",
+              }}
+            >
               <p className="text-[11.5px] font-bold text-[var(--text-muted)]">
-                أفضل نتيجة محفوظة
+                أفضل نتيجة
               </p>
               <p
                 className="font-mono-code mt-1 text-2xl font-black"
@@ -300,7 +421,13 @@ export default function QuizEngine({
           </div>
 
           {/* Per-question review */}
-          <div className="mt-5 w-full rounded-xl border border-[var(--border-soft)] bg-[var(--bg-surface)] p-4 text-right">
+          <div
+            className="mt-5 w-full rounded-xl border p-4 text-right"
+            style={{
+              background: "var(--bg-surface)",
+              borderColor: "var(--border-soft)",
+            }}
+          >
             <p className="mb-3 text-xs font-extrabold text-[var(--text-primary)]">
               ملخص إجاباتك:
             </p>
@@ -321,7 +448,7 @@ export default function QuizEngine({
                     ) : (
                       <XCircle
                         className="mt-0.5 h-4 w-4 shrink-0"
-                        style={{ color: "var(--accent-warm)" }}
+                        style={{ color: MUTED_ROSE }}
                       />
                     )}
                     <div className="min-w-0 flex-1">
@@ -346,8 +473,11 @@ export default function QuizEngine({
             <button
               type="button"
               onClick={handleRetake}
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-extrabold text-white transition-opacity hover:opacity-95"
-              style={{ background: "var(--hero-bg)" }}
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-extrabold transition-opacity hover:opacity-92 cursor-pointer"
+              style={{
+                background: "var(--atelier-cta-bg)",
+                color: "var(--atelier-cta-fg)",
+              }}
             >
               <RotateCcw className="h-4 w-4" />
               <span>إعادة الكويز</span>
@@ -364,39 +494,44 @@ export default function QuizEngine({
     );
   }
 
+  /* ==================== ACTIVE QUESTION VIEW ==================== */
   return (
-    <div className="space-y-5">
-      {/* Header matching #cwPane-quiz */}
+    <div className="space-y-4">
+      {/* Header + Segmented Question Progress Bar */}
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <span
               className="text-[11px] font-extrabold"
-              style={{ color: "var(--success-fg)" }}
+              style={{ color: "var(--accent-warm)" }}
             >
-              كويز تثبيت المقرر
+              كويز تثبيت الفصل
             </span>
             <h3 className="mt-0.5 text-lg font-black text-[var(--text-primary)]">
-              سؤال {safeIndex + 1} من {sortedQuestions.length}
+              سؤال {safeIndex + 1} من {totalCount}
             </h3>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className="font-mono-code rounded-full px-3 py-1 text-[12px] font-bold"
+              className="font-mono-code rounded-full border px-3 py-1 text-[11.5px] font-bold"
               style={{
                 background: "var(--success-soft)",
+                borderColor:
+                  "color-mix(in srgb, var(--success-fg) 26%, transparent)",
                 color: "var(--success-fg)",
               }}
             >
-              Score: {currentCorrectCount}/{sortedQuestions.length}
+              {currentCorrectCount}/{totalCount} صح
             </span>
             {bestScore !== null ? (
               <span
-                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold"
+                className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11.5px] font-bold"
                 style={{
-                  background: "var(--brand-soft)",
-                  color: "var(--brand-soft-text)",
+                  background: "var(--accent-warm-soft)",
+                  borderColor:
+                    "color-mix(in srgb, var(--accent-warm) 26%, transparent)",
+                  color: "var(--accent-warm-text)",
                 }}
               >
                 <Trophy className="h-3.5 w-3.5" />
@@ -406,23 +541,45 @@ export default function QuizEngine({
           </div>
         </div>
 
+        {/* Visual Segmented Question Progress Bar */}
         <div
-          className="h-1.5 w-full overflow-hidden rounded-full"
-          style={{ background: "var(--bg-subtle)" }}
+          className="flex w-full items-center gap-1.5"
+          role="progressbar"
+          aria-valuenow={safeIndex + 1}
+          aria-valuemin={1}
+          aria-valuemax={totalCount}
+          aria-label="تقدم أسئلة الكويز"
         >
-          <div
-            className="h-full rounded-full transition-all duration-300"
-            style={{
-              width: `${progressPercent}%`,
-              background: "var(--accent-warm)",
-            }}
-          />
+          {sortedQuestions.map((q, idx) => {
+            const ans = selectedAnswers[q.id];
+            const answered = ans !== undefined;
+            const right = answered && ans === q.correct_index;
+            const isCurrent = idx === safeIndex;
+
+            let bg = "var(--bg-subtle)";
+            if (answered) {
+              bg = right ? "var(--success-fg)" : MUTED_ROSE;
+            } else if (isCurrent) {
+              bg = "var(--accent-warm)";
+            }
+
+            return (
+              <span
+                key={q.id}
+                className="h-2 flex-1 rounded-full transition-all duration-300"
+                style={{
+                  background: bg,
+                  opacity: isCurrent && !answered ? 1 : answered ? 0.92 : 0.65,
+                }}
+              />
+            );
+          })}
         </div>
       </div>
 
       {/* Question Card */}
       <div
-        className="space-y-4 rounded-2xl border p-5"
+        className="sapphire-rim space-y-4 rounded-2xl border p-4 sm:p-5"
         style={{
           background: "var(--bg-canvas)",
           borderColor: "var(--border-soft)",
@@ -430,7 +587,7 @@ export default function QuizEngine({
       >
         <p
           dir={isEnglishQuestion ? "ltr" : undefined}
-          className={`text-[15px] font-extrabold leading-relaxed text-[var(--text-primary)] ${
+          className={`text-[15px] sm:text-[15.5px] font-extrabold leading-relaxed text-[var(--text-primary)] ${
             isEnglishQuestion ? "font-en text-left" : ""
           }`}
         >
@@ -441,10 +598,10 @@ export default function QuizEngine({
         {currentQuestion.code_snippet ? (
           <div
             dir="ltr"
-            className="max-w-full overflow-hidden rounded-xl border border-white/10 bg-[#0d131d] text-[#e4ebf5]"
+            className="max-w-full overflow-hidden rounded-xl border border-white/10 bg-[#0c0e13] text-[#e4ebf5]"
           >
-            <div className="flex items-center gap-2 border-b border-white/10 bg-[#141d2b] px-3.5 py-1.5 text-xs font-semibold text-slate-300">
-              <Code2 className="h-3.5 w-3.5 text-[#66c7a6]" />
+            <div className="flex items-center gap-2 border-b border-white/10 bg-[#13161e] px-3.5 py-1.5 text-xs font-semibold text-slate-300">
+              <Code2 className="h-3.5 w-3.5 text-[#6ec4a3]" />
               <span className="font-mono-code uppercase">
                 {currentQuestion.code_lang || "cpp"}
               </span>
@@ -469,7 +626,7 @@ export default function QuizEngine({
           </div>
         ) : null}
 
-        {/* Options Grid */}
+        {/* Calm Atelier Option Cards */}
         <div
           className={`grid grid-cols-1 gap-2.5 ${
             useTwoColOptions ? "sm:grid-cols-2" : ""
@@ -485,16 +642,25 @@ export default function QuizEngine({
             let borderColor = "var(--border-soft)";
             let background = "var(--bg-surface)";
             let color = "var(--text-primary)";
+            let badgeBg = "var(--bg-canvas)";
+            let badgeBorder = "var(--border-strong)";
+            let badgeColor = "var(--text-primary)";
 
             if (hasAnswered) {
               if (isCorrectOption) {
                 borderColor = "var(--success-fg)";
                 background = "var(--success-soft)";
-                color = "var(--success-fg)";
+                color = "var(--text-primary)";
+                badgeBg = "var(--success-fg)";
+                badgeBorder = "var(--success-fg)";
+                badgeColor = "#ffffff";
               } else if (isSelected) {
-                borderColor = "var(--accent-warm)";
-                background = "var(--accent-warm-soft)";
-                color = "var(--accent-warm-text)";
+                borderColor = MUTED_ROSE;
+                background = MUTED_ROSE_SOFT;
+                color = "var(--text-primary)";
+                badgeBg = MUTED_ROSE;
+                badgeBorder = MUTED_ROSE;
+                badgeColor = "#ffffff";
               } else {
                 color = "var(--text-muted)";
               }
@@ -509,24 +675,26 @@ export default function QuizEngine({
                 disabled={hasAnswered}
                 dir={isEngOption ? "ltr" : undefined}
                 onClick={() => handleSelectOption(optionIndex)}
-                className={`flex min-h-[48px] w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-[13px] font-bold transition-all hover:opacity-95 disabled:cursor-default sm:px-4 ${
-                  isEngOption ? "font-en text-left" : "text-right"
-                }`}
+                className={`group flex min-h-[50px] w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-[13px] font-bold transition-all disabled:cursor-default sm:px-4 ${
+                  !hasAnswered
+                    ? "cursor-pointer hover:border-[var(--border-strong)] hover:bg-[var(--bg-hover)]"
+                    : ""
+                } ${isEngOption ? "font-en text-left" : "text-right"}`}
                 style={{
                   borderColor,
                   background,
                   color,
                   opacity:
-                    hasAnswered && !isCorrectOption && !isSelected ? 0.65 : 1,
+                    hasAnswered && !isCorrectOption && !isSelected ? 0.58 : 1,
                 }}
               >
                 <span
                   dir="ltr"
-                  className="font-mono-code flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[11px] font-extrabold"
+                  className="font-mono-code flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[11px] font-extrabold transition-colors"
                   style={{
-                    borderColor: hasAnswered ? borderColor : "var(--border-strong)",
-                    background: "var(--bg-canvas)",
-                    color: hasAnswered ? color : "var(--text-primary)",
+                    borderColor: badgeBorder,
+                    background: badgeBg,
+                    color: badgeColor,
                   }}
                 >
                   {letter}
@@ -544,7 +712,7 @@ export default function QuizEngine({
                 {hasAnswered && isSelected && !isCorrectOption ? (
                   <XCircle
                     className="h-4 w-4 shrink-0"
-                    style={{ color: "var(--accent-warm)" }}
+                    style={{ color: MUTED_ROSE }}
                   />
                 ) : null}
               </button>
@@ -552,27 +720,33 @@ export default function QuizEngine({
           })}
         </div>
 
-        {/* Instant Explanation Box */}
+        {/* Calm Editorial Explanation Card */}
         {hasAnswered ? (
           <div
-            className="rounded-xl border p-3.5 text-[13px] leading-relaxed"
+            className="rounded-xl border p-4 text-[13px] leading-relaxed"
             style={{
               background: isCorrectSelection
-                ? "var(--success-soft)"
-                : "var(--accent-warm-soft)",
+                ? "color-mix(in srgb, var(--success-soft) 55%, var(--bg-surface))"
+                : "color-mix(in srgb, rgba(217, 108, 121, 0.12) 70%, var(--bg-surface))",
               borderColor: isCorrectSelection
+                ? "color-mix(in srgb, var(--success-fg) 42%, var(--border-soft))"
+                : "rgba(217, 108, 121, 0.42)",
+              borderRightWidth: "3px",
+              borderRightColor: isCorrectSelection
                 ? "var(--success-fg)"
-                : "var(--accent-warm)",
-              color: isCorrectSelection
-                ? "var(--success-fg)"
-                : "var(--accent-warm-text)",
+                : MUTED_ROSE,
             }}
           >
-            <div className="flex items-center gap-1.5 font-extrabold">
+            <div
+              className="flex items-center gap-1.5 font-extrabold"
+              style={{
+                color: isCorrectSelection ? "var(--success-fg)" : MUTED_ROSE,
+              }}
+            >
               {isCorrectSelection ? (
                 <>
                   <Sparkles className="h-4 w-4 shrink-0" />
-                  <span>إجابة صحيحة! أحسنت</span>
+                  <span>إجابة صحيحة — أحسنت</span>
                 </>
               ) : (
                 <>
@@ -584,7 +758,7 @@ export default function QuizEngine({
               )}
             </div>
             {currentQuestion.explanation ? (
-              <p className="mt-1.5 font-semibold text-[var(--text-primary)]">
+              <p className="mt-1.5 font-medium text-[var(--text-primary)]">
                 {currentQuestion.explanation}
               </p>
             ) : null}
@@ -592,48 +766,62 @@ export default function QuizEngine({
         ) : null}
       </div>
 
-      {/* Footer Actions: Bookmark to Mistake Bank + Next Question */}
+      {/* Footer Actions: Bookmark Star + Keyboard Hint + Next */}
       <div className="flex flex-wrap items-center justify-between gap-2.5">
-        <button
-          type="button"
-          onClick={handleBookmarkQuestion}
-          className="inline-flex min-h-[42px] items-center gap-1.5 rounded-xl border px-3.5 py-2 text-[12px] font-bold transition-colors hover:opacity-85"
-          style={{
-            background: isBookmarked
-              ? "var(--accent-warm-soft)"
-              : "var(--bg-canvas)",
-            borderColor: isBookmarked
-              ? "var(--accent-warm)"
-              : "var(--border-soft)",
-            color: isBookmarked
-              ? "var(--accent-warm-text)"
-              : "var(--text-primary)",
-          }}
-        >
-          {isBookmarked ? (
-            <BookmarkCheck
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleBookmarkQuestion}
+            aria-pressed={isBookmarked}
+            className="inline-flex min-h-[42px] items-center gap-1.5 rounded-xl border px-3.5 py-2 text-[12px] font-bold transition-colors hover:border-[var(--border-strong)] cursor-pointer"
+            style={{
+              background: isBookmarked
+                ? "var(--accent-warm-soft)"
+                : "var(--bg-canvas)",
+              borderColor: isBookmarked
+                ? "var(--accent-warm)"
+                : "var(--border-soft)",
+              color: isBookmarked
+                ? "var(--accent-warm-text)"
+                : "var(--text-primary)",
+            }}
+          >
+            <Star
               className="h-3.5 w-3.5"
-              style={{ color: "var(--accent-warm)" }}
+              style={{
+                color: "var(--accent-warm)",
+                fill: isBookmarked ? "var(--accent-warm)" : "none",
+              }}
             />
-          ) : (
-            <Bookmark
-              className="h-3.5 w-3.5"
-              style={{ color: "var(--accent-warm)" }}
-            />
-          )}
-          <span>
-            {isBookmarked ? "محفوظ في بنك المراجعة ✓" : "حفظ في بنك المراجعة"}
+            <span>
+              {isBookmarked ? "محفوظ في بنك المراجعة" : "حفظ للمراجعة"}
+            </span>
+          </button>
+
+          <span
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-semibold"
+            style={{
+              background: "var(--bg-canvas)",
+              borderColor: "var(--border-soft)",
+              color: "var(--text-muted)",
+            }}
+          >
+            <Keyboard className="h-3.5 w-3.5" />
+            <span>A–D أو 1–4 للاختيار · Enter للتالي</span>
           </span>
-        </button>
+        </div>
 
         <button
           type="button"
           onClick={handleNext}
           disabled={!hasAnswered}
-          className="inline-flex min-h-[42px] items-center justify-center rounded-xl px-5 py-2 text-[12.5px] font-extrabold text-white transition-all hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-45"
-          style={{ background: "var(--hero-bg)" }}
+          className="inline-flex min-h-[42px] items-center justify-center rounded-xl px-5 py-2 text-[12.5px] font-extrabold transition-opacity hover:opacity-92 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+          style={{
+            background: "var(--atelier-cta-bg)",
+            color: "var(--atelier-cta-fg)",
+          }}
         >
-          {safeIndex + 1 < sortedQuestions.length
+          {safeIndex + 1 < totalCount
             ? "السؤال التالي ←"
             : "عرض النتيجة النهائية ←"}
         </button>

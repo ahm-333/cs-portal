@@ -3,6 +3,7 @@ import { cache } from "react";
 import { and, eq, gt } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { getDb, getDbOrNull } from "@/lib/db";
+import { ensureAdminTables } from "@/lib/db/ensure-tables";
 import { sessions, users } from "@/lib/db/schema";
 
 export const SESSION_COOKIE_NAME = "cs_portal_session";
@@ -24,6 +25,13 @@ export interface SessionUser {
   department: SessionDepartment;
   role: "student" | "admin";
   examDate: string | null;
+}
+
+export interface CreateSessionOptions {
+  deviceId?: string | null;
+  deviceName?: string | null;
+  ipAddress?: string | null;
+  enforceSingleSession?: boolean;
 }
 
 const VALID_DEPARTMENTS = new Set<SessionDepartment>(["CS", "AI", "IS", "IT"]);
@@ -50,6 +58,8 @@ export const getServerSession = cache(async function getServerSession(): Promise
   }
 
   try {
+    await ensureAdminTables();
+
     const cookieStore = await cookies();
     const rawToken = cookieStore.get(SESSION_COOKIE_NAME)?.value?.trim();
     if (!rawToken) {
@@ -61,6 +71,8 @@ export const getServerSession = cache(async function getServerSession(): Promise
 
     const rows = await db
       .select({
+        sessionId: sessions.id,
+        sessionLastSeenAt: sessions.lastSeenAt,
         id: users.id,
         email: users.email,
         phone: users.phone,
@@ -71,6 +83,7 @@ export const getServerSession = cache(async function getServerSession(): Promise
         department: users.department,
         role: users.role,
         examDate: users.examDate,
+        isSuspended: users.isSuspended,
         lastActiveAt: users.lastActiveAt,
       })
       .from(sessions)
@@ -83,7 +96,12 @@ export const getServerSession = cache(async function getServerSession(): Promise
       return null;
     }
 
-    // Best-effort throttled lastActiveAt touch; never breaks session reads
+    // Suspended accounts immediately lose server session access
+    if (row.isSuspended) {
+      return null;
+    }
+
+    // Best-effort throttled lastActiveAt / lastSeenAt touch; never breaks session reads
     if (
       !row.lastActiveAt ||
       now.getTime() - row.lastActiveAt.getTime() > LAST_ACTIVE_THROTTLE_MS
@@ -91,6 +109,18 @@ export const getServerSession = cache(async function getServerSession(): Promise
       db.update(users)
         .set({ lastActiveAt: now })
         .where(eq(users.id, row.id))
+        .catch(() => {
+          // ignore non-critical telemetry update failures
+        });
+    }
+
+    if (
+      !row.sessionLastSeenAt ||
+      now.getTime() - row.sessionLastSeenAt.getTime() > LAST_ACTIVE_THROTTLE_MS
+    ) {
+      db.update(sessions)
+        .set({ lastSeenAt: now })
+        .where(eq(sessions.id, row.sessionId))
         .catch(() => {
           // ignore non-critical telemetry update failures
         });
@@ -115,17 +145,28 @@ export const getServerSession = cache(async function getServerSession(): Promise
 
 export async function createSession(
   userId: string,
-  userAgent?: string | null
+  userAgent?: string | null,
+  options?: CreateSessionOptions
 ): Promise<{ token: string; expiresAt: Date }> {
+  await ensureAdminTables();
   const db = getDb();
   const token = crypto.randomBytes(32).toString("hex");
   const tokenHash = hashSessionToken(token);
-  const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + SESSION_TTL_MS);
+
+  if (options?.enforceSingleSession) {
+    await db.delete(sessions).where(eq(sessions.userId, userId));
+  }
 
   await db.insert(sessions).values({
     userId,
     tokenHash,
     userAgent: userAgent ? userAgent.slice(0, 512) : null,
+    deviceId: options?.deviceId ? options.deviceId.slice(0, 128) : null,
+    deviceName: options?.deviceName ? options.deviceName.slice(0, 160) : null,
+    ipAddress: options?.ipAddress ? options.ipAddress.slice(0, 64) : null,
+    lastSeenAt: now,
     expiresAt,
   });
 

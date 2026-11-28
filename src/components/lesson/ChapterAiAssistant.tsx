@@ -15,8 +15,8 @@ import {
   Check,
   Clock,
   Copy,
+  CreditCard,
   FileText,
-  KeyRound,
   RotateCcw,
   SendHorizontal,
   Sparkles,
@@ -41,6 +41,7 @@ interface ChapterAiAssistantProps {
   lessonId: string;
   lessonTitle: string;
   hasStructuredSummary?: boolean;
+  compact?: boolean;
   onGoToSummary?: () => void;
   onTriggerUnlock?: () => void;
 }
@@ -92,6 +93,7 @@ export default function ChapterAiAssistant({
   lessonId,
   lessonTitle,
   hasStructuredSummary = false,
+  compact = false,
   onGoToSummary,
   onTriggerUnlock,
 }: ChapterAiAssistantProps) {
@@ -135,8 +137,8 @@ export default function ChapterAiAssistant({
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 132)}px`;
-  }, [input]);
+    el.style.height = `${Math.min(el.scrollHeight, compact ? 96 : 132)}px`;
+  }, [input, compact]);
 
   const handleStopStreaming = useCallback(() => {
     abortRef.current?.abort();
@@ -190,19 +192,26 @@ export default function ChapterAiAssistant({
       setBanner(null);
       setInput("");
 
-      // Capture clean alternating user/model prior history (excluding failed or dangling user turns)
       const cleanPrior = messages.filter(
         (m) => !m.isError && m.text.trim().length > 0
       );
-      const alternatingHistory: Array<{ role: "user" | "model"; text: string }> = [];
+      const alternatingHistory: Array<{
+        role: "user" | "model";
+        text: string;
+      }> = [];
       for (const m of cleanPrior) {
         if (alternatingHistory.length === 0) {
-          if (m.role === "user") alternatingHistory.push({ role: m.role, text: m.text });
+          if (m.role === "user") {
+            alternatingHistory.push({ role: m.role, text: m.text });
+          }
           continue;
         }
         const prev = alternatingHistory[alternatingHistory.length - 1];
         if (prev.role === m.role) {
-          alternatingHistory[alternatingHistory.length - 1] = { role: m.role, text: m.text };
+          alternatingHistory[alternatingHistory.length - 1] = {
+            role: m.role,
+            text: m.text,
+          };
         } else {
           alternatingHistory.push({ role: m.role, text: m.text });
         }
@@ -266,17 +275,15 @@ export default function ChapterAiAssistant({
             // fallback to generic message
           }
 
-          // Remove empty placeholder assistant bubble on non-stream error
           setMessages((prev) => prev.filter((m) => m.id !== assistantMsgId));
 
           if (errBody.code === "AI_NOT_CONFIGURED" || response.status === 503) {
-            // Also revert the unsent user bubble if AI isn't configured yet so the welcome + setup card stays clean
             setMessages((prev) => prev.filter((m) => m.id !== userMsgId));
             setBanner({
               type: "not_configured",
               message:
                 errBody.error ||
-                "المساعد الذكي جاهز للعمل فور إضافة مفتاح GEMINI_API_KEY في إعدادات السيرفر.",
+                "المساعد الذكي جاهز للعمل فور تفعيل مفتاح الخدمة على السيرفر.",
             });
             return;
           }
@@ -300,7 +307,7 @@ export default function ChapterAiAssistant({
               type: "locked",
               message:
                 errBody.error ||
-                "هذا الفصل مدفوع — فعّل المقرر أولاً لاستخدام المساعد الذكي هنا.",
+                "هذا الفصل ضمن المحتوى المدفوع — اشترك في المادة أولاً لاستخدام المساعد الذكي هنا.",
             });
             return;
           }
@@ -336,7 +343,6 @@ export default function ChapterAiAssistant({
           }
         }
 
-        // Flush any remaining UTF-8 bytes
         const tail = decoder.decode();
         if (tail) {
           accumulated += tail;
@@ -364,17 +370,16 @@ export default function ChapterAiAssistant({
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") {
           setMessages((prev) =>
-            prev
-              .map((m) => {
-                if (m.id !== assistantMsgId) return m;
-                return m.text.trim()
-                  ? m
-                  : {
-                      ...m,
-                      text: "تم إيقاف الرد بناءً على طلبك.",
-                      isError: true,
-                    };
-              })
+            prev.map((m) => {
+              if (m.id !== assistantMsgId) return m;
+              return m.text.trim()
+                ? m
+                : {
+                    ...m,
+                    text: "تم إيقاف الرد بناءً على طلبك.",
+                    isError: true,
+                  };
+            })
           );
           return;
         }
@@ -412,77 +417,80 @@ export default function ChapterAiAssistant({
     banner?.type === "rate_limited" ? formatResetTimeAr(banner.resetAt) : null;
 
   return (
-    <div className="flex flex-col gap-3.5 sm:gap-4">
-      {/* ==================== TOP ASSISTANT HEADER ==================== */}
+    <div
+      className={
+        compact
+          ? "flex h-full min-h-0 flex-col gap-2.5"
+          : "flex flex-col gap-3.5 sm:gap-4"
+      }
+    >
+      {/* ==================== ASSISTANT SUB-HEADER ==================== */}
       <div
-        className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3.5 sm:p-4"
+        className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border ${
+          compact ? "px-3 py-2" : "rounded-2xl p-3.5 sm:p-4"
+        }`}
         style={{
-          background:
-            "color-mix(in srgb, var(--brand-soft) 35%, var(--bg-canvas))",
+          background: "var(--bg-canvas)",
           borderColor: "var(--border-soft)",
         }}
       >
-        <div className="flex min-w-0 items-center gap-3">
-          <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm"
-            style={{
-              background:
-                "linear-gradient(135deg, var(--hero-bg) 0%, var(--accent-warm) 100%)",
-            }}
-          >
-            <Sparkles className="h-5 w-5" />
-          </div>
-
-          <div className="min-w-0 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2
-                className="text-[14.5px] font-black sm:text-[16px]"
-                style={{ color: "var(--text-primary)" }}
-              >
-                الركن الخامس · المساعد الذكي
-              </h2>
-              <span
-                className="font-mono-code rounded-md px-1.5 py-0.5 text-[10px] font-extrabold"
-                style={{
-                  background: "var(--accent-warm-soft)",
-                  color: "var(--accent-warm-text)",
-                }}
-              >
-                {courseCode}
-              </span>
+        <div className="flex min-w-0 items-center gap-2">
+          {!compact ? (
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border"
+              style={{
+                background: "var(--accent-warm-soft)",
+                borderColor:
+                  "color-mix(in srgb, var(--accent-warm) 35%, transparent)",
+                color: "var(--accent-warm-text)",
+              }}
+            >
+              <Sparkles className="h-4 w-4" />
             </div>
+          ) : null}
 
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
+              {!compact ? (
+                <h2
+                  className="text-[14px] font-black sm:text-[15.5px]"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  المساعد الذكي للفصل
+                </h2>
+              ) : null}
               <span
-                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold"
+                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-extrabold"
                 style={{
                   background: "var(--success-soft)",
                   color: "var(--success-fg)",
                 }}
               >
-                <BookOpenCheck className="h-3.5 w-3.5 shrink-0" />
-                <span>يقرأ مباشرة من كشكول ملخص الفصل</span>
+                <BookOpenCheck className="h-3 w-3 shrink-0" />
+                <span className="truncate">
+                  {compact ? "مبني على ملخص الفصل" : "يقرأ مباشرة من ملخص الفصل"}
+                </span>
               </span>
-              {hasStructuredSummary ? (
+              {!compact && hasStructuredSummary ? (
                 <span
-                  className="hidden sm:inline-flex items-center rounded-full px-2 py-0.5 text-[10.5px] font-bold"
+                  className="font-mono-code rounded-md px-1.5 py-0.5 text-[10px] font-extrabold"
                   style={{
-                    background: "var(--brand-soft)",
-                    color: "var(--brand-soft-text)",
+                    background: "var(--accent-warm-soft)",
+                    color: "var(--accent-warm-text)",
                   }}
                 >
-                  قوانين + مقارنات + مصايد الامتحان
+                  {courseCode}
                 </span>
               ) : null}
             </div>
           </div>
         </div>
 
-        {/* Quota Pill + Reset Button */}
-        <div className="flex shrink-0 items-center gap-2">
+        {/* Quota + Reset */}
+        <div className="flex shrink-0 items-center gap-1.5">
           {quota ? (
             <span
-              className="font-mono-code inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-bold"
+              className="font-mono-code inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10.5px] font-bold"
               style={{
                 background:
                   quota.remaining === 0
@@ -497,35 +505,19 @@ export default function ChapterAiAssistant({
                     ? "var(--accent-warm-text)"
                     : "var(--text-secondary)",
               }}
-              title="الرصيد المتبقي لك اليوم من أسئلة المساعد الذكي"
+              title="الرصيد المتبقي اليوم من أسئلة المساعد الذكي"
             >
-              <span>متبقي اليوم:</span>
               <strong style={{ color: "var(--text-primary)" }}>
                 {quota.remaining}/{quota.limit}
               </strong>
             </span>
-          ) : (
-            <span
-              className="hidden sm:inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[11px] font-bold"
-              style={{
-                background: "var(--bg-surface)",
-                borderColor: "var(--border-soft)",
-                color: "var(--text-muted)",
-              }}
-            >
-              <Sparkles
-                className="h-3 w-3 shrink-0"
-                style={{ color: "var(--accent-warm)" }}
-              />
-              <span>شرح بالعامية + مصطلحات EN</span>
-            </span>
-          )}
+          ) : null}
 
           <button
             type="button"
             onClick={handleResetChat}
             disabled={messages.length === 0 && !banner && !isStreaming}
-            className="inline-flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11.5px] font-extrabold transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-lg border px-2.5 text-[11px] font-bold transition-colors hover:border-[var(--border-strong)] disabled:cursor-not-allowed disabled:opacity-40"
             style={{
               background: "var(--bg-surface)",
               borderColor: "var(--border-soft)",
@@ -533,66 +525,49 @@ export default function ChapterAiAssistant({
             }}
             title="بدء محادثة جديدة لهذا الفصل"
           >
-            <RotateCcw className="h-3.5 w-3.5 shrink-0" />
-            <span>محادثة جديدة</span>
+            <RotateCcw className="h-3 w-3 shrink-0" />
+            <span>{compact ? "جديد" : "محادثة جديدة"}</span>
           </button>
         </div>
       </div>
 
-      {/* ==================== STATUS / SETUP BANNERS ==================== */}
+      {/* ==================== STATUS BANNERS ==================== */}
       {banner?.type === "not_configured" ? (
         <div
           role="status"
-          className="rounded-2xl border p-4 sm:p-5"
+          className="rounded-xl border p-3.5"
           style={{
             background: "var(--accent-warm-soft)",
-            borderColor: "var(--accent-warm)",
+            borderColor:
+              "color-mix(in srgb, var(--accent-warm) 40%, transparent)",
           }}
         >
-          <div className="flex items-start gap-3">
-            <div
-              className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white"
-              style={{ background: "var(--accent-warm)" }}
-            >
-              <Wrench className="h-4 w-4" />
-            </div>
+          <div className="flex items-start gap-2.5">
+            <Wrench
+              className="mt-0.5 h-4 w-4 shrink-0"
+              style={{ color: "var(--accent-warm-text)" }}
+            />
             <div className="min-w-0 flex-1 space-y-2">
-              <h3
-                className="text-[14px] font-black"
-                style={{ color: "var(--accent-warm-text)" }}
-              >
-                المساعد الذكي في انتظار التفعيل على السيرفر
-              </h3>
               <p
-                className="text-[12.5px] leading-relaxed font-semibold"
+                className="text-[12px] font-bold leading-relaxed"
                 style={{ color: "var(--text-primary)" }}
               >
                 {banner.message}
               </p>
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <span
-                  dir="ltr"
-                  className="font-mono-code rounded-lg border px-2.5 py-1 text-[11px] font-bold"
+              {onGoToSummary ? (
+                <button
+                  type="button"
+                  onClick={onGoToSummary}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-extrabold transition-opacity hover:opacity-90"
                   style={{
-                    background: "var(--bg-surface)",
-                    borderColor: "var(--border-soft)",
-                    color: "var(--text-secondary)",
+                    background: "var(--atelier-cta-bg)",
+                    color: "var(--atelier-cta-fg)",
                   }}
                 >
-                  GEMINI_API_KEY
-                </span>
-                {onGoToSummary ? (
-                  <button
-                    type="button"
-                    onClick={onGoToSummary}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11.5px] font-extrabold text-white transition-opacity hover:opacity-90"
-                    style={{ background: "var(--brand-primary)" }}
-                  >
-                    <FileText className="h-3.5 w-3.5" />
-                    <span>افتح كشكول الملخص الآن</span>
-                  </button>
-                ) : null}
-              </div>
+                  <FileText className="h-3 w-3" />
+                  <span>افتح الملخص السريع</span>
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -601,23 +576,22 @@ export default function ChapterAiAssistant({
       {banner?.type === "rate_limited" ? (
         <div
           role="alert"
-          className="flex items-start gap-3 rounded-2xl border p-4"
+          className="flex items-start gap-2.5 rounded-xl border p-3 text-[12px] font-bold leading-relaxed"
           style={{
             background: "var(--accent-warm-soft)",
             borderColor: "var(--accent-warm)",
             color: "var(--accent-warm-text)",
           }}
         >
-          <Clock className="mt-0.5 h-5 w-5 shrink-0" />
-          <div className="space-y-1 text-[12.5px] font-bold leading-relaxed">
+          <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="space-y-0.5">
             <div>{banner.message}</div>
             {resetTimeLabel ? (
               <div
-                className="text-[11.5px]"
+                className="text-[11px]"
                 style={{ color: "var(--text-secondary)" }}
               >
-                موعد تجديد الرصيد اليومي القادم: {resetTimeLabel} (بتوقيتك
-                المحلي)
+                يتجدد الرصيد الساعة {resetTimeLabel}
               </div>
             ) : null}
           </div>
@@ -627,30 +601,30 @@ export default function ChapterAiAssistant({
       {banner?.type === "locked" ? (
         <div
           role="alert"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4"
+          className="flex flex-wrap items-center justify-between gap-2.5 rounded-xl border p-3"
           style={{
             background: "var(--accent-warm-soft)",
             borderColor: "var(--accent-warm)",
           }}
         >
-          <div className="flex items-start gap-2.5 text-[12.5px] font-bold">
-            <KeyRound
-              className="mt-0.5 h-4 w-4 shrink-0"
-              style={{ color: "var(--accent-warm)" }}
-            />
-            <span style={{ color: "var(--accent-warm-text)" }}>
-              {banner.message}
-            </span>
-          </div>
+          <span
+            className="text-[12px] font-bold leading-relaxed"
+            style={{ color: "var(--accent-warm-text)" }}
+          >
+            {banner.message}
+          </span>
           {onTriggerUnlock ? (
             <button
               type="button"
               onClick={onTriggerUnlock}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[12px] font-extrabold text-white"
-              style={{ background: "#c25e33" }}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11.5px] font-extrabold"
+              style={{
+                background: "var(--atelier-cta-bg)",
+                color: "var(--atelier-cta-fg)",
+              }}
             >
-              <KeyRound className="h-3.5 w-3.5" />
-              <span>إدخال كود التفعيل</span>
+              <CreditCard className="h-3.5 w-3.5" />
+              <span>اشترك في المادة</span>
             </button>
           ) : null}
         </div>
@@ -659,100 +633,123 @@ export default function ChapterAiAssistant({
       {banner?.type === "error" ? (
         <div
           role="alert"
-          className="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-[12.5px] font-bold"
+          className="flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-[12px] font-bold"
           style={{
             background: "var(--danger-soft)",
             borderColor: "var(--danger-fg)",
             color: "var(--danger-fg)",
           }}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{banner.message}</span>
+            <span className="truncate">{banner.message}</span>
           </div>
           <button
             type="button"
             onClick={() => setBanner(null)}
-            className="cursor-pointer rounded-lg px-2 py-0.5 text-[11px] font-extrabold underline"
+            className="shrink-0 cursor-pointer text-[11px] font-extrabold underline"
           >
             إخفاء
           </button>
         </div>
       ) : null}
 
-      {/* ==================== CHAT BODY / WELCOME STAGE ==================== */}
+      {/* ==================== CHAT FEED / QUICK PROMPTS ==================== */}
       <div
-        className="flex min-h-[340px] max-h-[62vh] flex-col gap-4 overflow-y-auto rounded-2xl border p-3.5 sm:min-h-[390px] sm:p-5"
+        className={`flex flex-col gap-3 overflow-y-auto rounded-2xl border ${
+          compact
+            ? "min-h-0 flex-1 p-3"
+            : "min-h-[340px] max-h-[62vh] p-3.5 sm:min-h-[390px] sm:p-5"
+        }`}
         style={{
           background: "var(--bg-canvas)",
           borderColor: "var(--border-soft)",
         }}
       >
         {messages.length === 0 ? (
-          <div className="my-auto flex flex-col items-center justify-center py-4 text-center sm:py-6">
+          <div
+            className={`my-auto flex flex-col items-center justify-center text-center ${
+              compact ? "py-2" : "py-4 sm:py-6"
+            }`}
+          >
             <div
-              className="mb-3.5 flex h-12 w-12 items-center justify-center rounded-2xl border shadow-xs"
+              className={`mb-2.5 flex items-center justify-center rounded-2xl border ${
+                compact ? "h-10 w-10" : "h-12 w-12"
+              }`}
               style={{
                 background: "var(--bg-surface)",
                 borderColor: "var(--border-soft)",
                 color: "var(--accent-warm)",
               }}
             >
-              <Sparkles className="h-6 w-6" />
+              <Sparkles className={compact ? "h-5 w-5" : "h-6 w-6"} />
             </div>
 
             <h3
-              className="max-w-lg text-[16px] font-black leading-snug sm:text-[18px]"
+              className={`font-black leading-snug ${
+                compact ? "text-[14px]" : "max-w-lg text-[16px] sm:text-[18px]"
+              }`}
               style={{ color: "var(--text-primary)" }}
             >
               اسألني في أي نقطة داخل «{lessonTitle}»
             </h3>
 
             <p
-              className="mt-1.5 max-w-xl text-[12.5px] leading-relaxed sm:text-[13px]"
+              className={`mt-1 leading-relaxed ${
+                compact
+                  ? "text-[11.5px]"
+                  : "max-w-xl text-[12.5px] sm:text-[13px]"
+              }`}
               style={{ color: "var(--text-secondary)" }}
             >
-              أجاوبك بالعامية المصرية المبسّطة مع الحفاظ على المصطلحات الإنجليزية
-              الدقيقة في{" "}
-              <span className="font-en font-bold">{courseTitleEn}</span>، وبنّبهك
-              على مصايد الامتحان الموجودة في كشكول الملخص.
+              شرح مبسّط مع مصطلحات{" "}
+              <span className="font-en font-bold">{courseTitleEn}</span> وأهم
+              تريكات الامتحان بدون ما تسيب الدرس.
             </p>
 
-            {/* 4 Chapter-Specific Quick-Prompt Chips */}
-            <div className="mt-5 grid w-full max-w-2xl grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {/* Chapter Quick-Prompt Chips */}
+            <div
+              className={`mt-4 grid w-full gap-2 ${
+                compact ? "grid-cols-1" : "max-w-2xl grid-cols-1 sm:grid-cols-2"
+              }`}
+            >
               {quickPrompts.map((prompt, idx) => (
                 <button
                   key={idx}
                   type="button"
                   disabled={isStreaming}
                   onClick={() => void sendMessage(prompt)}
-                  className="surface-card group flex cursor-pointer items-start justify-between gap-2.5 rounded-2xl p-3.5 text-right transition-all hover:-translate-y-0.5 hover:border-[var(--accent-warm)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="group flex cursor-pointer items-start justify-between gap-2 rounded-xl border p-2.5 text-right transition-all hover:border-[var(--border-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{
+                    background: "var(--bg-surface)",
+                    borderColor: "var(--border-soft)",
+                  }}
                 >
-                  <div className="flex min-w-0 items-start gap-2.5">
+                  <div className="flex min-w-0 items-start gap-2">
                     <span
-                      className="font-mono-code mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[10.5px] font-extrabold transition-colors"
+                      className="font-mono-code mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-extrabold"
                       style={{
                         background:
-                          idx === 2
+                          idx % 2 === 0
                             ? "var(--accent-warm-soft)"
-                            : "var(--brand-soft)",
+                            : "var(--success-soft)",
                         color:
-                          idx === 2
+                          idx % 2 === 0
                             ? "var(--accent-warm-text)"
-                            : "var(--brand-soft-text)",
+                            : "var(--success-fg)",
                       }}
                     >
                       0{idx + 1}
                     </span>
                     <span
-                      className="text-[12.5px] font-bold leading-relaxed"
+                      className="text-[12px] font-bold leading-relaxed"
                       style={{ color: "var(--text-primary)" }}
                     >
                       {prompt}
                     </span>
                   </div>
                   <ArrowUpLeft
-                    className="mt-1 h-4 w-4 shrink-0 opacity-50 transition-transform group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
+                    className="mt-1 h-3.5 w-3.5 shrink-0 opacity-50 transition-transform group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
                     style={{ color: "var(--accent-warm)" }}
                   />
                 </button>
@@ -760,7 +757,7 @@ export default function ChapterAiAssistant({
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             {messages.map((msg, idx) => {
               const isLast = idx === messages.length - 1;
               const isCurrentlyStreamingMsg =
@@ -770,13 +767,15 @@ export default function ChapterAiAssistant({
                 return (
                   <div
                     key={msg.id}
-                    className="ms-auto flex max-w-[90%] flex-col items-end sm:max-w-[78%]"
+                    className={`ms-auto flex flex-col items-end ${
+                      compact ? "max-w-[92%]" : "max-w-[90%] sm:max-w-[78%]"
+                    }`}
                   >
                     <div
-                      className="rounded-2xl rounded-ee-md px-4 py-3 text-[13.5px] font-semibold leading-relaxed text-white shadow-sm"
+                      className="rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[12.5px] sm:text-[13px] font-bold leading-relaxed shadow-xs"
                       style={{
-                        background:
-                          "linear-gradient(135deg, var(--hero-bg) 0%, var(--hero-bg-end) 100%)",
+                        background: "var(--atelier-cta-bg)",
+                        color: "var(--atelier-cta-fg)",
                       }}
                     >
                       <p className="whitespace-pre-wrap break-words">
@@ -790,40 +789,44 @@ export default function ChapterAiAssistant({
               return (
                 <div
                   key={msg.id}
-                  className="me-auto w-full max-w-[98%] sm:max-w-[94%]"
+                  className={
+                    compact
+                      ? "me-auto w-full"
+                      : "me-auto w-full max-w-[98%] sm:max-w-[94%]"
+                  }
                 >
                   <div
-                    className="surface-card overflow-hidden rounded-2xl rounded-es-md border-s-[3px]"
+                    className="overflow-hidden rounded-2xl rounded-es-md border border-s-[3px]"
                     style={{
+                      background: "var(--bg-surface)",
+                      borderColor: "var(--border-soft)",
                       borderInlineStartColor: msg.isError
                         ? "var(--danger-fg)"
                         : "var(--accent-warm)",
                     }}
                   >
-                    {/* Tutor Bubble Top Bar */}
+                    {/* Bubble Top Bar */}
                     <div
-                      className="flex items-center justify-between gap-2 border-b px-3.5 py-2"
+                      className="flex items-center justify-between gap-2 border-b px-3 py-1.5"
                       style={{
                         background: "var(--bg-subtle)",
                         borderColor: "var(--border-soft)",
                       }}
                     >
-                      <div className="flex min-w-0 items-center gap-2">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <Sparkles
+                          className="h-3.5 w-3.5 shrink-0"
+                          style={{ color: "var(--accent-warm)" }}
+                        />
                         <span
-                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-white"
-                          style={{ background: "var(--brand-primary)" }}
-                        >
-                          <Sparkles className="h-3.5 w-3.5" />
-                        </span>
-                        <span
-                          className="truncate text-[11.5px] font-extrabold"
+                          className="truncate text-[11px] font-extrabold"
                           style={{ color: "var(--text-primary)" }}
                         >
-                          المساعد الذكي · كشكول الملخص
+                          المساعد الذكي
                         </span>
                         {isCurrentlyStreamingMsg ? (
                           <span
-                            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-bold"
                             style={{
                               background: "var(--accent-warm-soft)",
                               color: "var(--accent-warm-text)",
@@ -833,7 +836,7 @@ export default function ChapterAiAssistant({
                               className="h-1.5 w-1.5 animate-pulse rounded-full"
                               style={{ background: "var(--accent-warm)" }}
                             />
-                            <span>يكتب الآن...</span>
+                            <span>يكتب...</span>
                           </span>
                         ) : null}
                       </div>
@@ -841,8 +844,10 @@ export default function ChapterAiAssistant({
                       {msg.text.trim() && !isCurrentlyStreamingMsg ? (
                         <button
                           type="button"
-                          onClick={() => void handleCopyMessage(msg.id, msg.text)}
-                          className="inline-flex min-h-[30px] shrink-0 cursor-pointer items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-bold transition-colors hover:opacity-85"
+                          onClick={() =>
+                            void handleCopyMessage(msg.id, msg.text)
+                          }
+                          className="inline-flex h-6 shrink-0 cursor-pointer items-center gap-1 rounded-md border px-2 text-[10.5px] font-bold transition-colors hover:opacity-85"
                           style={{
                             background: "var(--bg-surface)",
                             borderColor: "var(--border-soft)",
@@ -855,7 +860,7 @@ export default function ChapterAiAssistant({
                           {copiedId === msg.id ? (
                             <>
                               <Check className="h-3 w-3" />
-                              <span>تم النسخ ✓</span>
+                              <span>نُسخ</span>
                             </>
                           ) : (
                             <>
@@ -867,37 +872,43 @@ export default function ChapterAiAssistant({
                       ) : null}
                     </div>
 
-                    {/* Tutor Content (Markdown + KaTeX + LTR Code) */}
-                    <div className="p-2.5 sm:p-3.5">
+                    {/* Bubble Body */}
+                    <div
+                      className={
+                        compact
+                          ? "overflow-x-auto p-2.5 text-[12.5px]"
+                          : "p-3 sm:p-3.5"
+                      }
+                    >
                       {!msg.text.trim() && isCurrentlyStreamingMsg ? (
                         <div
-                          className="flex items-center gap-2.5 px-2 py-3 text-[12.5px] font-bold"
+                          className="flex items-center gap-2 px-1 py-2 text-[12px] font-bold"
                           style={{ color: "var(--text-muted)" }}
                         >
                           <span className="inline-flex items-center gap-1">
                             <span
-                              className="h-2 w-2 animate-bounce rounded-full"
+                              className="h-1.5 w-1.5 animate-bounce rounded-full"
                               style={{
                                 background: "var(--accent-warm)",
                                 animationDelay: "0ms",
                               }}
                             />
                             <span
-                              className="h-2 w-2 animate-bounce rounded-full"
+                              className="h-1.5 w-1.5 animate-bounce rounded-full"
                               style={{
-                                background: "var(--brand-primary)",
+                                background: "var(--success-fg)",
                                 animationDelay: "150ms",
                               }}
                             />
                             <span
-                              className="h-2 w-2 animate-bounce rounded-full"
+                              className="h-1.5 w-1.5 animate-bounce rounded-full"
                               style={{
-                                background: "var(--success-fg)",
+                                background: "var(--brand-primary)",
                                 animationDelay: "300ms",
                               }}
                             />
                           </span>
-                          <span>جاري القراءة من كشكول الملخص وصياغة الإجابة...</span>
+                          <span>جاري صياغة الإجابة...</span>
                         </div>
                       ) : (
                         <MarkdownViewer content={msg.text} embedded />
@@ -912,29 +923,35 @@ export default function ChapterAiAssistant({
         )}
       </div>
 
-      {/* ==================== STICKY BOTTOM COMPOSER ==================== */}
+      {/* ==================== BOTTOM COMPOSER ==================== */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
           void sendMessage(input);
         }}
-        className="sticky bottom-0 z-10 rounded-2xl border p-2 shadow-sm transition-colors focus-within:border-[var(--brand-primary)]"
+        className="shrink-0 rounded-2xl border p-2 transition-colors focus-within:border-[var(--border-strong)]"
         style={{
           background: "var(--bg-surface)",
-          borderColor: "var(--border-strong)",
+          borderColor: "var(--border-soft)",
         }}
       >
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-1.5">
           <textarea
             ref={textareaRef}
             rows={1}
             value={input}
-            onChange={(e) => setInput(e.target.value.slice(0, MAX_INPUT_CHARS))}
+            onChange={(e) =>
+              setInput(e.target.value.slice(0, MAX_INPUT_CHARS))
+            }
             onKeyDown={handleKeyDown}
             disabled={isStreaming}
-            placeholder="اسأل في أي نقطة أو مصيدة امتحان في الفصل ده... (Enter للإرسال · Shift+Enter لسطر جديد)"
+            placeholder={
+              compact
+                ? "اسأل عن أي نقطة في الفصل..."
+                : "اسأل في أي نقطة أو تريكة امتحان في الفصل... (Enter للإرسال)"
+            }
             aria-label="اكتب سؤالك للمساعد الذكي"
-            className="max-h-[132px] min-h-[42px] flex-1 resize-none bg-transparent px-2.5 py-2 text-[13.5px] leading-relaxed outline-none placeholder:text-[var(--text-muted)] disabled:opacity-60"
+            className="min-h-[38px] flex-1 resize-none bg-transparent px-2 py-1.5 text-[13px] leading-relaxed outline-none placeholder:text-[var(--text-muted)] disabled:opacity-60"
             style={{ color: "var(--text-primary)" }}
           />
 
@@ -942,52 +959,44 @@ export default function ChapterAiAssistant({
             <button
               type="button"
               onClick={handleStopStreaming}
-              className="inline-flex h-[42px] shrink-0 cursor-pointer items-center gap-1.5 rounded-xl px-3.5 text-[12px] font-extrabold text-white transition-transform hover:scale-[1.02]"
-              style={{ background: "var(--accent-warm)" }}
+              className="inline-flex h-[38px] shrink-0 cursor-pointer items-center gap-1 rounded-xl px-3 text-[11.5px] font-extrabold text-white transition-opacity hover:opacity-90"
+              style={{ background: "var(--danger-fg)" }}
               title="إيقاف توليد الإجابة"
             >
-              <Square className="h-3.5 w-3.5 fill-current" />
+              <Square className="h-3 w-3 fill-current" />
               <span>إيقاف</span>
             </button>
           ) : (
             <button
               type="submit"
               disabled={!input.trim()}
-              className="inline-flex h-[42px] shrink-0 cursor-pointer items-center gap-1.5 rounded-xl px-4 text-[12.5px] font-extrabold text-white transition-all hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-45"
+              className="inline-flex h-[38px] shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 text-[12px] font-extrabold transition-opacity hover:opacity-92 disabled:cursor-not-allowed disabled:opacity-40"
               style={{
-                background: "var(--hero-bg)",
+                background: "var(--atelier-cta-bg)",
+                color: "var(--atelier-cta-fg)",
               }}
               title="إرسال السؤال"
+              aria-label="إرسال السؤال"
             >
               <SendHorizontal className="h-4 w-4 rotate-180" />
-              <span className="hidden sm:inline">إرسال</span>
+              {!compact ? <span className="hidden sm:inline">إرسال</span> : null}
             </button>
           )}
         </div>
 
-        <div
-          className="mt-1.5 flex items-center justify-between gap-2 border-t px-2 pt-1.5 text-[10.5px] font-semibold"
-          style={{
-            borderColor: "var(--border-soft)",
-            color: "var(--text-muted)",
-          }}
-        >
-          <span>
-            إجابات المساعد مبنية على كشكول ملخص الفصل — راجع دائماً مع الملخص
-            الأساسي.
-          </span>
-          {input.length > MAX_INPUT_CHARS - 250 ? (
+        {input.length > MAX_INPUT_CHARS - 250 ? (
+          <div className="mt-1 flex justify-end px-2 text-[10px] font-bold">
             <span
-              className="font-mono-code shrink-0 font-bold"
+              className="font-mono-code"
               style={{
                 color:
-                  charsLeft < 80 ? "var(--accent-warm)" : "var(--text-muted)",
+                  charsLeft < 80 ? "var(--danger-fg)" : "var(--text-muted)",
               }}
             >
               {charsLeft} حرف متبقي
             </span>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </form>
     </div>
   );

@@ -1,5 +1,10 @@
 import { eq } from "drizzle-orm";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  enforceStudentDeviceGuard,
+  extractDeviceInfo,
+  setDeviceCookie,
+} from "@/lib/auth/device";
 import { verifyPassword } from "@/lib/auth/password";
 import {
   looksLikePhoneIdentifier,
@@ -17,6 +22,7 @@ import {
   parseDepartment,
 } from "@/lib/auth/sync";
 import { getDb, isDatabaseConfigured } from "@/lib/db";
+import { ensureAdminTables } from "@/lib/db/ensure-tables";
 import { users } from "@/lib/db/schema";
 
 const NO_STORE_HEADERS = { "Cache-Control": "private, no-store" };
@@ -69,6 +75,8 @@ export async function POST(request: NextRequest) {
   const db = getDb();
 
   try {
+    await ensureAdminTables();
+
     const isPhone = looksLikePhoneIdentifier(rawIdentifier);
     const normalizedPhone = isPhone ? normalizePhoneNumber(rawIdentifier) : null;
     const normalizedEmail = rawIdentifier.toLowerCase();
@@ -86,6 +94,8 @@ export async function POST(request: NextRequest) {
         department: users.department,
         role: users.role,
         examDate: users.examDate,
+        isSuspended: users.isSuspended,
+        suspendReason: users.suspendReason,
       })
       .from(users)
       .where(
@@ -107,6 +117,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (userRow.isSuspended) {
+      const reason = userRow.suspendReason?.trim() || null;
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "ACCOUNT_SUSPENDED",
+          suspendReason: reason,
+          error: reason
+            ? `تم تعليق هذا الحساب: ${reason}`
+            : "تم تعليق هذا الحساب مؤقتاً. تواصل مع م. أحمد للمساعدة.",
+        },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
+    }
+
+    const device = extractDeviceInfo(request);
+    const role: "student" | "admin" =
+      userRow.role === "admin" ? "admin" : "student";
+
+    const guard = await enforceStudentDeviceGuard({
+      userId: userRow.id,
+      fullName: userRow.fullName,
+      role,
+      device,
+    });
+
+    if (!guard.allowed) {
+      const blockedResponse = NextResponse.json(
+        {
+          ok: false,
+          code: guard.code,
+          error: guard.error,
+        },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
+      setDeviceCookie(blockedResponse, device.deviceId);
+      return blockedResponse;
+    }
+
     const now = new Date();
     await db
       .update(users)
@@ -123,7 +172,13 @@ export async function POST(request: NextRequest) {
 
     const { token, expiresAt } = await createSession(
       userRow.id,
-      request.headers.get("user-agent")
+      request.headers.get("user-agent"),
+      {
+        deviceId: device.deviceId,
+        deviceName: device.deviceName,
+        ipAddress: device.ipAddress,
+        enforceSingleSession: guard.enforceSingleSession,
+      }
     );
 
     let finalExamDate = userRow.examDate ?? null;
@@ -146,7 +201,7 @@ export async function POST(request: NextRequest) {
       yearLevel: userRow.yearLevel,
       department: (parseDepartment(userRow.department, "CS") ??
         "CS") as SessionDepartment,
-      role: userRow.role === "admin" ? "admin" : "student",
+      role,
       examDate: finalExamDate,
     };
 
@@ -161,6 +216,7 @@ export async function POST(request: NextRequest) {
       path: "/",
       expires: expiresAt,
     });
+    setDeviceCookie(response, device.deviceId);
     return response;
   } catch (error) {
     console.error("[auth/login] Failed to sign in:", error);

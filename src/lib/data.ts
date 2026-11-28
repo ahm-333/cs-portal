@@ -5,7 +5,15 @@ import {
   type ActiveEnrollmentSummary,
 } from "@/lib/activation/codes";
 import { getServerSession } from "@/lib/auth/session";
-import { getDb, isDatabaseConfigured, userProgress } from "@/lib/db";
+import {
+  courseOverrides,
+  getDb,
+  getDbOrNull,
+  isDatabaseConfigured,
+  userProgress,
+  type CourseOverrideRow,
+} from "@/lib/db";
+import { ensureAdminTables } from "@/lib/db/ensure-tables";
 import {
   MOCK_COURSES,
   MOCK_INTERACTIVES,
@@ -27,6 +35,103 @@ import type {
   SearchIndexItem,
   UserProgress,
 } from "@/types/database";
+
+// ============================================================================
+// Live Course Overrides Loader & Merger
+// ============================================================================
+
+export function parseFreeLessonIdsJson(raw: string | null | undefined): string[] | null {
+  if (!raw || !raw.trim()) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    return parsed
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  } catch {
+    return null;
+  }
+}
+
+export async function getCourseOverridesMap(): Promise<Map<string, CourseOverrideRow>> {
+  const map = new Map<string, CourseOverrideRow>();
+  if (!isDatabaseConfigured()) {
+    return map;
+  }
+
+  try {
+    await ensureAdminTables();
+    const db = getDbOrNull();
+    if (!db) {
+      return map;
+    }
+
+    const rows = await db.select().from(courseOverrides);
+    for (const row of rows) {
+      map.set(row.courseId, row);
+    }
+  } catch (error) {
+    console.warn("[data] Failed to load course_overrides; using defaults:", error);
+  }
+  return map;
+}
+
+interface EffectiveCourseEntry {
+  course: Course;
+  isLockedByOverride: boolean;
+  freeLessonIdsOverride: Set<string> | null;
+}
+
+function resolveEffectiveCourse(
+  baseCourse: Course,
+  override?: CourseOverrideRow
+): EffectiveCourseEntry {
+  if (!override) {
+    return {
+      course: baseCourse,
+      isLockedByOverride: false,
+      freeLessonIdsOverride: null,
+    };
+  }
+
+  const parsedFreeIds = parseFreeLessonIdsJson(override.freeLessonIdsJson);
+  return {
+    course: {
+      ...baseCourse,
+      is_published: override.isPublished,
+      is_paid: override.isPaid,
+      price: override.price,
+    },
+    isLockedByOverride: Boolean(override.isLocked),
+    freeLessonIdsOverride: parsedFreeIds ? new Set(parsedFreeIds) : null,
+  };
+}
+
+function applyLessonFreeOverride<T extends LessonSummaryItem>(
+  lesson: T,
+  freeLessonIdsOverride: Set<string> | null
+): T {
+  if (!freeLessonIdsOverride) {
+    return lesson;
+  }
+  return {
+    ...lesson,
+    is_free_preview: freeLessonIdsOverride.has(lesson.id),
+  };
+}
+
+function isCourseVisibleForUser(
+  course: Course,
+  currentUser: CurrentUser | null
+): boolean {
+  if (course.is_published) {
+    return true;
+  }
+  return currentUser?.role === "admin";
+}
 
 // ============================================================================
 // Lightweight Projection & Redaction Helpers
@@ -99,18 +204,23 @@ function sanitizeLessonForClient(course: Course, lesson: Lesson): Lesson {
 function hasCourseEnrollment(
   course: Course,
   user: CurrentUser | null,
-  enrollments: ActiveEnrollmentSummary[]
+  enrollments: ActiveEnrollmentSummary[],
+  isLockedByOverride = false
 ): boolean {
-  if (!course.is_paid) {
+  if (user?.role === "admin") {
     return true;
   }
-  if (user?.role === "admin") {
+  if (isLockedByOverride) {
+    return false;
+  }
+  if (!course.is_paid) {
     return true;
   }
   return enrollments.some(
     (entry) =>
       (entry.scopeType === "bundle" && entry.targetId === "all") ||
-      (entry.scopeType === "course" && entry.targetId === course.id)
+      (entry.scopeType === "course" &&
+        (entry.targetId === course.id || entry.targetId === course.slug))
   );
 }
 
@@ -118,18 +228,23 @@ function hasLessonEnrollment(
   course: Course,
   lesson: LessonSummaryItem,
   user: CurrentUser | null,
-  enrollments: ActiveEnrollmentSummary[]
+  enrollments: ActiveEnrollmentSummary[],
+  isLockedByOverride = false
 ): boolean {
-  if (!course.is_paid || lesson.is_free_preview) {
+  if (user?.role === "admin") {
     return true;
   }
-  if (user?.role === "admin") {
+  if (isLockedByOverride) {
+    return false;
+  }
+  if (!course.is_paid || lesson.is_free_preview) {
     return true;
   }
   return enrollments.some(
     (entry) =>
       (entry.scopeType === "bundle" && entry.targetId === "all") ||
-      (entry.scopeType === "course" && entry.targetId === course.id) ||
+      (entry.scopeType === "course" &&
+        (entry.targetId === course.id || entry.targetId === course.slug)) ||
       (entry.scopeType === "lesson" && entry.targetId === lesson.id)
   );
 }
@@ -209,7 +324,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     id: session.id,
     email: session.email,
     full_name: session.fullName,
-    avatar_url: null,
+    avatar_url: session.avatarUrl ?? null,
     year_level: session.yearLevel,
     department: session.department,
     role: session.role,
@@ -221,7 +336,8 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 // ============================================================================
 
 export async function getPublishedCourses(): Promise<CourseWithStats[]> {
-  const { currentUser, enrollments, progressMap } = await getUserCloudContext();
+  const [{ currentUser, enrollments, progressMap }, overridesMap] =
+    await Promise.all([getUserCloudContext(), getCourseOverridesMap()]);
 
   const lessonIdsByCourse = new Map<string, string[]>();
   for (const lesson of MOCK_LESSONS) {
@@ -233,14 +349,17 @@ export async function getPublishedCourses(): Promise<CourseWithStats[]> {
     }
   }
 
-  return MOCK_COURSES.filter((course) => course.is_published)
+  return MOCK_COURSES.map((baseCourse) =>
+    resolveEffectiveCourse(baseCourse, overridesMap.get(baseCourse.id))
+  )
+    .filter(({ course }) => isCourseVisibleForUser(course, currentUser))
     .sort(
       (a, b) =>
-        a.year_level - b.year_level ||
-        a.term - b.term ||
-        a.created_at.localeCompare(b.created_at)
+        a.course.year_level - b.course.year_level ||
+        a.course.term - b.course.term ||
+        a.course.created_at.localeCompare(b.course.created_at)
     )
-    .map((course) => {
+    .map(({ course, isLockedByOverride }) => {
       const lessonIds = lessonIdsByCourse.get(course.id) ?? [];
       let completedCount = 0;
       for (const lessonId of lessonIds) {
@@ -253,7 +372,12 @@ export async function getPublishedCourses(): Promise<CourseWithStats[]> {
         ...sanitizeCourseForClient(course),
         lesson_count: lessonIds.length,
         completed_count: completedCount,
-        is_enrolled: hasCourseEnrollment(course, currentUser, enrollments),
+        is_enrolled: hasCourseEnrollment(
+          course,
+          currentUser,
+          enrollments,
+          isLockedByOverride
+        ),
       };
     });
 }
@@ -270,26 +394,40 @@ export async function getCourseDetailBySlug(
     return null;
   }
 
-  const course = MOCK_COURSES.find(
-    (c) => c.slug === cleanSlug && c.is_published
-  );
-  if (!course) {
+  const baseCourse = MOCK_COURSES.find((c) => c.slug === cleanSlug);
+  if (!baseCourse) {
     return null;
   }
 
-  const { currentUser, enrollments, progressMap } = await getUserCloudContext(
-    course.id
-  );
+  const [{ currentUser, enrollments, progressMap }, overridesMap] =
+    await Promise.all([
+      getUserCloudContext(baseCourse.id),
+      getCourseOverridesMap(),
+    ]);
+
+  const { course, isLockedByOverride, freeLessonIdsOverride } =
+    resolveEffectiveCourse(baseCourse, overridesMap.get(baseCourse.id));
+
+  if (!isCourseVisibleForUser(course, currentUser)) {
+    return null;
+  }
 
   const lessons = MOCK_LESSONS.filter((l) => l.course_id === course.id)
     .sort((a, b) => a.order_index - b.order_index)
-    .map(toLessonSummaryItem);
+    .map((l) =>
+      toLessonSummaryItem(applyLessonFreeOverride(l, freeLessonIdsOverride))
+    );
 
   return {
     course: sanitizeCourseForClient(course),
     lessons,
     progressMap,
-    isEnrolled: hasCourseEnrollment(course, currentUser, enrollments),
+    isEnrolled: hasCourseEnrollment(
+      course,
+      currentUser,
+      enrollments,
+      isLockedByOverride
+    ),
     currentUser,
   };
 }
@@ -308,16 +446,27 @@ export async function getLessonPageData(
     return null;
   }
 
-  const course = MOCK_COURSES.find(
-    (c) => c.slug === cleanSlug && c.is_published
-  );
-  if (!course) {
+  const baseCourse = MOCK_COURSES.find((c) => c.slug === cleanSlug);
+  if (!baseCourse) {
     return null;
   }
 
-  const courseLessons = MOCK_LESSONS.filter(
-    (l) => l.course_id === course.id
-  ).sort((a, b) => a.order_index - b.order_index);
+  const [{ currentUser, enrollments, progressMap }, overridesMap] =
+    await Promise.all([
+      getUserCloudContext(baseCourse.id),
+      getCourseOverridesMap(),
+    ]);
+
+  const { course, isLockedByOverride, freeLessonIdsOverride } =
+    resolveEffectiveCourse(baseCourse, overridesMap.get(baseCourse.id));
+
+  if (!isCourseVisibleForUser(course, currentUser)) {
+    return null;
+  }
+
+  const courseLessons = MOCK_LESSONS.filter((l) => l.course_id === course.id)
+    .sort((a, b) => a.order_index - b.order_index)
+    .map((l) => applyLessonFreeOverride(l, freeLessonIdsOverride));
 
   const allLessons = courseLessons.map(toLessonSummaryItem);
   const targetLesson = courseLessons.find((l) => l.id === cleanLessonId);
@@ -325,16 +474,18 @@ export async function getLessonPageData(
     return null;
   }
 
-  const { currentUser, enrollments, progressMap } = await getUserCloudContext(
-    course.id
+  const isEnrolled = hasCourseEnrollment(
+    course,
+    currentUser,
+    enrollments,
+    isLockedByOverride
   );
-
-  const isEnrolled = hasCourseEnrollment(course, currentUser, enrollments);
   const hasAccess = hasLessonEnrollment(
     course,
     targetLesson,
     currentUser,
-    enrollments
+    enrollments,
+    isLockedByOverride
   );
   const isLocked = !hasAccess;
 
@@ -383,67 +534,87 @@ export async function getLessonPageData(
 // ============================================================================
 
 export async function getDashboardData(): Promise<DashboardData> {
-  const { currentUser, enrollments, progressMap } = await getUserCloudContext();
+  const [{ currentUser, enrollments, progressMap }, overridesMap] =
+    await Promise.all([getUserCloudContext(), getCourseOverridesMap()]);
 
-  const publishedCourses = MOCK_COURSES.filter((c) => c.is_published).sort(
-    (a, b) =>
-      a.year_level - b.year_level ||
-      a.term - b.term ||
-      a.created_at.localeCompare(b.created_at)
-  );
+  const visibleCourses = MOCK_COURSES.map((baseCourse) =>
+    resolveEffectiveCourse(baseCourse, overridesMap.get(baseCourse.id))
+  )
+    .filter(({ course }) => isCourseVisibleForUser(course, currentUser))
+    .sort(
+      (a, b) =>
+        a.course.year_level - b.course.year_level ||
+        a.course.term - b.course.term ||
+        a.course.created_at.localeCompare(b.course.created_at)
+    );
 
   let totalCompletedLessons = 0;
   let totalLessonsAcrossEnrolled = 0;
   let overallScoreSum = 0;
   let overallScoreCount = 0;
 
-  const courses: DashboardCourseProgress[] = publishedCourses.map((course) => {
-    const courseLessons = MOCK_LESSONS.filter(
-      (l) => l.course_id === course.id
-    ).sort((a, b) => a.order_index - b.order_index);
+  const courses: DashboardCourseProgress[] = visibleCourses.map(
+    ({ course, isLockedByOverride, freeLessonIdsOverride }) => {
+      const courseLessons = MOCK_LESSONS.filter(
+        (l) => l.course_id === course.id
+      )
+        .sort((a, b) => a.order_index - b.order_index)
+        .map((l) => applyLessonFreeOverride(l, freeLessonIdsOverride));
 
-    const isEnrolled = hasCourseEnrollment(course, currentUser, enrollments);
-    if (isEnrolled || !isDatabaseConfigured()) {
-      totalLessonsAcrossEnrolled += courseLessons.length;
-    }
-
-    let completedLessons = 0;
-    let courseScoreSum = 0;
-    let courseScoreCount = 0;
-    let nextLessonId: string | null = null;
-
-    for (const lesson of courseLessons) {
-      const progress = progressMap[lesson.id];
-      const completed = Boolean(progress?.is_completed);
-      if (completed) {
-        completedLessons += 1;
-        totalCompletedLessons += 1;
-      } else if (
-        nextLessonId === null &&
-        hasLessonEnrollment(course, lesson, currentUser, enrollments)
-      ) {
-        nextLessonId = lesson.id;
+      const isEnrolled = hasCourseEnrollment(
+        course,
+        currentUser,
+        enrollments,
+        isLockedByOverride
+      );
+      if (isEnrolled || !isDatabaseConfigured()) {
+        totalLessonsAcrossEnrolled += courseLessons.length;
       }
 
-      if (typeof progress?.best_quiz_score === "number") {
-        courseScoreSum += progress.best_quiz_score;
-        courseScoreCount += 1;
-        overallScoreSum += progress.best_quiz_score;
-        overallScoreCount += 1;
-      }
-    }
+      let completedLessons = 0;
+      let courseScoreSum = 0;
+      let courseScoreCount = 0;
+      let nextLessonId: string | null = null;
 
-    return {
-      course: sanitizeCourseForClient(course),
-      totalLessons: courseLessons.length,
-      completedLessons,
-      averageQuizScore:
-        courseScoreCount > 0
-          ? Math.round(courseScoreSum / courseScoreCount)
-          : null,
-      nextLessonId: nextLessonId ?? courseLessons[0]?.id ?? null,
-    };
-  });
+      for (const lesson of courseLessons) {
+        const progress = progressMap[lesson.id];
+        const completed = Boolean(progress?.is_completed);
+        if (completed) {
+          completedLessons += 1;
+          totalCompletedLessons += 1;
+        } else if (
+          nextLessonId === null &&
+          hasLessonEnrollment(
+            course,
+            lesson,
+            currentUser,
+            enrollments,
+            isLockedByOverride
+          )
+        ) {
+          nextLessonId = lesson.id;
+        }
+
+        if (typeof progress?.best_quiz_score === "number") {
+          courseScoreSum += progress.best_quiz_score;
+          courseScoreCount += 1;
+          overallScoreSum += progress.best_quiz_score;
+          overallScoreCount += 1;
+        }
+      }
+
+      return {
+        course: sanitizeCourseForClient(course),
+        totalLessons: courseLessons.length,
+        completedLessons,
+        averageQuizScore:
+          courseScoreCount > 0
+            ? Math.round(courseScoreSum / courseScoreCount)
+            : null,
+        nextLessonId: nextLessonId ?? courseLessons[0]?.id ?? null,
+      };
+    }
+  );
 
   return {
     currentUser,
@@ -477,17 +648,33 @@ export async function getInteractiveById(
     return null;
   }
 
-  const lesson = MOCK_LESSONS.find((l) => l.id === interactive.lesson_id);
-  const course = lesson
-    ? MOCK_COURSES.find((c) => c.id === lesson.course_id)
+  const baseLesson = MOCK_LESSONS.find((l) => l.id === interactive.lesson_id);
+  const baseCourse = baseLesson
+    ? MOCK_COURSES.find((c) => c.id === baseLesson.course_id)
     : undefined;
 
-  if (!lesson || !course || !course.is_published) {
+  if (!baseLesson || !baseCourse) {
+    return null;
+  }
+
+  const [currentUser, overridesMap] = await Promise.all([
+    getCurrentUser(),
+    getCourseOverridesMap(),
+  ]);
+
+  const { course, isLockedByOverride, freeLessonIdsOverride } =
+    resolveEffectiveCourse(baseCourse, overridesMap.get(baseCourse.id));
+  const lesson = applyLessonFreeOverride(baseLesson, freeLessonIdsOverride);
+
+  if (!isCourseVisibleForUser(course, currentUser)) {
+    return null;
+  }
+
+  if (isLockedByOverride && currentUser?.role !== "admin") {
     return null;
   }
 
   if (course.is_paid && !lesson.is_free_preview) {
-    const currentUser = await getCurrentUser();
     if (!currentUser) {
       return null;
     }
@@ -515,16 +702,25 @@ export async function getInteractiveById(
 // ============================================================================
 
 export async function getSearchIndex(): Promise<SearchIndexItem[]> {
-  const publishedCourses = MOCK_COURSES.filter((c) => c.is_published).sort(
-    (a, b) =>
-      a.year_level - b.year_level ||
-      a.term - b.term ||
-      a.created_at.localeCompare(b.created_at)
-  );
+  const [currentUser, overridesMap] = await Promise.all([
+    getCurrentUser(),
+    getCourseOverridesMap(),
+  ]);
+
+  const visibleCourses = MOCK_COURSES.map((baseCourse) =>
+    resolveEffectiveCourse(baseCourse, overridesMap.get(baseCourse.id)).course
+  )
+    .filter((c) => isCourseVisibleForUser(c, currentUser))
+    .sort(
+      (a, b) =>
+        a.year_level - b.year_level ||
+        a.term - b.term ||
+        a.created_at.localeCompare(b.created_at)
+    );
 
   const items: SearchIndexItem[] = [];
 
-  for (const course of publishedCourses) {
+  for (const course of visibleCourses) {
     items.push({
       type: "مقرر",
       title: `${course.code} · ${course.title_en}`,

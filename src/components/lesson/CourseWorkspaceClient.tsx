@@ -1,28 +1,20 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ChangeEvent,
-} from "react";
-import Image from "next/image";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import confetti from "canvas-confetti";
 import {
   ArrowRight,
+  BookOpen,
   BookmarkCheck,
   Check,
   CheckSquare,
+  Clock,
   Copy,
-  Cpu,
-  Download,
+  CreditCard,
   ExternalLink,
-  FileCode2,
   FileText,
-  KeyRound,
   ListVideo,
   Lock,
   Maximize2,
@@ -33,24 +25,21 @@ import {
   Sparkles,
   Sun,
   Table2,
-  Upload,
   X,
   Zap,
 } from "lucide-react";
 import { saveLastLesson } from "@/components/course/lastLessonStore";
-import { BrandName } from "@/components/layout/BrandName";
 import { Footer } from "@/components/layout/Footer";
 import { PomodoroTimer } from "@/components/layout/PomodoroTimer";
 import { toggleTheme, useTheme } from "@/components/layout/themeStore";
 import { splitBilingualTitle } from "@/lib/courseTheme";
+import { getStructuredSummaryByLessonId } from "@/lib/chapters";
 import {
   emitToast,
   openMistakeBankModal,
   openUnlockModal,
 } from "@/lib/stores/events";
 import {
-  exportPortalBackupJson,
-  importPortalBackupJson,
   setLastVisited,
   setLessonNote,
   toggleLessonComplete,
@@ -62,7 +51,6 @@ import type {
   Question,
   VideoChapter,
 } from "@/types/database";
-import { getStructuredSummaryByLessonId } from "@/lib/chapters";
 import ChapterAiAssistant from "./ChapterAiAssistant";
 import ChapterSummarySheet from "./ChapterSummarySheet";
 import CourseInteractiveLab from "./CourseInteractiveLab";
@@ -70,12 +58,46 @@ import MarkdownViewer from "./MarkdownViewer";
 import QuizEngine from "./QuizEngine";
 import VideoPlayer from "./VideoPlayer";
 
-type WorkspaceTab = "video" | "lab" | "summary" | "quiz" | "ai";
+type WorkspaceTab = "video" | "lab" | "summary" | "quiz";
+type CompanionMode = "notes" | "ai";
+type MobileSheetMode = "chapters" | "notes" | "ai" | null;
 
 interface CourseWorkspaceClientProps {
   data: LessonPageData;
   requestedLessonId?: string;
 }
+
+const PILLAR_TABS: ReadonlyArray<{
+  id: WorkspaceTab;
+  desktopLabel: string;
+  mobileLabel: string;
+  Icon: typeof PlayCircle;
+}> = [
+  {
+    id: "video",
+    desktopLabel: "فيديو الشرح",
+    mobileLabel: "فيديو",
+    Icon: PlayCircle,
+  },
+  {
+    id: "lab",
+    desktopLabel: "اقرأ الفصل",
+    mobileLabel: "اقرأ",
+    Icon: BookOpen,
+  },
+  {
+    id: "summary",
+    desktopLabel: "ملخص سريع",
+    mobileLabel: "ملخص",
+    Icon: FileText,
+  },
+  {
+    id: "quiz",
+    desktopLabel: "أسئلة وكويزات",
+    mobileLabel: "كويزات",
+    Icon: CheckSquare,
+  },
+];
 
 function isSafeHttpUrl(raw: string | null | undefined): string | null {
   if (!raw) return null;
@@ -95,10 +117,10 @@ function fireCelebrationConfetti(): void {
   try {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     void confetti({
-      particleCount: 60,
-      spread: 70,
+      particleCount: 55,
+      spread: 68,
       origin: { y: 0.7 },
-      colors: ["#c25e33", "#66c7a6", "#7ca7f0"],
+      colors: ["#d8b07a", "#6ec4a3", "#c25e33"],
     });
   } catch {
     // ignore
@@ -292,18 +314,59 @@ function getFallbackQuestions(course: Course, lessonId: string): Question[] {
         "أين يحتفظ نظام التشغيل بحالة كل عملية (Registers, PC, State)؟",
       code_snippet: null,
       code_lang: null,
-      options: [
-        "Cache Line",
-        "PCB (Process Control Block)",
-        "BIOS",
-        "ALU",
-      ],
+      options: ["Cache Line", "PCB (Process Control Block)", "BIOS", "ALU"],
       correct_index: 1,
       explanation:
         "الـ PCB هو السجل الذي يحفظ كل بيانات العملية عند التبديل (Context Switch).",
       order_index: 2,
     },
   ];
+}
+
+function SwissProgressRing({ pct }: { pct: number }) {
+  const clamped = Math.max(0, Math.min(100, pct));
+  const r = 15;
+  const circumference = 2 * Math.PI * r;
+  const offset = circumference * (1 - clamped / 100);
+
+  return (
+    <div className="relative flex h-[38px] w-[38px] shrink-0 items-center justify-center">
+      <svg
+        width="38"
+        height="38"
+        viewBox="0 0 38 38"
+        className="-rotate-90"
+        aria-hidden="true"
+      >
+        <circle
+          cx="19"
+          cy="19"
+          r={r}
+          fill="none"
+          stroke="var(--border-soft)"
+          strokeWidth="2.6"
+        />
+        <circle
+          cx="19"
+          cy="19"
+          r={r}
+          fill="none"
+          stroke="var(--success-fg)"
+          strokeWidth="2.8"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="transition-[stroke-dashoffset] duration-500"
+        />
+      </svg>
+      <span
+        className="font-mono-code absolute text-[9.5px] font-black tabular-nums"
+        style={{ color: "var(--text-primary)" }}
+      >
+        {clamped}%
+      </span>
+    </div>
+  );
 }
 
 function CheatSheetTable({ course }: { course: Course }) {
@@ -313,7 +376,10 @@ function CheatSheetTable({ course }: { course: Course }) {
   return (
     <div
       className="w-full max-w-full overflow-x-auto rounded-2xl border"
-      style={{ borderColor: "var(--border-soft)" }}
+      style={{
+        borderColor: "var(--border-soft)",
+        background: "var(--bg-canvas)",
+      }}
     >
       <table className="w-full min-w-[340px] text-right text-[12px]">
         <thead
@@ -376,18 +442,6 @@ function CheatSheetTable({ course }: { course: Course }) {
   );
 }
 
-const TOOL_TABS: ReadonlyArray<{
-  id: WorkspaceTab;
-  label: string;
-  Icon: typeof PlayCircle;
-}> = [
-  { id: "video", label: "فيديو الشرح", Icon: PlayCircle },
-  { id: "lab", label: "الشرح التفاعلي", Icon: Cpu },
-  { id: "summary", label: "الملخص والأكواد", Icon: FileCode2 },
-  { id: "quiz", label: "الكويزات والأسئلة", Icon: CheckSquare },
-  { id: "ai", label: "المساعد الذكي", Icon: Sparkles },
-];
-
 export default function CourseWorkspaceClient({
   data,
   requestedLessonId,
@@ -397,16 +451,29 @@ export default function CourseWorkspaceClient({
 
   const portal = usePortalState();
   const theme = useTheme();
+  const isDark = theme === "dark";
+  const searchParams = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>("video");
-  const [hasOpenedLab, setHasOpenedLab] = useState(false);
+  const initialQueryTab = useMemo<WorkspaceTab | null>(() => {
+    const rawTab = searchParams.get("tab")?.toLowerCase();
+    if (rawTab === "summary") return "summary";
+    if (rawTab === "read" || rawTab === "lab") return "lab";
+    if (rawTab === "quiz") return "quiz";
+    if (rawTab === "video") return "video";
+    return null;
+  }, [searchParams]);
+
+  const [selectedTab, setSelectedTab] = useState<WorkspaceTab | null>(null);
+  const activeTab: WorkspaceTab = selectedTab ?? initialQueryTab ?? "video";
+  const [labMounted, setLabMounted] = useState(false);
+  const hasOpenedLab = labMounted || activeTab === "lab";
   const [examNight, setExamNight] = useState(false);
-  const [notesOpen, setNotesOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
-  const autoFocusByLabRef = useRef(false);
-  const [mobileLessonsOpen, setMobileLessonsOpen] = useState(false);
+  const [desktopCompanion, setDesktopCompanion] =
+    useState<CompanionMode | null>(null);
+  const [mobileSheet, setMobileSheet] = useState<MobileSheetMode>(null);
   const [copiedCode, setCopiedCode] = useState(false);
-  const notesDrawerRef = useRef<HTMLDivElement | null>(null);
+  const notesTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const sortedLessons = useMemo(
     () => [...allLessons].sort((a, b) => a.order_index - b.order_index),
@@ -430,7 +497,13 @@ export default function CourseWorkspaceClient({
       portal.unlockedCourses.includes(course.id) ||
       portal.unlockedCourses.includes(course.slug)
     );
-  }, [course.is_paid, course.id, course.slug, data.isEnrolled, portal.unlockedCourses]);
+  }, [
+    course.is_paid,
+    course.id,
+    course.slug,
+    data.isEnrolled,
+    portal.unlockedCourses,
+  ]);
 
   const isLockedView = data.isLocked || !lesson;
 
@@ -468,10 +541,13 @@ export default function CourseWorkspaceClient({
   );
 
   const rawTitle = lesson?.title ?? activeLessonMeta?.title ?? course.title;
-  const parsedLessonTitle = useMemo(() => splitBilingualTitle(rawTitle), [rawTitle]);
+  const parsedLessonTitle = useMemo(
+    () => splitBilingualTitle(rawTitle),
+    [rawTitle]
+  );
   const lessonNumPadded = String(currentLessonIndex + 1).padStart(2, "0");
 
-  // Save last visited lesson for resume banner (/courses and unified portalStore v3)
+  // Save last visited lesson for resume banner (/courses and unified portalStore)
   useEffect(() => {
     if (!currentLessonId || isLockedView) return;
     saveLastLesson({
@@ -499,14 +575,14 @@ export default function CourseWorkspaceClient({
     activeLessonMeta?.section_title,
   ]);
 
-  // Lock body scroll & listen for Escape when Slide-Over Mobile Lessons Drawer is open
+  // Lock body scroll & listen for Escape when mobile bottom sheet is open
   useEffect(() => {
-    if (!mobileLessonsOpen) return;
+    if (!mobileSheet) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setMobileLessonsOpen(false);
+        setMobileSheet(null);
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -514,7 +590,23 @@ export default function CourseWorkspaceClient({
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [mobileLessonsOpen]);
+  }, [mobileSheet]);
+
+  // Close desktop slide-over on Escape (helpful on lg overlay)
+  useEffect(() => {
+    if (!desktopCompanion) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        const target = e.target as HTMLElement | null;
+        if (target?.tagName === "TEXTAREA" || target?.tagName === "INPUT") {
+          return;
+        }
+        setDesktopCompanion(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [desktopCompanion]);
 
   const firstFreeLesson = useMemo(
     () => sortedLessons.find((l) => l.is_free_preview) ?? null,
@@ -530,7 +622,6 @@ export default function CourseWorkspaceClient({
   }, [lesson, activeLessonMeta, course]);
 
   const activeKeyCode = useMemo(() => {
-    // Respect explicit null (e.g., theory/non-coding courses like Operating Systems)
     if (lesson?.key_code === null || activeLessonMeta?.key_code === null) {
       return null;
     }
@@ -541,7 +632,9 @@ export default function CourseWorkspaceClient({
     return getFallbackKeyCode(course);
   }, [lesson, activeLessonMeta, course]);
 
-  const hasLessonCode = Boolean(activeKeyCode && activeKeyCode.trim().length > 0);
+  const hasLessonCode = Boolean(
+    activeKeyCode && activeKeyCode.trim().length > 0
+  );
   const structuredSummary = useMemo(
     () =>
       currentLessonId ? getStructuredSummaryByLessonId(currentLessonId) : null,
@@ -577,26 +670,25 @@ export default function CourseWorkspaceClient({
 
   const currentNote = portal.notes[currentLessonId] ?? "";
 
-  const handleSelectTab = useCallback(
-    (tab: WorkspaceTab) => {
-      setExamNight(false);
-      setActiveTab(tab);
-      if (tab === "lab" || tab === "summary") {
-        if (tab === "lab") {
-          setHasOpenedLab(true);
-        }
-        // Automatically open Full-Width Focus Mode for Interactive Explanation & Summary
-        if (!focusMode) {
-          autoFocusByLabRef.current = true;
-          setFocusMode(true);
-        }
-      } else if (autoFocusByLabRef.current) {
-        autoFocusByLabRef.current = false;
-        setFocusMode(false);
-      }
-    },
-    [focusMode]
+  const courseMistakesCount = useMemo(
+    () =>
+      portal.mistakes.filter(
+        (m) => m.courseId === course.id || m.courseCode === course.code
+      ).length,
+    [portal.mistakes, course.id, course.code]
   );
+
+  const handleSelectTab = useCallback((tab: WorkspaceTab) => {
+    setExamNight(false);
+    setSelectedTab(tab);
+    if (tab === "lab") {
+      setLabMounted(true);
+    }
+  }, []);
+
+  const handleToggleDesktopCompanion = useCallback((mode: CompanionMode) => {
+    setDesktopCompanion((prev) => (prev === mode ? null : mode));
+  }, []);
 
   const handleToggleDone = useCallback(() => {
     if (!currentLessonId) return;
@@ -609,21 +701,17 @@ export default function CourseWorkspaceClient({
     }));
 
     if (nowDone) {
-      emitToast("تم حفظ إنجازك في الدرس ✓");
+      emitToast("تم حفظ إنجازك في الفصل ✓");
       const projectedDone = sortedLessons.filter(
         (l) => l.id === currentLessonId || completedSet.has(l.id)
       ).length;
-      if (
-        sortedLessons.length > 0 &&
-        projectedDone >= sortedLessons.length
-      ) {
+      if (sortedLessons.length > 0 && projectedDone >= sortedLessons.length) {
         fireCelebrationConfetti();
       }
     } else {
-      emitToast("تم إلغاء تحديد الدرس كمكتمل");
+      emitToast("تم إلغاء تحديد الفصل كمكتمل");
     }
 
-    // Best-effort sync with /api/progress
     void fetch("/api/progress", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -676,205 +764,423 @@ export default function CourseWorkspaceClient({
     emitToast("تم نسخ ملاحظاتك ✓");
   }, [currentNote]);
 
+  const handleInsertTimestamp = useCallback(() => {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const stamp = `[CH ${lessonNumPadded} · ${hh}:${mm}] `;
+    const separator =
+      currentNote.length > 0 && !currentNote.endsWith("\n") ? "\n" : "";
+    setLessonNote(currentLessonId, `${currentNote}${separator}${stamp}`);
+    window.requestAnimationFrame(() => {
+      const el = notesTextareaRef.current;
+      if (el) {
+        el.focus();
+        el.selectionStart = el.value.length;
+        el.selectionEnd = el.value.length;
+      }
+    });
+  }, [currentLessonId, currentNote, lessonNumPadded]);
+
   const handleTriggerUnlock = useCallback(() => {
     openUnlockModal({
       courseId: course.id,
       courseTitle: course.title,
       courseCode: course.code,
       unlockCode: course.unlock_code || "AI2026",
+      price: course.price,
     });
-  }, [course.id, course.title, course.code, course.unlock_code]);
-
-  const backupInputRef = useRef<HTMLInputElement | null>(null);
-
-  const courseMistakesCount = useMemo(
-    () =>
-      portal.mistakes.filter(
-        (m) => m.courseId === course.id || m.courseCode === course.code
-      ).length,
-    [portal.mistakes, course.id, course.code]
-  );
-
-  const handleExportCourseBackup = useCallback(() => {
-    const json = exportPortalBackupJson();
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        void navigator.clipboard.writeText(json);
-      }
-    } catch {
-      // ignore
-    }
-    try {
-      const blob = new Blob([json], { type: "application/json;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `cs-portal-backup-${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch {
-      // ignore
-    }
-    emitToast("تم نسخ وتحميل نسخة تقدمك الاحتياطية (JSON) ✓");
-  }, []);
-
-  const handleImportCourseBackup = useCallback(
-    async (e: ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      e.target.value = "";
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const result = importPortalBackupJson(text);
-        if (result.ok) {
-          emitToast("تمت استعادة تقدمك وبياناتك بنجاح ✓");
-        } else {
-          emitToast(result.error);
-        }
-      } catch {
-        emitToast("تعذّر قراءة ملف النسخة الاحتياطية.");
-      }
-    },
-    []
-  );
-
-  const handleToggleNotes = useCallback(() => {
-    setNotesOpen((prev) => {
-      const next = !prev;
-      if (next) {
-        window.setTimeout(() => {
-          notesDrawerRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest",
-          });
-        }, 80);
-      }
-      return next;
-    });
-  }, []);
+  }, [course.id, course.title, course.code, course.unlock_code, course.price]);
 
   const handleQuizScoreUpdate = useCallback(() => {
-    // Score is already persisted in portalStore by QuizEngine
+    // Score is persisted in portalStore by QuizEngine
   }, []);
 
-  const isDark = theme === "dark";
+  /* ==================== REUSABLE CHAPTERS LIST RENDERER ==================== */
+  const renderChaptersList = (onSelectItem?: () => void) => (
+    <div className="flex-1 space-y-1.5 overflow-y-auto p-3">
+      {sortedLessons.map((item, idx) => {
+        const done = completedSet.has(item.id);
+        const locked =
+          course.is_paid && !item.is_free_preview && !isUnlockedLocally;
+        const active = item.id === currentLessonId;
+        const itemTitle = splitBilingualTitle(item.title);
+        const subEn = item.title_en ?? itemTitle.secondaryEn ?? "";
+        const durationStr = item.duration_minutes
+          ? `${item.duration_minutes} د`
+          : "";
+
+        const cardStyle = {
+          background: active ? "var(--accent-warm-soft)" : "var(--bg-canvas)",
+          borderColor: active
+            ? "color-mix(in srgb, var(--accent-warm) 55%, transparent)"
+            : "var(--border-soft)",
+        };
+
+        const badgeStyle = done
+          ? {
+              background: "var(--success-soft)",
+              borderColor:
+                "color-mix(in srgb, var(--success-fg) 42%, transparent)",
+              color: "var(--success-fg)",
+            }
+          : active
+            ? {
+                background: "var(--accent-warm)",
+                borderColor: "var(--accent-warm)",
+                color: "var(--atelier-cta-fg)",
+              }
+            : {
+                background: "var(--bg-subtle)",
+                borderColor: "var(--border-soft)",
+                color: "var(--text-secondary)",
+              };
+
+        const inner = (
+          <>
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span
+                className="font-mono-code flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[11px] font-black"
+                style={badgeStyle}
+              >
+                {done ? "✓" : String(idx + 1).padStart(2, "0")}
+              </span>
+              <div className="min-w-0 text-right">
+                <div
+                  className="truncate text-[12.5px] font-bold"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {itemTitle.primary}
+                </div>
+                {subEn || durationStr ? (
+                  <div
+                    className="font-en truncate text-[10.5px]"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    {[subEn, durationStr].filter(Boolean).join(" · ")}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            {locked ? (
+              <span
+                className="inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-bold"
+                style={{
+                  background: "var(--bg-surface)",
+                  borderColor: "var(--border-soft)",
+                  color: "var(--text-muted)",
+                }}
+              >
+                <Lock className="h-2.5 w-2.5" />
+                <span>مغلق</span>
+              </span>
+            ) : null}
+          </>
+        );
+
+        if (locked) {
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => {
+                onSelectItem?.();
+                handleTriggerUnlock();
+              }}
+              className="flex min-h-[48px] w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-2.5 py-2 text-right opacity-80 transition-all hover:opacity-100"
+              style={cardStyle}
+            >
+              {inner}
+            </button>
+          );
+        }
+
+        return (
+          <Link
+            key={item.id}
+            href={`/courses/${course.slug}/${item.id}`}
+            onClick={onSelectItem}
+            className="flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl border px-2.5 py-2 text-right transition-all hover:border-[var(--border-strong)]"
+            style={cardStyle}
+          >
+            {inner}
+          </Link>
+        );
+      })}
+    </div>
+  );
+
+  /* ==================== REUSABLE NOTES EDITOR PANEL ==================== */
+  const renderNotesPanel = () => (
+    <div className="flex h-full min-h-0 flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span
+          className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10.5px] font-extrabold"
+          style={{
+            background: "var(--success-soft)",
+            color: "var(--success-fg)",
+          }}
+        >
+          <Check className="h-3 w-3" />
+          <span>حفظ تلقائي ✓</span>
+        </span>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleInsertTimestamp}
+            className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-lg border px-2.5 text-[11px] font-bold transition-colors hover:border-[var(--border-strong)]"
+            style={{
+              background: "var(--bg-canvas)",
+              borderColor: "var(--border-soft)",
+              color: "var(--text-primary)",
+            }}
+          >
+            <Clock className="h-3 w-3" style={{ color: "var(--accent-warm)" }} />
+            <span>+ طابع زمني</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleCopyNotes}
+            className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-lg border px-2.5 text-[11px] font-bold transition-colors hover:border-[var(--border-strong)]"
+            style={{
+              background: "var(--bg-canvas)",
+              borderColor: "var(--border-soft)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            <Copy className="h-3 w-3" />
+            <span>نسخ</span>
+          </button>
+        </div>
+      </div>
+
+      <textarea
+        ref={notesTextareaRef}
+        value={currentNote}
+        onChange={(e) => setLessonNote(currentLessonId, e.target.value)}
+        placeholder="سجّل ملاحظاتك وأفكار الشرح هنا... تتحفظ تلقائياً على حسابك وتقدر ترجعلها في أي وقت."
+        className="min-h-[240px] flex-1 resize-none rounded-2xl border p-3.5 text-[13px] leading-[1.85] outline-none transition-colors focus:border-[var(--border-strong)]"
+        style={{
+          background: "var(--bg-canvas)",
+          borderColor: "var(--border-soft)",
+          color: "var(--text-primary)",
+        }}
+      />
+    </div>
+  );
+
+  /* ==================== REUSABLE COMPANION DRAWER BODY ==================== */
+  const renderCompanionBody = (
+    mode: CompanionMode,
+    onSwitchMode: (next: CompanionMode) => void,
+    onClose: () => void
+  ) => (
+    <div className="flex h-full min-h-0 flex-col">
+      {/* Switchable Header: Notes | AI Copilot */}
+      <div
+        className="flex items-center justify-between gap-2 border-b p-3"
+        style={{ borderColor: "var(--border-soft)" }}
+      >
+        <div
+          className="grid flex-1 grid-cols-2 gap-1 rounded-xl border p-0.5"
+          style={{
+            background: "var(--bg-canvas)",
+            borderColor: "var(--border-soft)",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => onSwitchMode("notes")}
+            className="inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2 text-[11.5px] font-extrabold transition-all"
+            style={
+              mode === "notes"
+                ? {
+                    background: "var(--bg-surface)",
+                    color: "var(--text-primary)",
+                    boxShadow: "var(--shadow-pill)",
+                  }
+                : { color: "var(--text-muted)" }
+            }
+          >
+            <NotebookPen className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">ملاحظات الفصل</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSwitchMode("ai")}
+            className="inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2 text-[11.5px] font-extrabold transition-all"
+            style={
+              mode === "ai"
+                ? {
+                    background: "var(--accent-warm-soft)",
+                    color: "var(--accent-warm-text)",
+                  }
+                : { color: "var(--text-muted)" }
+            }
+          >
+            <Sparkles className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">المساعد الذكي</span>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="إغلاق اللوحة الجانبية"
+          className="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border transition-colors hover:border-[var(--border-strong)]"
+          style={{
+            background: "var(--bg-canvas)",
+            borderColor: "var(--border-soft)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="min-h-0 flex-1 overflow-hidden p-3">
+        {mode === "notes" ? (
+          renderNotesPanel()
+        ) : (
+          <ChapterAiAssistant
+            key={currentLessonId}
+            courseId={course.id}
+            courseCode={course.code}
+            courseTitleEn={course.title_en}
+            lessonId={currentLessonId}
+            lessonTitle={parsedLessonTitle.primary}
+            hasStructuredSummary={Boolean(structuredSummary)}
+            compact
+            onGoToSummary={() => handleSelectTab("summary")}
+            onTriggerUnlock={handleTriggerUnlock}
+          />
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="flex min-h-screen w-full flex-1 flex-col">
-      {/* ==================== WORKSPACE TOPBAR ==================== */}
+    <div
+      className="relative flex min-h-screen w-full flex-1 flex-col"
+      style={{ background: "var(--bg-canvas)" }}
+    >
+      {/* Subtle Dual Atelier Dot Matrix Canvas Backdrop */}
+      <div
+        aria-hidden="true"
+        className="atelier-blueprint-grid pointer-events-none fixed inset-0 z-0 opacity-75"
+      />
+
+      {/* ==================== FULL-WIDTH CONCEPT A TOPBAR ==================== */}
       <header
-        className="sticky top-0 z-40 border-b backdrop-blur-xl shadow-[0_1px_16px_rgba(18,28,45,0.05)]"
+        className="sticky top-0 z-40 border-b backdrop-blur-xl"
         style={{
-          background: isDark
-            ? "rgba(20, 27, 37, 0.90)"
-            : "rgba(255, 255, 255, 0.90)",
-          borderColor: "var(--border-soft)",
+          background: "var(--atelier-topbar-bg)",
+          borderColor: "var(--atelier-topbar-border)",
         }}
       >
-        <div className="mx-auto flex h-14 sm:h-16 max-w-[1260px] items-center justify-between gap-2 sm:gap-3 px-3 sm:px-6 lg:px-8">
-          {/* Right side (RTL start): Founder Avatar + Clean Breadcrumb (المقررات / المادة) */}
-          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
+        {/* DESKTOP TOPBAR (lg+) */}
+        <div className="mx-auto hidden h-16 max-w-[1480px] items-center justify-between gap-3 px-4 lg:flex xl:px-6">
+          {/* Right (RTL start): Back pill + Mono code + Course EN title */}
+          <div className="flex min-w-0 items-center gap-2">
             <Link
               href="/courses"
-              className="group inline-flex items-center gap-1.5 sm:gap-2 shrink-0 rounded-full py-1 pl-1.5 sm:pl-2.5 pr-1 transition-colors hover:bg-[var(--bg-subtle)]"
-              title="العودة لمكتبة المقررات"
+              className="group inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[12px] font-extrabold transition-all hover:border-[var(--border-strong)]"
+              style={{
+                background: "var(--bg-surface)",
+                borderColor: "var(--border-soft)",
+                color: "var(--text-primary)",
+              }}
+              title="العودة للمواد"
             >
-              <span className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden ring-[1.5px] ring-[#c25e33] shrink-0 shadow-xs">
-                <Image
-                  src="/images/founder.jpg"
-                  alt="ENG. AHMED AMIR"
-                  fill
-                  sizes="32px"
-                  className="object-cover object-[50%_15%]"
-                />
-              </span>
-              <span
-                className="inline-flex items-center gap-1 text-[12px] font-bold transition-colors group-hover:text-[var(--text-primary)]"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" />
-                <span className="hidden sm:inline">المقررات</span>
-              </span>
+              <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" />
+              <span>المواد</span>
             </Link>
 
             <span
-              aria-hidden="true"
-              className="text-[14px] font-light select-none shrink-0 opacity-40"
-              style={{ color: "var(--text-muted)" }}
+              className="font-mono-code shrink-0 rounded-lg border px-2 py-1 text-[10.5px] font-black"
+              style={{
+                background: "var(--bg-subtle)",
+                borderColor: "var(--border-soft)",
+                color: "var(--accent-warm-text)",
+              }}
             >
-              /
+              {course.code}
             </span>
 
-            <div className="flex min-w-0 items-center gap-2">
-              <span
-                className="hidden sm:inline-block font-mono-code shrink-0 rounded-md px-2 py-0.5 text-[10.5px] font-extrabold"
-                style={{
-                  background: "var(--bg-subtle)",
-                  color: "var(--text-primary)",
-                }}
-              >
-                {course.code}
-              </span>
-              <span
-                className="font-en truncate text-[13.5px] font-black sm:text-[15px]"
-                style={{ color: "var(--text-primary)" }}
-              >
-                {course.title_en}
-              </span>
-            </div>
+            <span
+              className="font-en max-w-[145px] truncate text-[13.5px] font-black xl:max-w-[210px]"
+              style={{ color: "var(--text-primary)" }}
+              title={course.title_en}
+            >
+              {course.title_en}
+            </span>
           </div>
 
-          {/* Center (Desktop): Unified Segmented Studio Controls Capsule */}
+          {/* Center: The 4 REAL Study Pillars Segmented Bar */}
           <div
-            role="toolbar"
-            aria-label="أدوات مساحة المذاكرة"
-            className="hidden lg:flex items-center gap-1 p-1 rounded-full border shrink-0"
+            role="tablist"
+            aria-label="أركان المذاكرة الأربعة"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border p-1"
             style={{
               background: "var(--bg-canvas)",
               borderColor: "var(--border-soft)",
             }}
           >
-            <button
-              type="button"
-              onClick={() => setExamNight((prev) => !prev)}
-              aria-pressed={examNight}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-extrabold transition-all cursor-pointer ${
-                examNight ? "shadow-xs" : "hover:text-[var(--text-primary)]"
-              }`}
-              style={
-                examNight
-                  ? {
-                      background: "#c25e33",
-                      color: "#ffffff",
-                    }
-                  : {
-                      color: "var(--text-secondary)",
-                    }
-              }
-            >
-              <Zap
-                className="h-3.5 w-3.5 shrink-0"
-                style={{ color: examNight ? "#ffffff" : "var(--accent-warm)" }}
-              />
-              <span>{examNight ? "خروج ليلة الامتحان" : "ليلة الامتحان"}</span>
-            </button>
+            {PILLAR_TABS.map(({ id, desktopLabel, Icon }) => {
+              const isActive = !examNight && activeTab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => handleSelectTab(id)}
+                  className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[12px] font-extrabold whitespace-nowrap transition-all xl:px-3.5"
+                  style={
+                    isActive
+                      ? {
+                          background: "var(--atelier-cta-bg)",
+                          color: "var(--atelier-cta-fg)",
+                          boxShadow: "var(--shadow-pill)",
+                        }
+                      : {
+                          color: "var(--text-secondary)",
+                        }
+                  }
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span>{desktopLabel}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Left (RTL end): Focused Study Tools Cluster */}
+          <div className="flex shrink-0 items-center gap-1.5">
+            <PomodoroTimer className="hidden xl:inline-flex" />
 
             <button
               type="button"
-              onClick={handleToggleNotes}
-              aria-pressed={notesOpen}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all cursor-pointer ${
-                notesOpen ? "shadow-xs" : "hover:text-[var(--text-primary)]"
-              }`}
+              onClick={() => handleToggleDesktopCompanion("notes")}
+              aria-pressed={desktopCompanion === "notes"}
+              title="ملاحظات الفصل"
+              className="relative inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-[11.5px] font-extrabold transition-all hover:border-[var(--border-strong)]"
               style={
-                notesOpen
+                desktopCompanion === "notes"
                   ? {
-                      background: "var(--bg-surface)",
-                      color: "var(--text-primary)",
+                      background: "var(--brand-soft)",
+                      borderColor:
+                        "color-mix(in srgb, var(--brand-primary) 42%, transparent)",
+                      color: "var(--brand-soft-text)",
                     }
                   : {
+                      background: "var(--bg-surface)",
+                      borderColor: "var(--border-soft)",
                       color: "var(--text-secondary)",
                     }
               }
@@ -885,29 +1191,85 @@ export default function CourseWorkspaceClient({
                 <span
                   aria-hidden="true"
                   className="h-1.5 w-1.5 rounded-full shrink-0"
-                  style={{ background: "#c25e33" }}
+                  style={{ background: "var(--accent-warm)" }}
                 />
               ) : null}
             </button>
 
             <button
               type="button"
-              onClick={() => {
-                autoFocusByLabRef.current = false;
-                setFocusMode((prev) => !prev);
-              }}
+              onClick={() => handleToggleDesktopCompanion("ai")}
+              aria-pressed={desktopCompanion === "ai"}
+              title="المساعد الذكي للفصل"
+              className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-[11.5px] font-extrabold transition-all hover:border-[var(--border-strong)]"
+              style={
+                desktopCompanion === "ai"
+                  ? {
+                      background: "var(--accent-warm)",
+                      borderColor: "var(--accent-warm)",
+                      color: "var(--atelier-cta-fg)",
+                    }
+                  : {
+                      background: "var(--accent-warm-soft)",
+                      borderColor:
+                        "color-mix(in srgb, var(--accent-warm) 35%, transparent)",
+                      color: "var(--accent-warm-text)",
+                    }
+              }
+            >
+              <Sparkles className="h-3.5 w-3.5 shrink-0" />
+              <span className="font-en">AI</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setExamNight((prev) => !prev)}
+              aria-pressed={examNight}
+              title="ورقة ليلة الامتحان السريعة (5 دقائق)"
+              className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-[11.5px] font-extrabold transition-all hover:border-[var(--border-strong)]"
+              style={
+                examNight
+                  ? {
+                      background: "var(--accent-warm)",
+                      borderColor: "var(--accent-warm)",
+                      color: "var(--atelier-cta-fg)",
+                    }
+                  : {
+                      background: "var(--bg-surface)",
+                      borderColor: "var(--border-soft)",
+                      color: "var(--text-secondary)",
+                    }
+              }
+            >
+              <Zap
+                className="h-3.5 w-3.5 shrink-0"
+                style={{
+                  color: examNight
+                    ? "var(--atelier-cta-fg)"
+                    : "var(--accent-warm)",
+                }}
+              />
+              <span className="hidden 2xl:inline">ليلة الامتحان</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFocusMode((prev) => !prev)}
               aria-pressed={focusMode}
-              title="إخفاء القائمة الجانبية للتركيز"
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all cursor-pointer ${
-                focusMode ? "shadow-xs" : "hover:text-[var(--text-primary)]"
-              }`}
+              title={focusMode ? "إظهار قائمة الفصول" : "وضع التركيز"}
+              aria-label={focusMode ? "إظهار قائمة الفصول" : "وضع التركيز"}
+              className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border transition-all hover:border-[var(--border-strong)]"
               style={
                 focusMode
                   ? {
-                      background: "var(--bg-surface)",
-                      color: "var(--text-primary)",
+                      background: "var(--brand-soft)",
+                      borderColor:
+                        "color-mix(in srgb, var(--brand-primary) 42%, transparent)",
+                      color: "var(--brand-soft-text)",
                     }
                   : {
+                      background: "var(--bg-surface)",
+                      borderColor: "var(--border-soft)",
                       color: "var(--text-secondary)",
                     }
               }
@@ -917,20 +1279,14 @@ export default function CourseWorkspaceClient({
               ) : (
                 <Maximize2 className="h-3.5 w-3.5 shrink-0" />
               )}
-              <span>{focusMode ? "إظهار الدروس" : "وضع التركيز"}</span>
             </button>
-          </div>
-
-          {/* Left side (RTL end): Pro Pomodoro + Circular Theme Button */}
-          <div className="flex shrink-0 items-center gap-2">
-            <PomodoroTimer className="hidden sm:inline-flex" />
 
             <button
               type="button"
               onClick={() => toggleTheme()}
               title="تبديل المظهر"
               aria-label="تبديل المظهر"
-              className="w-10 h-10 rounded-full border inline-flex items-center justify-center transition-all hover:border-[var(--border-strong)] cursor-pointer shrink-0 shadow-xs"
+              className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border transition-all hover:border-[var(--border-strong)]"
               style={{
                 background: "var(--bg-surface)",
                 borderColor: "var(--border-soft)",
@@ -952,7 +1308,81 @@ export default function CourseWorkspaceClient({
           </div>
         </div>
 
-        {/* Hairline Course Progress Indicator along the bottom edge */}
+        {/* SLIM MOBILE TOPBAR (< lg) */}
+        <div className="mx-auto flex h-14 max-w-[1480px] items-center justify-between gap-2 px-3 lg:hidden">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <Link
+              href="/courses"
+              aria-label="العودة للمواد"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors"
+              style={{
+                background: "var(--bg-surface)",
+                borderColor: "var(--border-soft)",
+                color: "var(--text-primary)",
+              }}
+            >
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+
+            <div className="min-w-0 flex-1 leading-tight">
+              <div
+                className="font-mono-code truncate text-[10px] font-black tracking-wide"
+                style={{ color: "var(--accent-warm)" }}
+              >
+                {course.code} · CH {lessonNumPadded}
+              </div>
+              <div
+                className="truncate text-[13px] font-black"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {parsedLessonTitle.primary}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setMobileSheet("ai")}
+              className="inline-flex h-9 cursor-pointer items-center gap-1 rounded-full border px-3 text-[11.5px] font-extrabold"
+              style={{
+                background: "var(--accent-warm-soft)",
+                borderColor:
+                  "color-mix(in srgb, var(--accent-warm) 38%, transparent)",
+                color: "var(--accent-warm-text)",
+              }}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span className="font-en">AI</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => toggleTheme()}
+              aria-label="تبديل المظهر"
+              className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border"
+              style={{
+                background: "var(--bg-surface)",
+                borderColor: "var(--border-soft)",
+                color: "var(--text-primary)",
+              }}
+            >
+              {isDark ? (
+                <Sun
+                  className="h-4 w-4"
+                  style={{ color: "var(--accent-warm)" }}
+                />
+              ) : (
+                <Moon
+                  className="h-4 w-4"
+                  style={{ color: "var(--brand-primary)" }}
+                />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom 2px Course Progress Hairline */}
         <div
           aria-hidden="true"
           className="h-[2px] w-full overflow-hidden"
@@ -962,181 +1392,48 @@ export default function CourseWorkspaceClient({
             className="h-full transition-all duration-500"
             style={{
               width: `${progressPct}%`,
-              background: "var(--success-fg)",
+              background: isDark
+                ? "linear-gradient(90deg, #d8b07a 0%, #6ec4a3 100%)"
+                : "linear-gradient(90deg, #162847 0%, #15664b 100%)",
             }}
           />
         </div>
       </header>
 
-      {/* ==================== WORKSPACE BODY (Coursera / Notion Sticky Layout) ==================== */}
-      <main
-        className={`mx-auto w-full flex-1 px-2.5 py-3 pb-24 transition-[max-width] duration-200 sm:px-6 sm:py-4 lg:px-8 lg:py-5 lg:pb-8 ${
-          focusMode ? "max-w-[1440px]" : "max-w-[1260px]"
-        }`}
-      >
-        <input
-          ref={backupInputRef}
-          type="file"
-          accept=".json,application/json"
-          onChange={handleImportCourseBackup}
-          className="hidden"
-          aria-label="استعادة نسخة احتياطية JSON"
-        />
-
-        {/* 2-Column Workspace Grid */}
-        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
-          {/* Right Sticky Sidebar: Progress + Lessons + Mistake Bank + Backup (Desktop >= 1024px) */}
+      {/* ==================== WORKSPACE MAIN BODY ==================== */}
+      <main className="relative z-10 mx-auto w-full max-w-[1480px] flex-1 px-2.5 py-3 pb-24 sm:px-4 sm:py-4 lg:px-6 lg:py-5 lg:pb-8">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+          {/* RIGHT SIDEBAR: Chapters + Mini Swiss Progress Ring + Mistake Bank ONLY (Desktop lg+, hidden in Focus Mode) */}
           {!focusMode ? (
-            <aside className="surface-card hidden overflow-hidden rounded-[24px] lg:sticky lg:top-[76px] lg:col-span-4 lg:flex lg:max-h-[calc(100svh-96px)] lg:flex-col">
-              {/* Top: Compact Course Progress Header */}
+            <aside className="surface-card sapphire-rim hidden shrink-0 overflow-hidden rounded-[22px] lg:sticky lg:top-[80px] lg:flex lg:max-h-[calc(100svh-100px)] lg:w-[276px] lg:flex-col xl:w-[296px]">
+              {/* Header + 38px Mini Swiss Progress Ring */}
               <div
-                className="space-y-2.5 border-b p-4"
+                className="flex items-center justify-between gap-3 border-b p-4"
                 style={{ borderColor: "var(--border-soft)" }}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span
-                    className="text-[13px] font-black"
+                <div className="min-w-0">
+                  <div
+                    className="text-[13.5px] font-black"
                     style={{ color: "var(--text-primary)" }}
                   >
-                    فصول المقرر
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className="font-mono-code text-[11px] font-black"
-                      style={{ color: "var(--success-fg)" }}
-                    >
-                      {progressPct}%
-                    </span>
-                    <span
-                      className="font-mono-code rounded-md px-2 py-0.5 text-[10.5px] font-bold"
-                      style={{
-                        background: "var(--bg-subtle)",
-                        color: "var(--text-secondary)",
-                      }}
-                    >
-                      {doneCount}/{sortedLessons.length}
-                    </span>
+                    فصول المادة
+                  </div>
+                  <div
+                    className="mt-0.5 text-[11.5px] font-bold"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    أنجزت {doneCount} من {sortedLessons.length} فصول
                   </div>
                 </div>
-                <div
-                  className="h-1.5 w-full overflow-hidden rounded-full"
-                  style={{ background: "var(--bg-subtle)" }}
-                >
-                  <div
-                    className="h-full rounded-full transition-all duration-300"
-                    style={{
-                      width: `${progressPct}%`,
-                      background: "var(--success-fg)",
-                    }}
-                  />
-                </div>
+                <SwissProgressRing pct={progressPct} />
               </div>
 
-              {/* Scrollable Lessons List */}
-              <div className="flex-1 space-y-2 overflow-y-auto p-3.5">
-                {sortedLessons.map((item, idx) => {
-                  const done = completedSet.has(item.id);
-                  const locked =
-                    course.is_paid &&
-                    !item.is_free_preview &&
-                    !isUnlockedLocally;
-                  const active = item.id === currentLessonId;
-                  const itemTitle = splitBilingualTitle(item.title);
-                  const subEn = item.title_en ?? itemTitle.secondaryEn ?? "";
-                  const durationStr = item.duration_minutes
-                    ? `${item.duration_minutes} د`
-                    : "";
+              {/* Numbered Chapters List */}
+              {renderChaptersList()}
 
-                  const cardStyle = {
-                    background: active
-                      ? "var(--accent-warm-soft)"
-                      : "var(--bg-canvas)",
-                    borderColor: active
-                      ? "var(--accent-warm)"
-                      : "var(--border-soft)",
-                  };
-
-                  const badgeStyle = {
-                    background: done
-                      ? "var(--success-fg)"
-                      : active
-                        ? "var(--accent-warm)"
-                        : "var(--bg-subtle)",
-                    color: done || active ? "#ffffff" : "var(--text-primary)",
-                  };
-
-                  const inner = (
-                    <>
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <span
-                          className="font-en flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11.5px] font-extrabold"
-                          style={badgeStyle}
-                        >
-                          {done ? "✓" : String(idx + 1).padStart(2, "0")}
-                        </span>
-                        <div className="min-w-0 text-right">
-                          <div
-                            className="truncate text-[12.5px] font-bold"
-                            style={{ color: "var(--text-primary)" }}
-                          >
-                            {itemTitle.primary}
-                          </div>
-                          {subEn || durationStr ? (
-                            <div
-                              className="font-en truncate text-[10.5px]"
-                              style={{ color: "var(--text-muted)" }}
-                            >
-                              {[subEn, durationStr].filter(Boolean).join(" · ")}
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
-
-                      {locked ? (
-                        <span
-                          className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold"
-                          style={{
-                            background: "var(--accent-warm-soft)",
-                            color: "var(--accent-warm-text)",
-                          }}
-                        >
-                          <Lock className="h-2.5 w-2.5" />
-                          <span>مغلق</span>
-                        </span>
-                      ) : null}
-                    </>
-                  );
-
-                  if (locked) {
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={handleTriggerUnlock}
-                        className="flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-2xl border p-3 text-right opacity-80 transition-all hover:opacity-100"
-                        style={cardStyle}
-                      >
-                        {inner}
-                      </button>
-                    );
-                  }
-
-                  return (
-                    <Link
-                      key={item.id}
-                      href={`/courses/${course.slug}/${item.id}`}
-                      className="flex w-full items-center justify-between gap-2.5 rounded-2xl border p-3 text-right transition-all hover:opacity-95"
-                      style={cardStyle}
-                    >
-                      {inner}
-                    </Link>
-                  );
-                })}
-              </div>
-
-              {/* Sidebar Bottom Utility Footer: Mistake Bank + Local JSON Backup + Founder */}
+              {/* Clean Footer: ONLY Mistake Bank Button (NO JSON backup, NO founder card) */}
               <div
-                className="space-y-2.5 border-t p-3.5"
+                className="border-t p-3"
                 style={{
                   borderColor: "var(--border-soft)",
                   background: "var(--bg-canvas)",
@@ -1145,7 +1442,7 @@ export default function CourseWorkspaceClient({
                 <button
                   type="button"
                   onClick={openMistakeBankModal}
-                  className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2 text-right transition-colors hover:bg-[var(--bg-hover)]"
+                  className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-right transition-colors hover:border-[var(--border-strong)]"
                   style={{
                     background: "var(--bg-surface)",
                     borderColor: "var(--border-soft)",
@@ -1165,11 +1462,11 @@ export default function CourseWorkspaceClient({
                       className="truncate text-[12px] font-extrabold"
                       style={{ color: "var(--text-primary)" }}
                     >
-                      بنك أخطاء المقرر
+                      بنك أخطاء المادة
                     </span>
                   </span>
                   <span
-                    className="font-mono-code shrink-0 rounded-md px-2 py-0.5 text-[10.5px] font-bold"
+                    className="font-mono-code shrink-0 rounded-md px-2 py-0.5 text-[10.5px] font-black"
                     style={{
                       background:
                         courseMistakesCount > 0
@@ -1184,104 +1481,48 @@ export default function CourseWorkspaceClient({
                     {courseMistakesCount}
                   </span>
                 </button>
-
-                <div className="flex items-center justify-between gap-2 px-1 text-[11px] font-bold">
-                  <span style={{ color: "var(--text-muted)" }}>
-                    نسخة احتياطية JSON
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={handleExportCourseBackup}
-                      className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 hover:bg-[var(--bg-subtle)]"
-                      style={{ color: "var(--brand-primary)" }}
-                    >
-                      <Download className="h-3 w-3 shrink-0" />
-                      <span>تصدير</span>
-                    </button>
-                    <span style={{ color: "var(--border-strong)" }}>·</span>
-                    <button
-                      type="button"
-                      onClick={() => backupInputRef.current?.click()}
-                      className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 hover:bg-[var(--bg-subtle)]"
-                      style={{ color: "var(--accent-warm)" }}
-                    >
-                      <Upload className="h-3 w-3 shrink-0" />
-                      <span>استعادة</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  className="flex items-center gap-2.5 border-t pt-2.5"
-                  style={{ borderColor: "var(--border-soft)" }}
-                >
-                  <Image
-                    src="/images/founder.jpg"
-                    alt="Eng. Ahmed Amir"
-                    width={28}
-                    height={28}
-                    className="h-7 w-7 shrink-0 rounded-full border object-cover object-[50%_15%]"
-                    style={{ borderColor: "var(--border-strong)" }}
-                  />
-                  <div className="min-w-0 text-right leading-tight">
-                    <div className="truncate">
-                      <BrandName size="sm" />
-                    </div>
-                    <div
-                      className="truncate text-[10px] font-semibold"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      Faculty of Computers &amp; AI
-                    </div>
-                  </div>
-                </div>
               </div>
             </aside>
           ) : null}
 
-          {/* Left Main Feature Stage (Single-Screen Header + 4 Pillars + Active Content) */}
-          <section
-            className={`surface-card min-h-[420px] space-y-3.5 sm:space-y-4 overflow-hidden rounded-2xl sm:rounded-[24px] p-3 sm:p-5 ${
-              focusMode ? "lg:col-span-12" : "lg:col-span-8"
-            }`}
-          >
-            {/* Compact Single-Row Lesson Header */}
-            <div className="flex items-center justify-between gap-2.5 sm:gap-3">
-              <div className="min-w-0 flex-1 space-y-0.5 sm:space-y-1">
-                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          {/* CENTER MAIN STUDY STAGE */}
+          <section className="surface-card sapphire-rim min-h-[460px] min-w-0 flex-1 space-y-4 overflow-hidden rounded-2xl p-3 sm:rounded-[22px] sm:p-5">
+            {/* Compact Chapter Header Row */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1 space-y-0.5">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <span
-                    className="font-mono-code rounded-md px-2 py-0.5 text-[10.5px] font-extrabold"
+                    className="font-mono-code rounded-md px-2 py-0.5 text-[10.5px] font-black"
                     style={{
-                      background: "var(--brand-soft)",
-                      color: "var(--brand-soft-text)",
+                      background: "var(--accent-warm-soft)",
+                      color: "var(--accent-warm-text)",
                     }}
                   >
-                    الفصل {lessonNumPadded}
+                    CH {lessonNumPadded}
                   </span>
                   <span
-                    className="hidden sm:inline-block rounded-full px-2 py-0.5 text-[10.5px] font-extrabold"
+                    className="hidden sm:inline-block rounded-full px-2.5 py-0.5 text-[10.5px] font-extrabold"
                     style={{
                       background:
                         !course.is_paid || isUnlockedLocally
                           ? "var(--success-soft)"
-                          : "var(--accent-warm-soft)",
+                          : "var(--bg-subtle)",
                       color:
                         !course.is_paid || isUnlockedLocally
                           ? "var(--success-fg)"
-                          : "var(--accent-warm-text)",
+                          : "var(--text-secondary)",
                     }}
                   >
                     {!course.is_paid
-                      ? "مجاني"
+                      ? "مجاني بالكامل"
                       : isUnlockedLocally
-                        ? "مفعّل ✓"
-                        : `${course.price} ج.م · الفصل 1 مجاني`}
+                        ? "مشترك ومفعّل ✓"
+                        : `${course.price} ج.م · الفصل الأول مجاناً`}
                   </span>
                 </div>
 
                 <h1
-                  className="truncate text-[14.5px] font-black sm:text-xl"
+                  className="truncate text-[15px] font-black sm:text-[19px]"
                   style={{ color: "var(--text-primary)" }}
                 >
                   {parsedLessonTitle.primary}
@@ -1293,23 +1534,25 @@ export default function CourseWorkspaceClient({
                   type="button"
                   onClick={handleToggleDone}
                   aria-pressed={isCurrentLessonDone}
-                  title={isCurrentLessonDone ? "مكتمل" : "تحديد كمكتمل"}
-                  className="inline-flex min-h-[36px] sm:min-h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 sm:px-3.5 py-1.5 text-[11.5px] sm:text-[12px] font-extrabold transition-all hover:opacity-90"
-                  style={{
-                    background: isCurrentLessonDone
-                      ? "var(--success-soft)"
-                      : "var(--bg-canvas)",
-                    borderColor: isCurrentLessonDone
-                      ? "var(--success-fg)"
-                      : "var(--border-strong)",
-                    color: isCurrentLessonDone
-                      ? "var(--success-fg)"
-                      : "var(--text-primary)",
-                  }}
+                  className="inline-flex min-h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[12px] font-extrabold transition-all hover:border-[var(--border-strong)]"
+                  style={
+                    isCurrentLessonDone
+                      ? {
+                          background: "var(--success-soft)",
+                          borderColor:
+                            "color-mix(in srgb, var(--success-fg) 42%, transparent)",
+                          color: "var(--success-fg)",
+                        }
+                      : {
+                          background: "var(--bg-canvas)",
+                          borderColor: "var(--border-soft)",
+                          color: "var(--text-primary)",
+                        }
+                  }
                 >
                   <Check className="h-3.5 w-3.5 shrink-0" />
                   <span className="hidden sm:inline">
-                    {isCurrentLessonDone ? "مكتمل ✓" : "تحديد كمكتمل"}
+                    {isCurrentLessonDone ? "مكتمل ✓" : "إتمام الفصل"}
                   </span>
                   <span className="sm:hidden">
                     {isCurrentLessonDone ? "تم" : "إتمام"}
@@ -1319,41 +1562,30 @@ export default function CourseWorkspaceClient({
                 <button
                   type="button"
                   onClick={handleTriggerUnlock}
-                  className="inline-flex min-h-[36px] sm:min-h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-xl px-3 sm:px-3.5 py-1.5 text-[11.5px] sm:text-[12px] font-extrabold text-white transition-transform hover:scale-[1.02]"
-                  style={{ background: "#c25e33" }}
+                  className="inline-flex min-h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[12px] font-extrabold transition-opacity hover:opacity-92"
+                  style={{
+                    background: "var(--atelier-cta-bg)",
+                    color: "var(--atelier-cta-fg)",
+                  }}
                 >
-                  <KeyRound className="h-3.5 w-3.5 shrink-0" />
-                  <span>تفعيل</span>
+                  <CreditCard className="h-3.5 w-3.5 shrink-0" />
+                  <span>اشترك الآن</span>
                 </button>
               )}
             </div>
 
-            {/* Unified 5-Pillar Tab Bar (Sleek Single-Row Segmented Bar on Mobile & Desktop!) */}
+            {/* MOBILE 4-PILLAR SEGMENTED BAR (< lg ONLY — Desktop pillars live in Topbar!) */}
             <div
               role="tablist"
-              aria-label="أركان دراسة الفصل الخمسة"
-              className="grid grid-cols-5 gap-1 sm:gap-1.5 rounded-2xl border p-1"
+              aria-label="أركان المذاكرة الأربعة"
+              className="grid grid-cols-4 gap-1 rounded-2xl border p-1 lg:hidden"
               style={{
                 background: "var(--bg-canvas)",
                 borderColor: "var(--border-soft)",
               }}
             >
-              {TOOL_TABS.map(({ id, label, Icon }) => {
+              {PILLAR_TABS.map(({ id, mobileLabel, Icon }) => {
                 const isActive = !examNight && activeTab === id;
-                const resolvedLabel =
-                  id === "summary" && !hasLessonCode ? "الملخص" : label;
-                const mobileLabel =
-                  id === "video"
-                    ? "فيديو"
-                    : id === "lab"
-                      ? "تفاعلي"
-                      : id === "summary"
-                        ? "ملخص"
-                        : id === "quiz"
-                          ? "كويز"
-                          : "المساعد";
-                const ResolvedIcon =
-                  id === "summary" && !hasLessonCode ? FileText : Icon;
                 return (
                   <button
                     key={id}
@@ -1361,79 +1593,81 @@ export default function CourseWorkspaceClient({
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => handleSelectTab(id)}
-                    className={`tool-dock-pill min-h-[44px] sm:min-h-[38px] flex-col sm:flex-row gap-0.5 sm:gap-1.5 px-1 sm:px-2.5 py-1.5 justify-center whitespace-nowrap ${
-                      isActive ? "active" : ""
-                    }`}
+                    className="flex min-h-[42px] cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10.5px] font-extrabold transition-all"
+                    style={
+                      isActive
+                        ? {
+                            background: "var(--atelier-cta-bg)",
+                            color: "var(--atelier-cta-fg)",
+                          }
+                        : {
+                            color: "var(--text-secondary)",
+                          }
+                    }
                   >
-                    <ResolvedIcon className="h-4 w-4 shrink-0" />
-                    <span className="sm:hidden text-[10px] font-extrabold leading-tight">
-                      {mobileLabel}
-                    </span>
-                    <span className="hidden sm:inline text-[12.5px]">
-                      {resolvedLabel}
-                    </span>
-                    {id === "ai" ? (
-                      <span
-                        className="font-mono-code hidden md:inline-flex items-center rounded px-1 py-0.5 text-[9px] font-black leading-none"
-                        style={
-                          isActive
-                            ? {
-                                background: "rgba(255, 255, 255, 0.2)",
-                                color: "#ffffff",
-                              }
-                            : {
-                                background: "var(--accent-warm-soft)",
-                                color: "var(--accent-warm-text)",
-                              }
-                        }
-                      >
-                        AI
-                      </span>
-                    ) : null}
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{mobileLabel}</span>
                   </button>
                 );
               })}
             </div>
 
-            {/* ==================== EXAM-NIGHT CRAM MODE PANE ==================== */}
+            {/* ==================== EXAM-NIGHT 5-MINUTE EXPRESS SHEET ==================== */}
             {examNight ? (
               <div className="space-y-5">
                 <div
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4 text-white"
+                  className="sapphire-rim flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 sm:p-5"
                   style={{
-                    background: "linear-gradient(135deg, #182947, #c25e33)",
+                    background: isDark
+                      ? "linear-gradient(135deg, #161822 0%, #101218 100%)"
+                      : "linear-gradient(135deg, #162847 0%, #0e1c33 100%)",
+                    borderColor: isDark
+                      ? "rgba(216, 176, 122, 0.34)"
+                      : "rgba(22, 40, 71, 0.35)",
+                    color: "#f6f4ef",
                   }}
                 >
-                  <div className="min-w-0 space-y-0.5">
-                    <div className="text-[11px] font-bold text-[#fed7aa]">
-                      وضع ليلة الامتحان · مراجعة سريعة في 5 دقائق
+                  <div className="min-w-0 space-y-1">
+                    <div
+                      className="font-mono-code inline-flex items-center gap-1.5 text-[10.5px] font-black uppercase tracking-wider"
+                      style={{ color: "#d8b07a" }}
+                    >
+                      <Zap className="h-3.5 w-3.5" />
+                      <span>EXAM-NIGHT EXPRESS · 5-MINUTE REVIEW</span>
                     </div>
                     <h2 className="text-base font-black sm:text-lg">
-                      خلاصة ليلة الامتحان ·{" "}
+                      ورقة ليلة الامتحان السريعة ·{" "}
                       <span className="font-en">{course.title_en}</span>
                     </h2>
                   </div>
+
                   <button
                     type="button"
                     onClick={() => setExamNight(false)}
-                    className="inline-flex min-h-[38px] items-center justify-center rounded-xl bg-white/15 px-3.5 py-1.5 text-[12px] font-bold transition-colors hover:bg-white/25"
+                    className="inline-flex min-h-[38px] cursor-pointer items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3.5 py-1.5 text-[12px] font-bold text-white transition-colors hover:bg-white/18"
                   >
-                    العودة للدرس
+                    العودة للفصل
                   </button>
                 </div>
 
                 <CheatSheetTable course={course} />
 
-                <div
-                  className="rounded-2xl border p-4 text-[13px] font-bold leading-relaxed"
-                  style={{
-                    background: "var(--accent-warm-soft)",
-                    borderColor: "var(--accent-warm)",
-                    color: "var(--accent-warm-text)",
-                  }}
-                >
-                  {activeExamTip}
-                </div>
+                {activeExamTip ? (
+                  <div
+                    className="rounded-2xl border p-4 text-[13px] font-bold leading-relaxed"
+                    style={{
+                      background:
+                        "color-mix(in srgb, var(--accent-warm-soft) 55%, var(--bg-canvas))",
+                      borderColor:
+                        "color-mix(in srgb, var(--accent-warm) 35%, var(--border-soft))",
+                      borderRightWidth: "3px",
+                      borderRightColor: "var(--accent-warm)",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    {activeExamTip}
+                  </div>
+                ) : null}
 
                 {hasLessonCode && activeKeyCode ? (
                   <div className="space-y-2">
@@ -1447,7 +1681,7 @@ export default function CourseWorkspaceClient({
                       <button
                         type="button"
                         onClick={handleCopyKeyCode}
-                        className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border px-3 py-1 text-[11.5px] font-bold transition-colors hover:opacity-85"
+                        className="inline-flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1 text-[11.5px] font-bold transition-colors hover:border-[var(--border-strong)]"
                         style={{
                           background: "var(--bg-canvas)",
                           borderColor: "var(--border-soft)",
@@ -1455,7 +1689,10 @@ export default function CourseWorkspaceClient({
                         }}
                       >
                         {copiedCode ? (
-                          <Check className="h-3.5 w-3.5 text-[var(--success-fg)]" />
+                          <Check
+                            className="h-3.5 w-3.5"
+                            style={{ color: "var(--success-fg)" }}
+                          />
                         ) : (
                           <Copy className="h-3.5 w-3.5" />
                         )}
@@ -1479,31 +1716,42 @@ export default function CourseWorkspaceClient({
                 ) : null}
               </div>
             ) : isLockedView ? (
-              /* ==================== EDITORIAL LOCK CARD ==================== */
-              <div className="flex min-h-[360px] flex-col items-center justify-center rounded-2xl border border-[var(--border-soft)] bg-[var(--bg-canvas)] p-6 text-center sm:p-10">
+              /* ==================== LOCKED PAID LESSON VIEW (SUBSCRIPTION FLOW) ==================== */
+              <div
+                className="sapphire-rim flex min-h-[380px] flex-col items-center justify-center rounded-2xl border p-6 text-center sm:p-10"
+                style={{
+                  background: "var(--bg-canvas)",
+                  borderColor: "var(--border-soft)",
+                }}
+              >
                 <div
                   className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border"
                   style={{
                     background: "var(--accent-warm-soft)",
-                    borderColor: "var(--accent-warm)",
-                    color: "var(--accent-warm)",
+                    borderColor:
+                      "color-mix(in srgb, var(--accent-warm) 36%, transparent)",
+                    color: "var(--accent-warm-text)",
                   }}
                 >
-                  <Lock className="h-7 w-7" />
+                  <Lock className="h-6 w-6" />
                 </div>
 
                 <span
-                  className="mb-1.5 text-[11.5px] font-extrabold"
-                  style={{ color: "var(--accent-warm)" }}
+                  className="font-mono-code mb-2 rounded-full border px-3 py-0.5 text-[11px] font-black"
+                  style={{
+                    background: "var(--bg-surface)",
+                    borderColor: "var(--border-soft)",
+                    color: "var(--accent-warm-text)",
+                  }}
                 >
-                  محتوى مدفوع للمشتركين · {course.code}
+                  {course.code} · اشتراك الترم الكامل ({course.price} ج.م)
                 </span>
 
                 <h2
-                  className="text-xl font-black sm:text-2xl"
+                  className="max-w-lg text-xl font-black sm:text-2xl"
                   style={{ color: "var(--text-primary)" }}
                 >
-                  هذا الدرس جزء من مقرر{" "}
+                  هذا الفصل ضمن الاشتراك الكامل لمادة{" "}
                   <span className="font-en">{course.title_en}</span>
                 </h2>
 
@@ -1511,42 +1759,48 @@ export default function CourseWorkspaceClient({
                   className="mt-2 max-w-md text-[13.5px] leading-relaxed"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  أدخل كود تفعيل المقرر لفتح جميع الفصول والشرح التفاعلي
-                  والملخصات والكويزات فوراً. يمكنك الحصول على الكود بالتواصل مع
-                  م. أحمد أمير.
+                  اشترك مرة واحدة بـ{" "}
+                  <strong style={{ color: "var(--text-primary)" }}>
+                    {course.price} ج.م
+                  </strong>{" "}
+                  لفصل دراسي كامل وافتح جميع فيديوهات الشرح، قراءة الفصول،
+                  الملخصات السريعة، الكويزات، والمساعد الذكي.
                 </p>
 
-                <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                   <button
                     type="button"
                     onClick={handleTriggerUnlock}
-                    className="inline-flex min-h-[44px] items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-extrabold text-white shadow-sm transition-transform hover:scale-[1.02]"
-                    style={{ background: "#c25e33" }}
+                    className="inline-flex min-h-[46px] cursor-pointer items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-extrabold shadow-sm transition-opacity hover:opacity-92"
+                    style={{
+                      background: "var(--atelier-cta-bg)",
+                      color: "var(--atelier-cta-fg)",
+                    }}
                   >
-                    <KeyRound className="h-4 w-4" />
-                    <span>إدخال كود التفعيل ({course.price} ج.م)</span>
+                    <CreditCard className="h-4 w-4 shrink-0" />
+                    <span>اشترك في المادة الآن (فودافون كاش / InstaPay)</span>
                   </button>
 
                   {firstFreeLesson && firstFreeLesson.id !== currentLessonId ? (
                     <Link
                       href={`/courses/${course.slug}/${firstFreeLesson.id}`}
-                      className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-bold transition-colors hover:opacity-85"
+                      className="inline-flex min-h-[46px] items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-bold transition-colors hover:border-[var(--border-strong)]"
                       style={{
                         background: "var(--bg-surface)",
-                        borderColor: "var(--border-strong)",
+                        borderColor: "var(--border-soft)",
                         color: "var(--text-primary)",
                       }}
                     >
-                      <PlayCircle className="h-4 w-4" />
-                      <span>معاينة الدرس المجاني</span>
+                      <PlayCircle className="h-4 w-4 shrink-0" />
+                      <span>معاينة الفصل الأول مجاناً</span>
                     </Link>
                   ) : null}
                 </div>
               </div>
             ) : (
-              /* ==================== 5-TOOL ACTIVE STAGE ==================== */
+              /* ==================== 4-PILLAR ACTIVE STUDY STAGE ==================== */
               <>
-                {/* TAB 1: Video Player */}
+                {/* PILLAR 1: Video Player */}
                 <div className={activeTab === "video" ? "space-y-5" : "hidden"}>
                   <VideoPlayer
                     provider={lesson?.video_provider ?? "youtube"}
@@ -1574,7 +1828,7 @@ export default function CourseWorkspaceClient({
                   />
                 </div>
 
-                {/* TAB 2: Interactive Lab (strictly lazy-mounted on first Lab click) */}
+                {/* PILLAR 2: Read Chapter (ChapterInteractiveViewer / CourseInteractiveLab) */}
                 <div className={activeTab === "lab" ? "space-y-5" : "hidden"}>
                   {hasOpenedLab ? (
                     <CourseInteractiveLab
@@ -1586,7 +1840,7 @@ export default function CourseWorkspaceClient({
                   ) : null}
                 </div>
 
-                {/* TAB 3: Structured Summaries (+ Optional LTR Code & Cheat Sheet) */}
+                {/* PILLAR 3: Quick Summary (Atelier Revision Dossier) */}
                 <div
                   className={activeTab === "summary" ? "space-y-5" : "hidden"}
                 >
@@ -1601,15 +1855,11 @@ export default function CourseWorkspaceClient({
                         <div>
                           <span
                             className="text-[11px] font-extrabold"
-                            style={{
-                              color: hasLessonCode
-                                ? "var(--accent-warm)"
-                                : "var(--brand-primary)",
-                            }}
+                            style={{ color: "var(--accent-warm)" }}
                           >
                             {hasLessonCode
-                              ? "ملخص هندسي + كود LTR"
-                              : "ملخص شامل للمراجعة (English + توضيح مبسّط)"}
+                              ? "ملخص الفصل + الكود الأساسي"
+                              : "ملخص سريع للمراجعة"}
                           </span>
                           <h2
                             className="mt-0.5 text-lg font-black"
@@ -1623,7 +1873,7 @@ export default function CourseWorkspaceClient({
                           <button
                             type="button"
                             onClick={handleCopyKeyCode}
-                            className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-[12px] font-bold transition-colors hover:opacity-85"
+                            className="inline-flex min-h-[38px] cursor-pointer items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-[12px] font-bold transition-colors hover:border-[var(--border-strong)]"
                             style={{
                               background: "var(--bg-canvas)",
                               borderColor: "var(--border-soft)",
@@ -1638,26 +1888,27 @@ export default function CourseWorkspaceClient({
                             ) : (
                               <Copy className="h-3.5 w-3.5" />
                             )}
-                            <span>{copiedCode ? "تم النسخ ✓" : "نسخ الكود"}</span>
+                            <span>
+                              {copiedCode ? "تم النسخ ✓" : "نسخ الكود"}
+                            </span>
                           </button>
                         ) : null}
                       </div>
 
-                      {/* Full Markdown + KaTeX Summary when available */}
                       {lesson?.summary_md ? (
                         <MarkdownViewer content={lesson.summary_md} embedded />
                       ) : null}
                     </>
                   )}
 
-                  {/* Key Code LTR Block — rendered ONLY when this lesson actually has code */}
+                  {/* Optional Key Code LTR Block */}
                   {hasLessonCode && activeKeyCode ? (
                     <div className="space-y-1.5">
                       <div
                         className="text-[12px] font-extrabold"
                         style={{ color: "var(--text-primary)" }}
                       >
-                        الكود الأساسي للمراجعة السريعة (LTR):
+                        الكود الأساسي للمراجعة السريعة:
                       </div>
                       <pre
                         dir="ltr"
@@ -1668,15 +1919,17 @@ export default function CourseWorkspaceClient({
                     </div>
                   ) : null}
 
-                  {/* Exam Tip Callout (for non-structured lessons; structured sheets have a full Exam Traps section) */}
+                  {/* Exam Tip Callout (for non-structured lessons) */}
                   {!structuredSummary && activeExamTip ? (
                     <div
                       className="rounded-xl border p-4 text-[13px] font-semibold leading-relaxed"
                       style={{
                         background:
-                          "color-mix(in srgb, var(--accent-warm-soft) 55%, var(--bg-canvas))",
+                          "color-mix(in srgb, var(--accent-warm-soft) 50%, var(--bg-canvas))",
                         borderColor:
-                          "color-mix(in srgb, var(--accent-warm) 22%, transparent)",
+                          "color-mix(in srgb, var(--accent-warm) 30%, var(--border-soft))",
+                        borderRightWidth: "3px",
+                        borderRightColor: "var(--accent-warm)",
                         color: "var(--text-primary)",
                       }}
                     >
@@ -1684,23 +1937,22 @@ export default function CourseWorkspaceClient({
                     </div>
                   ) : null}
 
-                  {/* Course-level Quick Cheat Sheet Table (shown for coding courses or lessons without structured/markdown summaries) */}
-                  {!structuredSummary && (hasLessonCode || !lesson?.summary_md) ? (
+                  {/* Quick Cheat Sheet Table */}
+                  {!structuredSummary &&
+                  (hasLessonCode || !lesson?.summary_md) ? (
                     <div className="space-y-2 pt-2">
                       <div
                         className="flex items-center gap-1.5 text-[12px] font-extrabold"
                         style={{ color: "var(--brand-primary)" }}
                       >
                         <Table2 className="h-4 w-4 shrink-0" />
-                        <span>
-                          ورقة القوانين والمقارنات السريعة (Cheat Sheet)
-                        </span>
+                        <span>ورقة القوانين والمقارنات السريعة</span>
                       </div>
                       <CheatSheetTable course={course} />
                     </div>
                   ) : null}
 
-                  {/* External Resources moved cleanly into Summary */}
+                  {/* External Resources */}
                   {safeResources.length > 0 ? (
                     <div
                       className="space-y-2.5 border-t pt-4"
@@ -1719,7 +1971,7 @@ export default function CourseWorkspaceClient({
                             href={res.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group flex items-start justify-between gap-2.5 rounded-2xl border p-3.5 transition-all hover:-translate-y-0.5"
+                            className="group flex items-start justify-between gap-2.5 rounded-2xl border p-3.5 transition-all hover:border-[var(--border-strong)]"
                             style={{
                               background: "var(--bg-canvas)",
                               borderColor: "var(--border-soft)",
@@ -1752,7 +2004,7 @@ export default function CourseWorkspaceClient({
                   ) : null}
                 </div>
 
-                {/* TAB 4: Course-Specific Instant Quiz */}
+                {/* PILLAR 4: Quiz Engine */}
                 <div className={activeTab === "quiz" ? "space-y-5" : "hidden"}>
                   <QuizEngine
                     key={currentLessonId}
@@ -1764,139 +2016,82 @@ export default function CourseWorkspaceClient({
                     onScoreUpdate={handleQuizScoreUpdate}
                   />
                 </div>
-
-                {/* TAB 5: Chapter AI Assistant ("الركن الخامس — المساعد الذكي") */}
-                <div className={activeTab === "ai" ? "space-y-5" : "hidden"}>
-                  <ChapterAiAssistant
-                    key={currentLessonId}
-                    courseId={course.id}
-                    courseCode={course.code}
-                    courseTitleEn={course.title_en}
-                    lessonId={currentLessonId}
-                    lessonTitle={parsedLessonTitle.primary}
-                    hasStructuredSummary={Boolean(structuredSummary)}
-                    onGoToSummary={() => handleSelectTab("summary")}
-                    onTriggerUnlock={handleTriggerUnlock}
-                  />
-                </div>
               </>
             )}
-
-            {/* ==================== QUICK LESSON NOTES DRAWER ==================== */}
-            {notesOpen ? (
-              <div
-                ref={notesDrawerRef}
-                id="lesson-notes-drawer"
-                className="mt-5 space-y-3 border-t pt-5"
-                style={{ borderColor: "var(--border-soft)" }}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div
-                    className="flex min-w-0 items-center gap-2 text-[13px] font-extrabold"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    <NotebookPen
-                      className="h-4 w-4 shrink-0"
-                      style={{ color: "var(--brand-primary)" }}
-                    />
-                    <span className="truncate">
-                      ملاحظاتك على: {parsedLessonTitle.primary}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="rounded-md px-2 py-0.5 text-[10.5px] font-bold"
-                      style={{
-                        background: "var(--success-soft)",
-                        color: "var(--success-fg)",
-                      }}
-                    >
-                      حفظ تلقائي ✓
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleCopyNotes}
-                      className="inline-flex min-h-[36px] items-center rounded-xl border px-3 py-1 text-[11.5px] font-bold transition-colors hover:opacity-85 cursor-pointer"
-                      style={{
-                        background: "var(--bg-canvas)",
-                        borderColor: "var(--border-soft)",
-                        color: "var(--text-secondary)",
-                      }}
-                    >
-                      نسخ الملاحظات
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setNotesOpen(false)}
-                      aria-label="إغلاق الملاحظات"
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-colors hover:opacity-85 cursor-pointer"
-                      style={{
-                        background: "var(--bg-canvas)",
-                        borderColor: "var(--border-soft)",
-                        color: "var(--text-secondary)",
-                      }}
-                    >
-                      <X className="h-4 w-4 shrink-0" />
-                    </button>
-                  </div>
-                </div>
-
-                <textarea
-                  rows={3}
-                  value={currentNote}
-                  onChange={(e) =>
-                    setLessonNote(currentLessonId, e.target.value)
-                  }
-                  placeholder="اكتب هنا أي فكرة قالها المحاضر أو ملاحظة عاوز تفتكرها ليلة الامتحان... (حفظ تلقائي)"
-                  className="w-full rounded-2xl border p-3.5 text-[13px] leading-relaxed outline-none focus:ring-2"
-                  style={{
-                    background: "var(--bg-canvas)",
-                    borderColor: "var(--border-soft)",
-                    color: "var(--text-primary)",
-                  }}
-                />
-              </div>
-            ) : null}
           </section>
+
+          {/* LEFT COMPANION DRAWER — DOCKED ON XL+ (Side-by-Side Notes / AI Copilot) */}
+          {desktopCompanion ? (
+            <aside className="surface-card sapphire-rim hidden shrink-0 overflow-hidden rounded-[22px] xl:sticky xl:top-[80px] xl:flex xl:h-[calc(100svh-100px)] xl:w-[348px] xl:flex-col 2xl:w-[368px]">
+              {renderCompanionBody(
+                desktopCompanion,
+                setDesktopCompanion,
+                () => setDesktopCompanion(null)
+              )}
+            </aside>
+          ) : null}
         </div>
       </main>
 
-      {/* ==================== STICKY MOBILE BOTTOM THUMB-ZONE DOCK (< 1024px) ==================== */}
-      <nav
-        aria-label="شريط أدوات المذاكرة السريع للموبايل"
-        className="fixed inset-x-0 bottom-0 z-[60] [transform:translateZ(0)] border-t px-2.5 pt-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden"
-        style={{
-          background: "color-mix(in srgb, var(--bg-surface) 94%, transparent)",
-          borderColor: "var(--border-soft)",
-          boxShadow: "0 -8px 28px rgba(15, 23, 42, 0.08)",
-        }}
-      >
-        <div className="mx-auto grid max-w-lg grid-cols-4 gap-1.5">
-          {/* 1. الدروس (done/total) */}
-          <button
-            type="button"
-            onClick={() => setMobileLessonsOpen(true)}
-            aria-expanded={mobileLessonsOpen}
-            className="flex min-h-[46px] min-w-0 overflow-hidden flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[10.5px] font-extrabold transition-all cursor-pointer"
+      {/* ==================== LEFT SLIDE-OVER COMPANION OVERLAY (Desktop lg only: 1024px–1279px) ==================== */}
+      {desktopCompanion ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={
+            desktopCompanion === "ai"
+              ? "المساعد الذكي للفصل"
+              : "ملاحظات الفصل"
+          }
+          className="fixed inset-0 z-[70] hidden justify-end lg:flex xl:hidden"
+        >
+          <div
+            className="modal-backdrop fixed inset-0"
+            onClick={() => setDesktopCompanion(null)}
+          />
+          <div
+            className="relative z-10 flex h-full w-[380px] max-w-[90vw] flex-col border-s shadow-2xl"
             style={{
-              background: mobileLessonsOpen
-                ? "var(--brand-soft)"
-                : "var(--bg-canvas)",
-              borderColor: mobileLessonsOpen
-                ? "var(--brand-primary)"
-                : "var(--border-soft)",
-              color: mobileLessonsOpen
-                ? "var(--brand-soft-text)"
-                : "var(--text-primary)",
+              background: "var(--bg-surface)",
+              borderColor: "var(--border-soft)",
             }}
           >
-            <ListVideo
-              className="h-4 w-4 shrink-0"
-              style={{ color: "var(--brand-primary)" }}
-            />
+            {renderCompanionBody(
+              desktopCompanion,
+              setDesktopCompanion,
+              () => setDesktopCompanion(null)
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {/* ==================== SLEEK EDGE-TO-EDGE MOBILE STUDY BOTTOM BAR (< lg) ==================== */}
+      <nav
+        aria-label="شريط أدوات المذاكرة للموبايل"
+        className="fixed inset-x-0 bottom-0 z-[60] [transform:translateZ(0)] border-t pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-xl lg:hidden"
+        style={{
+          background: "var(--atelier-dock-bg)",
+          borderColor: "var(--atelier-dock-border)",
+          boxShadow: "var(--atelier-dock-shadow)",
+        }}
+      >
+        <div className="mx-auto grid max-w-lg grid-cols-4 px-2">
+          {/* 1. الفصول (X/Y) */}
+          <button
+            type="button"
+            onClick={() => setMobileSheet("chapters")}
+            aria-expanded={mobileSheet === "chapters"}
+            className="flex min-h-[44px] min-w-0 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10.5px] font-extrabold transition-colors"
+            style={{
+              color:
+                mobileSheet === "chapters"
+                  ? "var(--accent-warm)"
+                  : "var(--text-secondary)",
+            }}
+          >
+            <ListVideo className="h-4 w-4 shrink-0" />
             <span className="max-w-full truncate">
-              الدروس ({doneCount}/{sortedLessons.length})
+              الفصول ({doneCount}/{sortedLessons.length})
             </span>
           </button>
 
@@ -1905,358 +2100,207 @@ export default function CourseWorkspaceClient({
             type="button"
             onClick={() => setExamNight((prev) => !prev)}
             aria-pressed={examNight}
-            className="flex min-h-[46px] min-w-0 overflow-hidden flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[10.5px] font-extrabold transition-all cursor-pointer"
-            style={
-              examNight
-                ? {
-                    background: "var(--accent-warm)",
-                    borderColor: "var(--accent-warm)",
-                    color: "#ffffff",
-                  }
-                : {
-                    background: "var(--accent-warm-soft)",
-                    borderColor: "var(--accent-warm)",
-                    color: "var(--accent-warm-text)",
-                  }
-            }
+            className="flex min-h-[44px] min-w-0 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10.5px] font-extrabold transition-colors"
+            style={{
+              color: examNight ? "var(--accent-warm)" : "var(--text-secondary)",
+            }}
           >
             <Zap className="h-4 w-4 shrink-0" />
             <span className="max-w-full truncate">ليلة الامتحان</span>
           </button>
 
-          {/* 3. نوتس */}
+          {/* 3. ملاحظاتي */}
           <button
             type="button"
-            onClick={handleToggleNotes}
-            aria-pressed={notesOpen}
-            className="relative flex min-h-[46px] min-w-0 overflow-hidden flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[10.5px] font-extrabold transition-all cursor-pointer"
+            onClick={() => setMobileSheet("notes")}
+            aria-expanded={mobileSheet === "notes"}
+            className="relative flex min-h-[44px] min-w-0 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10.5px] font-extrabold transition-colors"
             style={{
-              background: notesOpen ? "var(--brand-soft)" : "var(--bg-canvas)",
-              borderColor: notesOpen
-                ? "var(--brand-primary)"
-                : "var(--border-soft)",
-              color: notesOpen
-                ? "var(--brand-soft-text)"
-                : "var(--text-primary)",
+              color:
+                mobileSheet === "notes"
+                  ? "var(--accent-warm)"
+                  : "var(--text-secondary)",
             }}
           >
-            <div className="relative inline-flex items-center">
-              <NotebookPen
-                className="h-4 w-4 shrink-0"
-                style={{ color: "var(--brand-primary)" }}
-              />
+            <span className="relative inline-flex">
+              <NotebookPen className="h-4 w-4 shrink-0" />
               {currentNote.trim().length > 0 ? (
                 <span
                   aria-hidden="true"
-                  className="-top-0.5 -end-1.5 absolute h-2 w-2 rounded-full"
+                  className="-top-0.5 -end-1.5 absolute h-1.5 w-1.5 rounded-full"
                   style={{ background: "var(--accent-warm)" }}
                 />
               ) : null}
-            </div>
-            <span className="max-w-full truncate">نوتس</span>
+            </span>
+            <span className="max-w-full truncate">ملاحظاتي</span>
           </button>
 
-          {/* 4. إكمال الفصل */}
+          {/* 4. إتمام / اشتراك */}
           <button
             type="button"
             onClick={isLockedView ? handleTriggerUnlock : handleToggleDone}
             aria-pressed={!isLockedView && isCurrentLessonDone}
-            className="flex min-h-[46px] min-w-0 overflow-hidden flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-1 text-[10.5px] font-extrabold transition-all cursor-pointer"
-            style={
-              isLockedView
-                ? {
-                    background: "var(--accent-warm-soft)",
-                    borderColor: "var(--accent-warm)",
-                    color: "var(--accent-warm-text)",
-                  }
+            className="flex min-h-[44px] min-w-0 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10.5px] font-extrabold transition-colors"
+            style={{
+              color: isLockedView
+                ? "var(--accent-warm)"
                 : isCurrentLessonDone
-                  ? {
-                      background: "var(--success-soft)",
-                      borderColor: "var(--success-fg)",
-                      color: "var(--success-fg)",
-                    }
-                  : {
-                      background: "var(--bg-canvas)",
-                      borderColor: "var(--border-soft)",
-                      color: "var(--text-primary)",
-                    }
-            }
+                  ? "var(--success-fg)"
+                  : "var(--text-secondary)",
+            }}
           >
             {isLockedView ? (
-              <KeyRound className="h-4 w-4 shrink-0" />
+              <CreditCard className="h-4 w-4 shrink-0" />
             ) : (
               <Check className="h-4 w-4 shrink-0" />
             )}
             <span className="max-w-full truncate">
               {isLockedView
-                ? "تفعيل"
+                ? "اشتراك"
                 : isCurrentLessonDone
                   ? "مكتمل ✓"
-                  : "إكمال"}
+                  : "إتمام"}
             </span>
           </button>
         </div>
       </nav>
 
-      {/* ==================== SLIDE-OVER MOBILE LESSONS DRAWER (< 1024px) ==================== */}
-      {mobileLessonsOpen ? (
+      {/* ==================== MOBILE SMOOTH BOTTOM SHEETS (< lg) ==================== */}
+      {mobileSheet ? (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="دروس المقرر"
-          className="fixed inset-0 z-[70] [transform:translateZ(0)] flex lg:hidden"
+          aria-label={
+            mobileSheet === "chapters"
+              ? "فصول المادة"
+              : mobileSheet === "notes"
+                ? "ملاحظاتي"
+                : "المساعد الذكي"
+          }
+          className="fixed inset-0 z-[75] flex items-end lg:hidden"
         >
-          {/* Backdrop */}
           <div
             className="modal-backdrop fixed inset-0"
-            onClick={() => setMobileLessonsOpen(false)}
+            onClick={() => setMobileSheet(null)}
           />
 
-          {/* Slide-Over Panel */}
           <div
-            className="relative z-10 flex h-full w-full max-w-[min(320px,86vw)] flex-col border-e p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl sm:p-5"
+            className="relative z-10 flex max-h-[85svh] w-full flex-col overflow-hidden rounded-t-[26px] border-t pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-2xl"
             style={{
               background: "var(--bg-surface)",
-              borderColor: "var(--border-soft)",
+              borderColor: "var(--border-strong)",
+              height: mobileSheet === "ai" ? "82svh" : "auto",
             }}
           >
-            <div
-              className="flex items-center justify-between gap-2 border-b pb-3"
-              style={{ borderColor: "var(--border-soft)" }}
-            >
-              <div className="flex items-center gap-2">
-                <span
-                  className="text-[14px] font-black"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  دروس المقرر
-                </span>
-                <span
-                  className="font-mono-code rounded-md px-2 py-0.5 text-[11px] font-bold"
-                  style={{
-                    background: "var(--bg-subtle)",
-                    color: "var(--text-secondary)",
-                  }}
-                >
-                  {doneCount} / {sortedLessons.length}
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setMobileLessonsOpen(false)}
-                aria-label="إغلاق قائمة الدروس"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:opacity-85"
-                style={{
-                  background: "var(--bg-canvas)",
-                  borderColor: "var(--border-soft)",
-                  color: "var(--text-primary)",
-                }}
-              >
-                <X className="h-4 w-4" />
-              </button>
+            {/* Drag Handle Indicator */}
+            <div className="flex justify-center pt-2.5 pb-1">
+              <span
+                className="h-1 w-10 rounded-full"
+                style={{ background: "var(--border-strong)" }}
+              />
             </div>
 
-            <div className="flex-1 space-y-2 overflow-y-auto py-3.5">
-              {sortedLessons.map((item, idx) => {
-                const done = completedSet.has(item.id);
-                const locked =
-                  course.is_paid &&
-                  !item.is_free_preview &&
-                  !isUnlockedLocally;
-                const active = item.id === currentLessonId;
-                const itemTitle = splitBilingualTitle(item.title);
-                const subEn = item.title_en ?? itemTitle.secondaryEn ?? "";
-                const durationStr = item.duration_minutes
-                  ? `${item.duration_minutes} د`
-                  : "";
-
-                const cardStyle = {
-                  background: active
-                    ? "var(--accent-warm-soft)"
-                    : "var(--bg-canvas)",
-                  borderColor: active
-                    ? "var(--accent-warm)"
-                    : "var(--border-soft)",
-                };
-
-                const badgeStyle = {
-                  background: done
-                    ? "var(--success-fg)"
-                    : active
-                      ? "var(--accent-warm)"
-                      : "var(--bg-subtle)",
-                  color: done || active ? "#ffffff" : "var(--text-primary)",
-                };
-
-                const inner = (
-                  <>
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <span
-                        className="font-en flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11.5px] font-extrabold"
-                        style={badgeStyle}
+            {mobileSheet === "chapters" ? (
+              <div className="flex min-h-0 flex-1 flex-col">
+                <div
+                  className="flex items-center justify-between gap-3 border-b px-4 py-3"
+                  style={{ borderColor: "var(--border-soft)" }}
+                >
+                  <div className="flex items-center gap-3">
+                    <SwissProgressRing pct={progressPct} />
+                    <div>
+                      <div
+                        className="text-[14px] font-black"
+                        style={{ color: "var(--text-primary)" }}
                       >
-                        {done ? "✓" : String(idx + 1).padStart(2, "0")}
-                      </span>
-                      <div className="min-w-0 text-right">
-                        <div
-                          className="truncate text-[12.5px] font-bold"
-                          style={{ color: "var(--text-primary)" }}
-                        >
-                          {itemTitle.primary}
-                        </div>
-                        {subEn || durationStr ? (
-                          <div
-                            className="font-en truncate text-[10.5px]"
-                            style={{ color: "var(--text-muted)" }}
-                          >
-                            {[subEn, durationStr].filter(Boolean).join(" · ")}
-                          </div>
-                        ) : null}
+                        فصول المادة
+                      </div>
+                      <div
+                        className="text-[11.5px] font-bold"
+                        style={{ color: "var(--text-muted)" }}
+                      >
+                        أنجزت {doneCount} من {sortedLessons.length} فصول
                       </div>
                     </div>
-
-                    {locked ? (
-                      <span
-                        className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold"
-                        style={{
-                          background: "var(--accent-warm-soft)",
-                          color: "var(--accent-warm-text)",
-                        }}
-                      >
-                        <Lock className="h-2.5 w-2.5" />
-                        <span>مغلق</span>
-                      </span>
-                    ) : null}
-                  </>
-                );
-
-                if (locked) {
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        setMobileLessonsOpen(false);
-                        handleTriggerUnlock();
-                      }}
-                      className="flex min-h-[52px] w-full cursor-pointer items-center justify-between gap-2.5 rounded-2xl border p-3 text-right opacity-85 transition-all hover:opacity-100"
-                      style={cardStyle}
-                    >
-                      {inner}
-                    </button>
-                  );
-                }
-
-                return (
-                  <Link
-                    key={item.id}
-                    href={`/courses/${course.slug}/${item.id}`}
-                    onClick={() => setMobileLessonsOpen(false)}
-                    className="flex min-h-[52px] w-full items-center justify-between gap-2.5 rounded-2xl border p-3 text-right transition-all hover:opacity-95"
-                    style={cardStyle}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMobileSheet(null)}
+                    aria-label="إغلاق"
+                    className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border"
+                    style={{
+                      background: "var(--bg-canvas)",
+                      borderColor: "var(--border-soft)",
+                      color: "var(--text-primary)",
+                    }}
                   >
-                    {inner}
-                  </Link>
-                );
-              })}
-            </div>
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
 
-            {/* Mobile Drawer Bottom Utility Footer: Mistake Bank + Backup + Founder */}
-            <div
-              className="space-y-2.5 border-t pt-3"
-              style={{ borderColor: "var(--border-soft)" }}
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileLessonsOpen(false);
-                  openMistakeBankModal();
-                }}
-                className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2 text-right"
-                style={{
-                  background: "var(--bg-canvas)",
-                  borderColor: "var(--border-soft)",
-                }}
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <BookmarkCheck
-                    className="h-4 w-4 shrink-0"
-                    style={{ color: "var(--accent-warm)" }}
-                  />
-                  <span
-                    className="truncate text-[12px] font-extrabold"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    بنك أخطاء المقرر
-                  </span>
-                </span>
-                <span
-                  className="font-mono-code rounded-md px-2 py-0.5 text-[10.5px] font-bold"
+                {renderChaptersList(() => setMobileSheet(null))}
+
+                <div
+                  className="border-t p-3"
                   style={{
-                    background: "var(--bg-subtle)",
-                    color: "var(--text-secondary)",
+                    borderColor: "var(--border-soft)",
+                    background: "var(--bg-canvas)",
                   }}
                 >
-                  {courseMistakesCount}
-                </span>
-              </button>
-
-              <div className="flex items-center justify-between gap-2 px-1 text-[11px] font-bold">
-                <span style={{ color: "var(--text-muted)" }}>نسخة JSON</span>
-                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={handleExportCourseBackup}
-                    className="inline-flex cursor-pointer items-center gap-1"
-                    style={{ color: "var(--brand-primary)" }}
+                    onClick={() => {
+                      setMobileSheet(null);
+                      openMistakeBankModal();
+                    }}
+                    className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-right"
+                    style={{
+                      background: "var(--bg-surface)",
+                      borderColor: "var(--border-soft)",
+                    }}
                   >
-                    <Download className="h-3 w-3 shrink-0" />
-                    <span>تصدير</span>
-                  </button>
-                  <span style={{ color: "var(--border-strong)" }}>·</span>
-                  <button
-                    type="button"
-                    onClick={() => backupInputRef.current?.click()}
-                    className="inline-flex cursor-pointer items-center gap-1"
-                    style={{ color: "var(--accent-warm)" }}
-                  >
-                    <Upload className="h-3 w-3 shrink-0" />
-                    <span>استعادة</span>
+                    <span className="flex min-w-0 items-center gap-2">
+                      <BookmarkCheck
+                        className="h-4 w-4 shrink-0"
+                        style={{ color: "var(--accent-warm)" }}
+                      />
+                      <span
+                        className="truncate text-[12.5px] font-extrabold"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        بنك أخطاء المادة
+                      </span>
+                    </span>
+                    <span
+                      className="font-mono-code rounded-md px-2 py-0.5 text-[11px] font-black"
+                      style={{
+                        background:
+                          courseMistakesCount > 0
+                            ? "var(--accent-warm-soft)"
+                            : "var(--bg-subtle)",
+                        color:
+                          courseMistakesCount > 0
+                            ? "var(--accent-warm-text)"
+                            : "var(--text-muted)",
+                      }}
+                    >
+                      {courseMistakesCount}
+                    </span>
                   </button>
                 </div>
               </div>
-
-              <div
-                className="flex items-center gap-2.5 border-t pt-2.5"
-                style={{ borderColor: "var(--border-soft)" }}
-              >
-                <Image
-                  src="/images/founder.jpg"
-                  alt="Eng. Ahmed Amir"
-                  width={28}
-                  height={28}
-                  className="h-7 w-7 shrink-0 rounded-full border object-cover object-[50%_15%]"
-                  style={{ borderColor: "var(--border-strong)" }}
-                />
-                <div className="min-w-0 text-right leading-tight">
-                  <div className="truncate">
-                    <BrandName size="sm" />
-                  </div>
-                  <div
-                    className="truncate text-[10px] font-semibold"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    Faculty of Computers &amp; AI
-                  </div>
-                </div>
-              </div>
-            </div>
+            ) : (
+              renderCompanionBody(
+                mobileSheet === "ai" ? "ai" : "notes",
+                (next) => setMobileSheet(next),
+                () => setMobileSheet(null)
+              )
+            )}
           </div>
         </div>
       ) : null}
 
-      <Footer variant="compact" className="pb-20 lg:pb-0" />
+      <Footer variant="compact" className="relative z-10 pb-20 lg:pb-0" />
     </div>
   );
 }

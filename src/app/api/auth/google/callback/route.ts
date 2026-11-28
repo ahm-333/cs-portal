@@ -2,6 +2,11 @@ import crypto from "node:crypto";
 import { eq, or } from "drizzle-orm";
 import { NextResponse, type NextRequest } from "next/server";
 import {
+  enforceStudentDeviceGuard,
+  extractDeviceInfo,
+  setDeviceCookie,
+} from "@/lib/auth/device";
+import {
   getGoogleClientId,
   getGoogleClientSecret,
   GOOGLE_OAUTH_COOKIE_NAME,
@@ -13,6 +18,10 @@ import { hashPassword } from "@/lib/auth/password";
 import { createSession, SESSION_COOKIE_NAME } from "@/lib/auth/session";
 import { parseDepartment, parseYearLevel } from "@/lib/auth/sync";
 import { getDb, isDatabaseConfigured, users } from "@/lib/db";
+import {
+  ensureAdminTables,
+  getEffectiveSiteSettings,
+} from "@/lib/db/ensure-tables";
 
 export const dynamic = "force-dynamic";
 
@@ -40,11 +49,15 @@ interface GoogleUserInfo {
 function redirectToLoginError(
   request: NextRequest,
   errorCode: string,
-  nextPath = "/courses"
+  nextPath = "/courses",
+  reason?: string | null
 ): NextResponse {
   const url = new URL("/login", request.nextUrl.origin);
   url.searchParams.set("error", errorCode);
   url.searchParams.set("next", nextPath);
+  if (reason?.trim()) {
+    url.searchParams.set("reason", reason.trim().slice(0, 200));
+  }
   const res = NextResponse.redirect(url);
   res.cookies.delete(GOOGLE_OAUTH_COOKIE_NAME);
   return res;
@@ -90,6 +103,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    await ensureAdminTables();
+
     const redirectUri = resolveGoogleRedirectUri(request);
     const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -149,12 +164,18 @@ export async function GET(request: NextRequest) {
         phone: users.phone,
         googleId: users.googleId,
         avatarUrl: users.avatarUrl,
+        fullName: users.fullName,
+        role: users.role,
+        isSuspended: users.isSuspended,
+        suspendReason: users.suspendReason,
       })
       .from(users)
       .where(or(eq(users.googleId, googleSub), eq(users.email, email)))
       .limit(1);
 
     let userId: string;
+    let userFullName = fullName.slice(0, 120);
+    let userRole: "student" | "admin" = "student";
     let hasPhone = false;
 
     if (existingRows.length > 0) {
@@ -162,7 +183,32 @@ export async function GET(request: NextRequest) {
       if (existing.googleId && existing.googleId !== googleSub) {
         return redirectToLoginError(request, "google_account_conflict", nextPath);
       }
+
+      if (existing.isSuspended) {
+        if (request.headers.get("accept")?.includes("application/json")) {
+          return NextResponse.json(
+            {
+              ok: false,
+              code: "ACCOUNT_SUSPENDED",
+              suspendReason: existing.suspendReason ?? null,
+              error: existing.suspendReason
+                ? `تم تعليق هذا الحساب: ${existing.suspendReason}`
+                : "تم تعليق هذا الحساب مؤقتاً. تواصل مع م. أحمد للمساعدة.",
+            },
+            { status: 403 }
+          );
+        }
+        return redirectToLoginError(
+          request,
+          "account_suspended",
+          nextPath,
+          existing.suspendReason
+        );
+      }
+
       userId = existing.id;
+      userFullName = existing.fullName;
+      userRole = existing.role === "admin" ? "admin" : "student";
       hasPhone = Boolean(existing.phone?.trim());
 
       await db
@@ -175,6 +221,11 @@ export async function GET(request: NextRequest) {
         })
         .where(eq(users.id, existing.id));
     } else {
+      const settings = await getEffectiveSiteSettings();
+      if (!settings.registrationOpen) {
+        return redirectToLoginError(request, "registration_closed", nextPath);
+      }
+
       const yearLevel = parseYearLevel(parsedCookie.year, 2) ?? 2;
       const department = parseDepartment(parsedCookie.dept, "CS") ?? "CS";
       // Generate unguessable random password hash for Google-created accounts
@@ -188,7 +239,7 @@ export async function GET(request: NextRequest) {
           googleId: googleSub,
           avatarUrl,
           passwordHash,
-          fullName: fullName.slice(0, 120),
+          fullName: userFullName,
           yearLevel,
           department,
           role: "student",
@@ -202,9 +253,36 @@ export async function GET(request: NextRequest) {
       hasPhone = false;
     }
 
+    const device = extractDeviceInfo(request);
+    const guard = await enforceStudentDeviceGuard({
+      userId,
+      fullName: userFullName,
+      role: userRole,
+      device,
+    });
+
+    if (!guard.allowed) {
+      const errRes = redirectToLoginError(
+        request,
+        guard.code === "DEVICE_BLOCKED"
+          ? "device_blocked"
+          : "device_limit_reached",
+        nextPath,
+        guard.error
+      );
+      setDeviceCookie(errRes, device.deviceId);
+      return errRes;
+    }
+
     const { token, expiresAt } = await createSession(
       userId,
-      request.headers.get("user-agent")
+      request.headers.get("user-agent"),
+      {
+        deviceId: device.deviceId,
+        deviceName: device.deviceName,
+        ipAddress: device.ipAddress,
+        enforceSingleSession: guard.enforceSingleSession,
+      }
     );
 
     // If first-time Google user hasn't provided a phone number yet, prompt to complete profile once
@@ -225,6 +303,7 @@ export async function GET(request: NextRequest) {
       path: "/",
       expires: expiresAt,
     });
+    setDeviceCookie(response, device.deviceId);
     response.cookies.set(GOOGLE_OAUTH_COOKIE_NAME, "", {
       httpOnly: true,
       sameSite: "lax",

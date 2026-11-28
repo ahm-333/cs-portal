@@ -3,6 +3,15 @@ export type AdminCodeStatus = "available" | "used" | "revoked" | "expired";
 export type AdminEnrollmentStatus = "active" | "revoked" | "expired";
 export type AdminUserRole = "student" | "admin";
 
+export type AdminTab =
+  | "overview"
+  | "subscriptions"
+  | "students"
+  | "courses"
+  | "security"
+  | "inbox"
+  | "system";
+
 export interface AdminCourseOption {
   id: string;
   slug: string;
@@ -13,6 +22,8 @@ export interface AdminCourseOption {
   term: number;
   isPaid: boolean;
   isPublished: boolean;
+  price?: number;
+  isLocked?: boolean;
   accent: string;
   lessonCount: number;
 }
@@ -38,6 +49,7 @@ export interface AdminCourseEnrollmentStat {
   yearLevel: number;
   isPaid: boolean;
   isPublished: boolean;
+  price?: number;
   lessonCount: number;
   directEnrollments: number;
   totalWithBundle: number;
@@ -62,11 +74,19 @@ export interface AdminHardChapterStat {
 
 export interface AdminActivityItem {
   id: string;
-  type: "signup" | "redemption" | "enrollment";
+  type: "signup" | "redemption" | "enrollment" | "subscription";
   title: string;
   subtitle: string;
   meta: string | null;
   createdAt: string;
+}
+
+export interface AdminDailySeriesPoint {
+  label: string;
+  dateKey: string;
+  signups: number;
+  enrollments: number;
+  completions: number;
 }
 
 export interface AdminOverviewData {
@@ -93,6 +113,94 @@ export interface AdminOverviewData {
   deptDistribution: AdminDistributionBucket[];
   hardestChapters: AdminHardChapterStat[];
   recentActivity: AdminActivityItem[];
+  // Executive Command Center extensions
+  estimatedRevenue?: number;
+  pendingSubscriptionsCount?: number;
+  securityAlertsCount?: number;
+  unreadNotificationsCount?: number;
+  openMessagesCount?: number;
+  dailySeries?: AdminDailySeriesPoint[];
+  dbLatencyMs?: number;
+}
+
+export type AdminSubscriptionStatus = "pending" | "approved" | "rejected";
+export type AdminPaymentMethod = "vodafone_cash" | "instapay";
+
+export interface AdminSubscriptionRequest {
+  id: string;
+  userId: string;
+  studentName?: string;
+  userName?: string;
+  studentEmail?: string;
+  userEmail?: string;
+  studentPhone?: string | null;
+  userPhone?: string | null;
+  courseId: string;
+  courseCode: string;
+  courseTitle: string;
+  amount: number;
+  method: AdminPaymentMethod | string;
+  senderInfo: string;
+  receiptData: string | null;
+  status: AdminSubscriptionStatus;
+  adminNote: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+}
+
+export type AdminNotificationType = "security" | "payment" | "message";
+export type AdminNotificationSeverity = "info" | "warning" | "critical";
+
+export interface AdminNotificationItem {
+  id: string;
+  type: AdminNotificationType;
+  severity: AdminNotificationSeverity;
+  title: string;
+  body: string;
+  userId: string | null;
+  metaJson: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export type AdminMessageType = "suggest" | "bug" | "support";
+export type AdminMessageStatus = "open" | "resolved";
+
+export interface AdminStudentMessageItem {
+  id: string;
+  userId: string | null;
+  senderName: string;
+  senderPhone: string | null;
+  senderEmail: string | null;
+  type: AdminMessageType;
+  title: string;
+  body: string;
+  status: AdminMessageStatus;
+  createdAt: string;
+}
+
+export interface AdminCourseOverride {
+  courseId: string;
+  isPublished: boolean;
+  isPaid: boolean;
+  price: number;
+  isLocked: boolean;
+  freeLessonIds?: string[];
+  freeLessonIdsJson?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface AdminSiteSettings {
+  maxDevicesPerUser: number;
+  enforceSingleSession: boolean;
+  aiDailyLimit: number;
+  registrationOpen: boolean;
+  announcementEnabled: boolean;
+  announcementText: string;
+  announcementAudience: string;
+  vodafoneCashNumber: string;
+  instaPayHandle: string;
+  updatedAt?: string | null;
 }
 
 export interface AdminCodeItem {
@@ -155,6 +263,49 @@ export interface AdminStudentItem {
   mistakesCount: number;
   notesCount: number;
   enrollments: AdminStudentEnrollmentItem[];
+  // Security & device telemetry
+  isSuspended?: boolean;
+  suspendReason?: string | null;
+  devicesCount?: number;
+  deviceAlert?: boolean;
+  activeDeviceNames?: string[];
+}
+
+export interface AdminStudentDevice {
+  id: string;
+  deviceId: string;
+  deviceName: string;
+  browser: string | null;
+  os: string | null;
+  ipAddress: string | null;
+  firstSeenAt?: string | null;
+  lastSeenAt: string;
+  isActiveNow: boolean;
+  isBlocked: boolean;
+}
+
+export interface AdminStudentChapterGrade {
+  lessonId: string;
+  title: string;
+  orderIndex?: number;
+  isCompleted: boolean;
+  bestQuizScore: number | null;
+  updatedAt?: string | null;
+}
+
+export interface AdminStudentCourseBreakdown {
+  courseId: string;
+  courseCode?: string;
+  code?: string;
+  courseTitle?: string;
+  title?: string;
+  isPaid?: boolean;
+  isEnrolled: boolean;
+  completedCount: number;
+  totalLessons: number;
+  lastLessonTitle: string | null;
+  averageQuizScore: number | null;
+  chapterGrades: AdminStudentChapterGrade[];
 }
 
 export interface AdminStudentDetailData {
@@ -171,6 +322,8 @@ export interface AdminStudentDetailData {
     createdAt: string;
     updatedAt: string;
     lastActiveAt: string;
+    isSuspended?: boolean;
+    suspendReason?: string | null;
   };
   enrollments: AdminStudentEnrollmentItem[];
   progress: Array<{
@@ -208,10 +361,16 @@ export interface AdminStudentDetailData {
   sessions: Array<{
     id: string;
     userAgent: string | null;
+    deviceId?: string | null;
+    deviceName?: string | null;
+    ipAddress?: string | null;
+    lastSeenAt?: string | null;
     createdAt: string;
     expiresAt: string;
     isActive: boolean;
   }>;
+  courseBreakdown?: AdminStudentCourseBreakdown[];
+  devices?: AdminStudentDevice[];
   aiUsageToday: number;
   aiDailyLimit: number;
 }
@@ -253,6 +412,8 @@ export interface AdminSystemData {
     userEmail: string;
     userRole: AdminUserRole;
     userAgent: string | null;
+    deviceName?: string | null;
+    ipAddress?: string | null;
     createdAt: string;
     expiresAt: string;
     isCurrent: boolean;
@@ -276,9 +437,9 @@ export interface AdminSystemData {
 }
 
 export const SCOPE_LABELS_AR: Record<ActivationScope, string> = {
-  course: "مقرر كامل",
+  course: "مادة كاملة",
   lesson: "فصل محدد",
-  bundle: "كل المقررات",
+  bundle: "كل المواد",
 };
 
 export const STATUS_LABELS_AR: Record<AdminCodeStatus, string> = {
@@ -286,6 +447,23 @@ export const STATUS_LABELS_AR: Record<AdminCodeStatus, string> = {
   used: "مستخدم",
   revoked: "ملغي",
   expired: "منتهي",
+};
+
+export const SUBSCRIPTION_STATUS_AR: Record<AdminSubscriptionStatus, string> = {
+  pending: "معلّق",
+  approved: "مقبول",
+  rejected: "مرفوض",
+};
+
+export const PAYMENT_METHOD_AR: Record<string, string> = {
+  vodafone_cash: "فودافون كاش",
+  instapay: "InstaPay",
+};
+
+export const MESSAGE_TYPE_AR: Record<AdminMessageType, string> = {
+  bug: "تبليغ خطأ",
+  suggest: "اقتراح مادة",
+  support: "رسالة",
 };
 
 export function formatArabicDate(iso: string | null | undefined): string {
@@ -316,5 +494,32 @@ export function formatArabicDateTime(iso: string | null | undefined): string {
     }).format(date);
   } catch {
     return date.toISOString().slice(0, 16).replace("T", " ");
+  }
+}
+
+export function formatRelativeArabicTime(
+  iso: string | null | undefined
+): string {
+  if (!iso) return "—";
+  const date = new Date(iso);
+  const ts = date.getTime();
+  if (Number.isNaN(ts)) return "—";
+  const diffSec = Math.round((Date.now() - ts) / 1000);
+  if (diffSec < 60) return "الآن";
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `منذ ${diffMin} د`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `منذ ${diffHr} س`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `منذ ${diffDay} ي`;
+  return formatArabicDate(iso);
+}
+
+export function formatEgp(amount: number | null | undefined): string {
+  const safe = Number.isFinite(amount) ? Number(amount) : 0;
+  try {
+    return `${new Intl.NumberFormat("ar-EG").format(safe)} ج.م`;
+  } catch {
+    return `${safe} ج.م`;
   }
 }

@@ -34,7 +34,7 @@ export function MobileBottomDock() {
     },
     {
       id: "courses",
-      label: "المقررات",
+      label: "المواد",
       href: "/courses",
       icon: BookOpen,
     },

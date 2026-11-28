@@ -14,19 +14,24 @@ import {
 } from "drizzle-orm";
 import { getUtcDayWindow } from "@/lib/ai/provider";
 import { requireAdmin } from "@/lib/auth/session";
+import { getCourseOverridesMap } from "@/lib/data";
 import {
   activationCodes,
+  adminNotifications,
   aiChatUsage,
   codeRedemptions,
   enrollments,
   getDb,
   isDatabaseConfigured,
   sessions,
+  studentMessages,
+  subscriptionRequests,
   userMistakes,
   userNotes,
   userProgress,
   users,
 } from "@/lib/db";
+import { ensureAdminTables } from "@/lib/db/ensure-tables";
 import { MOCK_COURSES, MOCK_LESSONS } from "@/lib/mock-data";
 import {
   computeCodeStatus,
@@ -35,6 +40,7 @@ import {
 import type {
   AdminActivityItem,
   AdminCourseEnrollmentStat,
+  AdminDailySeriesPoint,
   AdminDistributionBucket,
   AdminHardChapterStat,
   AdminOverviewData,
@@ -42,12 +48,26 @@ import type {
 
 export const dynamic = "force-dynamic";
 
+const ARABIC_SHORT_DAYS = [
+  "الأحد",
+  "الإثنين",
+  "الثلاثاء",
+  "الأربعاء",
+  "الخميس",
+  "الجمعة",
+  "السبت",
+];
+
+function toUtcDateKey(date: Date): string {
+  const y = date.getUTCFullYear();
+  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function utcDateKeyDaysAgo(daysAgo: number, now: Date): string {
   const d = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return toUtcDateKey(d);
 }
 
 export async function GET() {
@@ -67,6 +87,8 @@ export async function GET() {
   }
 
   try {
+    const startMs = Date.now();
+    await ensureAdminTables();
     const db = getDb();
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -94,6 +116,15 @@ export async function GET() {
       hardestLessonAgg,
       recentSignups,
       recentRedemptions,
+      pendingSubscriptionsRows,
+      approvedSubscriptionRows,
+      securityAlertsRows,
+      unreadNotificationsRows,
+      openMessagesRows,
+      signups7dRows,
+      enrollments7dRows,
+      completions7dRows,
+      overridesMap,
     ] = await Promise.all([
       db
         .select({ total: count() })
@@ -118,6 +149,7 @@ export async function GET() {
         .where(gt(sessions.expiresAt, now)),
       db
         .select({
+          userId: enrollments.userId,
           scopeType: enrollments.scopeType,
           targetId: enrollments.targetId,
         })
@@ -236,7 +268,61 @@ export async function GET() {
         .innerJoin(users, eq(codeRedemptions.userId, users.id))
         .orderBy(desc(codeRedemptions.redeemedAt))
         .limit(8),
+      db
+        .select({ total: count() })
+        .from(subscriptionRequests)
+        .where(eq(subscriptionRequests.status, "pending")),
+      db
+        .select({
+          userId: subscriptionRequests.userId,
+          courseId: subscriptionRequests.courseId,
+          amount: subscriptionRequests.amount,
+          courseCode: subscriptionRequests.courseCode,
+          courseTitle: subscriptionRequests.courseTitle,
+          reviewedAt: subscriptionRequests.reviewedAt,
+          createdAt: subscriptionRequests.createdAt,
+        })
+        .from(subscriptionRequests)
+        .where(eq(subscriptionRequests.status, "approved"))
+        .orderBy(desc(subscriptionRequests.reviewedAt)),
+      db
+        .select({ total: count() })
+        .from(adminNotifications)
+        .where(
+          and(
+            eq(adminNotifications.type, "security"),
+            eq(adminNotifications.isRead, false)
+          )
+        ),
+      db
+        .select({ total: count() })
+        .from(adminNotifications)
+        .where(eq(adminNotifications.isRead, false)),
+      db
+        .select({ total: count() })
+        .from(studentMessages)
+        .where(eq(studentMessages.status, "open")),
+      db
+        .select({ createdAt: users.createdAt })
+        .from(users)
+        .where(gte(users.createdAt, sevenDaysAgo)),
+      db
+        .select({ enrolledAt: enrollments.enrolledAt })
+        .from(enrollments)
+        .where(gte(enrollments.enrolledAt, sevenDaysAgo)),
+      db
+        .select({ updatedAt: userProgress.updatedAt })
+        .from(userProgress)
+        .where(
+          and(
+            eq(userProgress.isCompleted, true),
+            gte(userProgress.updatedAt, sevenDaysAgo)
+          )
+        ),
+      getCourseOverridesMap(),
     ]);
+
+    const dbLatencyMs = Math.max(1, Date.now() - startMs);
 
     let unusedCodes = 0;
     let usedCodes = 0;
@@ -251,6 +337,26 @@ export async function GET() {
       else unusedCodes += 1;
     }
 
+    // Effective course pricing lookup (respecting course_overrides)
+    const coursePriceMap = new Map<string, { isPaid: boolean; price: number }>();
+    for (const course of MOCK_COURSES) {
+      const ov = overridesMap.get(course.id);
+      const effective = {
+        isPaid: ov ? ov.isPaid : course.is_paid,
+        price: ov ? ov.price : course.price,
+      };
+      coursePriceMap.set(course.id, effective);
+      coursePriceMap.set(course.slug, effective);
+    }
+
+    // Calculate estimatedRevenue cleanly without double counting
+    let estimatedRevenue = 0;
+    const paidBySubRequestKey = new Set<string>();
+    for (const sub of approvedSubscriptionRows) {
+      estimatedRevenue += Number(sub.amount ?? 0);
+      paidBySubRequestKey.add(`${sub.userId}:${sub.courseId}`);
+    }
+
     let bundleEnrollments = 0;
     const directCourseCounts = new Map<string, number>();
 
@@ -262,6 +368,13 @@ export async function GET() {
           row.targetId,
           (directCourseCounts.get(row.targetId) ?? 0) + 1
         );
+        const key = `${row.userId}:${row.targetId}`;
+        if (!paidBySubRequestKey.has(key)) {
+          const pricing = coursePriceMap.get(row.targetId);
+          if (pricing?.isPaid && pricing.price > 0) {
+            estimatedRevenue += pricing.price;
+          }
+        }
       }
     }
 
@@ -292,6 +405,7 @@ export async function GET() {
 
     const courseEnrollments: AdminCourseEnrollmentStat[] = MOCK_COURSES.map(
       (course) => {
+        const ov = overridesMap.get(course.id);
         const direct =
           (directCourseCounts.get(course.id) ?? 0) +
           (directCourseCounts.get(course.slug) ?? 0);
@@ -309,8 +423,9 @@ export async function GET() {
           title: course.title,
           titleEn: course.title_en,
           yearLevel: course.year_level,
-          isPaid: course.is_paid,
-          isPublished: course.is_published,
+          isPaid: ov ? ov.isPaid : course.is_paid,
+          isPublished: ov ? ov.isPublished : course.is_published,
+          price: ov ? ov.price : course.price,
           lessonCount: lessonCountByCourse.get(course.id) ?? 0,
           directEnrollments: direct,
           totalWithBundle: direct + bundleEnrollments,
@@ -361,6 +476,37 @@ export async function GET() {
       })
     );
 
+    // Build 7-day dailySeries (oldest -> today)
+    const dailyMap = new Map<string, AdminDailySeriesPoint>();
+    const dailySeries: AdminDailySeriesPoint[] = [];
+    for (let offset = 6; offset >= 0; offset -= 1) {
+      const dayDate = new Date(now.getTime() - offset * 24 * 60 * 60 * 1000);
+      const dateKey = toUtcDateKey(dayDate);
+      const label = ARABIC_SHORT_DAYS[dayDate.getUTCDay()] ?? dateKey.slice(5);
+      const point: AdminDailySeriesPoint = {
+        label,
+        dateKey,
+        signups: 0,
+        enrollments: 0,
+        completions: 0,
+      };
+      dailyMap.set(dateKey, point);
+      dailySeries.push(point);
+    }
+
+    for (const row of signups7dRows) {
+      const bucket = dailyMap.get(toUtcDateKey(row.createdAt));
+      if (bucket) bucket.signups += 1;
+    }
+    for (const row of enrollments7dRows) {
+      const bucket = dailyMap.get(toUtcDateKey(row.enrolledAt));
+      if (bucket) bucket.enrollments += 1;
+    }
+    for (const row of completions7dRows) {
+      const bucket = dailyMap.get(toUtcDateKey(row.updatedAt));
+      if (bucket) bucket.completions += 1;
+    }
+
     const activityItems: AdminActivityItem[] = [
       ...recentSignups.map((u) => ({
         id: `signup-${u.id}`,
@@ -377,6 +523,14 @@ export async function GET() {
         subtitle: resolveAdminTargetLabel(r.scopeType, r.targetId),
         meta: r.code,
         createdAt: r.redeemedAt.toISOString(),
+      })),
+      ...approvedSubscriptionRows.slice(0, 6).map((s, idx) => ({
+        id: `sub-${s.userId}-${s.courseId}-${idx}`,
+        type: "subscription" as const,
+        title: `اعتماد اشتراك: ${s.courseCode} — ${s.courseTitle}`,
+        subtitle: `قيمة الاشتراك: ${s.amount} ج.م`,
+        meta: `${s.amount} ج.م`,
+        createdAt: (s.reviewedAt ?? s.createdAt).toISOString(),
       })),
     ]
       .sort(
@@ -415,6 +569,13 @@ export async function GET() {
       deptDistribution,
       hardestChapters,
       recentActivity: activityItems,
+      estimatedRevenue,
+      pendingSubscriptionsCount: Number(pendingSubscriptionsRows[0]?.total ?? 0),
+      securityAlertsCount: Number(securityAlertsRows[0]?.total ?? 0),
+      unreadNotificationsCount: Number(unreadNotificationsRows[0]?.total ?? 0),
+      openMessagesCount: Number(openMessagesRows[0]?.total ?? 0),
+      dailySeries,
+      dbLatencyMs,
     };
 
     return NextResponse.json(payload, {

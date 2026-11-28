@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowLeft, Moon, Sun } from "lucide-react";
 import { BrandName } from "@/components/layout/BrandName";
+import { BroadcastBanner } from "@/components/layout/BroadcastBanner";
 import { toggleTheme, useTheme } from "@/components/layout/themeStore";
 import { usePortalState } from "@/lib/stores/portalStore";
 import { SITE_CONFIG } from "@/lib/config";
@@ -13,7 +14,7 @@ import { SITE_CONFIG } from "@/lib/config";
 const NAV_LINKS = [
   { id: "interactive-showcase", href: "#interactive-showcase", label: "الأركان" },
   { id: "compare", href: "#compare", label: "الفرق" },
-  { id: "courses", href: "/courses", label: "المقررات" },
+  { id: "courses", href: "/courses", label: "المواد" },
   { id: "faq", href: "#faq", label: "الأسئلة" },
   { id: "community", href: "#community", label: "التواصل" },
 ] as const;
@@ -114,18 +115,22 @@ export function LandingTopbar() {
       id="mainTopbar"
       className="absolute top-0 inset-x-0 md:fixed z-30 md:z-40 w-full transition-colors duration-300"
     >
-      {/* Desktop-only Full-Width Edge-to-Edge Glass Backdrop (Mobile stays 100% transparent & non-fixed!) */}
-      <div
-        aria-hidden="true"
-        className="hidden md:block pointer-events-none absolute inset-0 backdrop-blur-xl border-b transition-all duration-300"
-        style={{
-          background: barBg,
-          borderColor: barBorder,
-          boxShadow: barShadow,
-        }}
-      />
+      {/* Global Broadcast Announcement Strip (renders null when disabled/dismissed) */}
+      <BroadcastBanner syncCssVar />
 
-      <div className="relative z-10 max-w-[1480px] mx-auto px-4 md:px-6 lg:px-8 xl:px-10 h-12 md:h-16 flex items-center justify-between gap-3">
+      <div className="relative w-full">
+        {/* Desktop-only Full-Width Edge-to-Edge Glass Backdrop (Mobile stays 100% transparent & non-fixed!) */}
+        <div
+          aria-hidden="true"
+          className="hidden md:block pointer-events-none absolute inset-0 backdrop-blur-xl border-b transition-all duration-300"
+          style={{
+            background: barBg,
+            borderColor: barBorder,
+            boxShadow: barShadow,
+          }}
+        />
+
+        <div className="relative z-10 max-w-[1480px] mx-auto px-4 md:px-6 lg:px-8 xl:px-10 h-12 md:h-16 flex items-center justify-between gap-3">
         {/* Right (RTL Start): Founder Avatar + BrandName + CS PORTAL */}
         <a
           href="#top"
@@ -308,6 +313,7 @@ export function LandingTopbar() {
             <span>ابدأ المذاكرة</span>
             <ArrowLeft className="w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5" />
           </Link>
+        </div>
         </div>
       </div>
     </header>

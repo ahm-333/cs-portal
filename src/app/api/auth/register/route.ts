@@ -1,5 +1,10 @@
 import { eq, or } from "drizzle-orm";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  enforceStudentDeviceGuard,
+  extractDeviceInfo,
+  setDeviceCookie,
+} from "@/lib/auth/device";
 import { hashPassword } from "@/lib/auth/password";
 import { normalizePhoneNumber } from "@/lib/auth/phone";
 import {
@@ -16,6 +21,10 @@ import {
   sanitizeExamDateOrNull,
 } from "@/lib/auth/sync";
 import { getDb, isDatabaseConfigured } from "@/lib/db";
+import {
+  ensureAdminTables,
+  getEffectiveSiteSettings,
+} from "@/lib/db/ensure-tables";
 import { users } from "@/lib/db/schema";
 
 const NO_STORE_HEADERS = { "Cache-Control": "private, no-store" };
@@ -114,6 +123,20 @@ export async function POST(request: NextRequest) {
   const db = getDb();
 
   try {
+    await ensureAdminTables();
+
+    const settings = await getEffectiveSiteSettings();
+    if (!settings.registrationOpen) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "REGISTRATION_CLOSED",
+          error: "إنشاء الحسابات الجديدة مغلق حالياً. تواصل مع م. أحمد للمساعدة.",
+        },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
+    }
+
     const existing = await db
       .select({ id: users.id, email: users.email, phone: users.phone })
       .from(users)
@@ -176,9 +199,23 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const device = extractDeviceInfo(request);
+    await enforceStudentDeviceGuard({
+      userId: created.id,
+      fullName: created.fullName,
+      role: "student",
+      device,
+    });
+
     const { token, expiresAt } = await createSession(
       created.id,
-      request.headers.get("user-agent")
+      request.headers.get("user-agent"),
+      {
+        deviceId: device.deviceId,
+        deviceName: device.deviceName,
+        ipAddress: device.ipAddress,
+        enforceSingleSession: false,
+      }
     );
 
     const sessionUser: SessionUser = {
@@ -203,6 +240,7 @@ export async function POST(request: NextRequest) {
       path: "/",
       expires: expiresAt,
     });
+    setDeviceCookie(response, device.deviceId);
     return response;
   } catch (error) {
     if (isUniqueConstraintError(error)) {

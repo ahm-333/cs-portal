@@ -1,13 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowDown, ArrowLeft, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowDown, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "@/components/layout/themeStore";
-import { usePortalState } from "@/lib/stores/portalStore";
 import { EDITORIAL_EASE } from "@/components/ui/AwwwardsPrimitives";
 
 if (typeof window !== "undefined") {
@@ -57,7 +55,7 @@ const STUDY_PILLARS: readonly StudyPillar[] = [
     index: 2,
     num: "03",
     label: "ملخص سريع",
-    sub: "افتكر في دقايق",
+    sub: "راجع في دقائق",
     kicker: "03 · REVISION",
     needleDeg: 180,
     arcProgress: 0.75,
@@ -152,10 +150,10 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
   switch (pillar.id) {
     case "video":
       return (
-        <div className="w-full flex flex-col items-center justify-center gap-1.5 sm:gap-2 lg:gap-3">
+        <div className="w-full flex flex-col items-center justify-center gap-1 min-[400px]:gap-1.5 sm:gap-2 lg:gap-3">
           <span
             dir="ltr"
-            className="font-mono-code text-[7.5px] sm:text-[8.5px] lg:text-[10px] font-extrabold tracking-[0.1em] px-2 lg:px-2.5 py-0.5 rounded-full"
+            className="font-mono-code text-[7px] min-[400px]:text-[7.5px] sm:text-[8.5px] lg:text-[10px] font-extrabold tracking-[0.1em] px-2 lg:px-2.5 py-0.5 rounded-full"
             style={{
               color: lensWarm,
               background: lensPillBg,
@@ -177,7 +175,7 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
               }}
             />
             <div
-              className="relative w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center"
+              className="relative w-7 h-7 min-[400px]:w-8 min-[400px]:h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center"
               style={{
                 background: isDark
                   ? "linear-gradient(135deg, rgba(216,176,122,0.24), rgba(216,176,122,0.08))"
@@ -191,11 +189,11 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
               }}
             >
               <svg
-                width="13"
-                height="13"
+                width="12"
+                height="12"
                 viewBox="0 0 16 16"
                 fill={lensWarm}
-                className="translate-x-[1px] lg:w-[15px] lg:h-[15px]"
+                className="translate-x-[1px] sm:w-[13px] sm:h-[13px] lg:w-[15px] lg:h-[15px]"
                 aria-hidden="true"
               >
                 <path d="M5 3.2L13 8L5 12.8V3.2Z" />
@@ -205,7 +203,7 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
 
           {/* Calm Audio/Video Waveform Bars */}
           <div
-            className="flex items-center justify-center gap-[2px] sm:gap-[2.5px] lg:gap-[3.5px] h-4 sm:h-5 lg:h-6 w-[106px] sm:w-[138px] lg:w-[176px]"
+            className="flex items-center justify-center gap-[2px] sm:gap-[2.5px] lg:gap-[3.5px] h-3.5 min-[400px]:h-4 sm:h-5 lg:h-6 w-[92px] min-[400px]:w-[104px] sm:w-[138px] lg:w-[176px]"
             aria-hidden="true"
           >
             {WAVEFORM_BARS.map((bar, idx) => (
@@ -213,7 +211,7 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
                 key={idx}
                 className="w-[2px] sm:w-[2.5px] lg:w-[3px] rounded-full"
                 style={{
-                  height: `${Math.round(bar.height * 0.78)}px`,
+                  height: `${Math.round(bar.height * 0.72)}px`,
                   background: bar.active
                     ? lensWarmStrong
                     : "rgba(255, 248, 238, 0.16)",
@@ -234,7 +232,7 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
 
           {/* 3-Segment Chapter Progress Rail */}
           <div
-            className="w-[106px] sm:w-[138px] lg:w-[176px] grid grid-cols-[1.1fr_1.4fr_0.9fr] gap-1"
+            className="w-[92px] min-[400px]:w-[104px] sm:w-[138px] lg:w-[176px] grid grid-cols-[1.1fr_1.4fr_0.9fr] gap-1"
             aria-hidden="true"
           >
             <div className="h-[3px] lg:h-1 rounded-full" style={{ background: lensWarmStrong }} />
@@ -251,7 +249,7 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
           </div>
 
           <span
-            className="text-[8.5px] sm:text-[9.5px] lg:text-[11px] font-bold leading-snug max-w-[122px] sm:max-w-[155px] lg:max-w-[205px]"
+            className="text-[8px] min-[400px]:text-[8.5px] sm:text-[10.5px] lg:text-[11px] font-bold leading-tight max-w-[100px] min-[400px]:max-w-[112px] sm:max-w-[155px] lg:max-w-[205px]"
             style={{ color: lensTextMuted }}
           >
             فصول زمنية واضحة بدون إعلانات
@@ -261,10 +259,10 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
 
     case "read":
       return (
-        <div className="w-full flex flex-col items-center justify-center gap-1.5 sm:gap-2 lg:gap-2.5">
+        <div className="w-full flex flex-col items-center justify-center gap-1 min-[400px]:gap-1.5 sm:gap-2 lg:gap-2.5">
           <span
             dir="ltr"
-            className="font-mono-code text-[7.5px] sm:text-[8.5px] lg:text-[10px] font-extrabold tracking-[0.1em] px-2 lg:px-2.5 py-0.5 rounded-full"
+            className="font-mono-code text-[7px] min-[400px]:text-[7.5px] sm:text-[8.5px] lg:text-[10px] font-extrabold tracking-[0.1em] px-2 lg:px-2.5 py-0.5 rounded-full"
             style={{
               color: lensMint,
               background: lensPillBg,
@@ -276,7 +274,7 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
 
           {/* Universal Structured Chapter Page Preview */}
           <div
-            className="w-[112px] sm:w-[144px] lg:w-[192px] rounded-lg lg:rounded-xl p-1.5 sm:p-2 lg:p-2.5 text-right flex flex-col gap-1 sm:gap-1.5 lg:gap-2"
+            className="w-[102px] min-[400px]:w-[112px] sm:w-[144px] lg:w-[192px] rounded-lg lg:rounded-xl p-1.5 sm:p-2 lg:p-2.5 text-right flex flex-col gap-1 sm:gap-1.5 lg:gap-2"
             style={{
               background: lensSurface,
               border: `1px solid ${lensBorder}`,
@@ -386,20 +384,20 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
           </div>
 
           <span
-            className="text-[8.5px] sm:text-[9.5px] lg:text-[11px] font-bold leading-snug max-w-[122px] sm:max-w-[155px] lg:max-w-[208px]"
+            className="text-[8px] min-[400px]:text-[8.5px] sm:text-[10.5px] lg:text-[11px] font-bold leading-tight max-w-[100px] min-[400px]:max-w-[112px] sm:max-w-[155px] lg:max-w-[208px]"
             style={{ color: lensTextMuted }}
           >
-            شرح الشابتر كامل برسومات وأكواد
+            شرح الفصل كامل برسومات وأكواد
           </span>
         </div>
       );
 
     case "summary":
       return (
-        <div className="w-full flex flex-col items-center justify-center gap-1.5 sm:gap-2 lg:gap-2.5">
+        <div className="w-full flex flex-col items-center justify-center gap-1 min-[400px]:gap-1.5 sm:gap-2 lg:gap-2.5">
           {/* Harmonious Obsidian/Champagne (Dark) or Navy/Terracotta (Light Jewel) Framed Summary Sheet */}
           <div
-            className="relative w-[114px] sm:w-[148px] lg:w-[196px] rounded-[11px] lg:rounded-[14px] p-2 sm:p-2.5 lg:p-3.5 text-right flex flex-col gap-1 sm:gap-1.5 lg:gap-2"
+            className="relative w-[102px] min-[400px]:w-[114px] sm:w-[148px] lg:w-[196px] rounded-[11px] lg:rounded-[14px] p-1.5 min-[400px]:p-2 sm:p-2.5 lg:p-3.5 text-right flex flex-col gap-1 sm:gap-1.5 lg:gap-2"
             style={{
               background: lensSurface,
               color: lensTextMain,
@@ -451,7 +449,7 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
           </div>
 
           <span
-            className="text-[8.5px] sm:text-[9.5px] lg:text-[11px] font-bold leading-snug max-w-[122px] sm:max-w-[155px] lg:max-w-[205px]"
+            className="text-[8px] min-[400px]:text-[8.5px] sm:text-[10.5px] lg:text-[11px] font-bold leading-tight max-w-[100px] min-[400px]:max-w-[112px] sm:max-w-[155px] lg:max-w-[205px]"
             style={{ color: lensTextMuted }}
           >
             مذاكر وتريد التذكّر سريعاً؟
@@ -525,7 +523,7 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
           </div>
 
           <span
-            className="text-[8.5px] sm:text-[10px] lg:text-[11.5px] font-extrabold"
+            className="text-[8px] min-[400px]:text-[8.5px] sm:text-[10.5px] lg:text-[11.5px] font-extrabold leading-tight max-w-[100px] min-[400px]:max-w-[112px] sm:max-w-[155px]"
             style={{ color: lensTextMuted }}
           >
             +40 سؤال لكل فصل
@@ -537,7 +535,6 @@ function CenterLensContent({ pillar, isDark, reducedMotion }: CenterLensContentP
 
 export function InteractiveDeskHero() {
   const theme = useTheme();
-  const portal = usePortalState();
   const reducedMotion = useReducedMotion() ?? false;
 
   const [activeIdx, setActiveIdx] = useState<number>(0);
@@ -550,7 +547,6 @@ export function InteractiveDeskHero() {
   const pauseTimerRef = useRef<number | null>(null);
 
   const isDark = theme === "dark";
-  const lastVisited = portal.lastVisited;
   const activePillar = STUDY_PILLARS[activeIdx];
 
   const clearManualPauseTimer = useCallback(() => {
@@ -618,10 +614,16 @@ export function InteractiveDeskHero() {
       });
 
       tl.fromTo(
-        "[data-hero-eyebrow]",
-        { y: 14, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.62, clearProps: "transform,opacity" }
+        "[data-hero-dial]",
+        { scale: 0.94, y: 16, opacity: 0 },
+        { scale: 1, y: 0, opacity: 1, duration: 0.82, clearProps: "transform,opacity" }
       )
+        .fromTo(
+          "[data-hero-eyebrow]",
+          { y: 14, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.62, clearProps: "transform,opacity" },
+          "-=0.72"
+        )
         .fromTo(
           "[data-hero-line]",
           { yPercent: 105, opacity: 0 },
@@ -632,7 +634,7 @@ export function InteractiveDeskHero() {
             stagger: 0.09,
             clearProps: "transform,opacity",
           },
-          "-=0.42"
+          "-=0.52"
         )
         .fromTo(
           "[data-hero-fade]",
@@ -645,12 +647,6 @@ export function InteractiveDeskHero() {
             clearProps: "transform,opacity",
           },
           "-=0.52"
-        )
-        .fromTo(
-          "[data-hero-dial]",
-          { scale: 0.94, y: 18, opacity: 0 },
-          { scale: 1, y: 0, opacity: 1, duration: 0.86, clearProps: "transform,opacity" },
-          "-=0.68"
         )
         .fromTo(
           "[data-hero-stepper]",
@@ -739,9 +735,6 @@ export function InteractiveDeskHero() {
   const ctaShadow = isDark
     ? "0 10px 28px rgba(214, 169, 108, 0.28), inset 0 1px 0 rgba(255, 250, 240, 0.35)"
     : "0 12px 28px rgba(22, 40, 71, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.16)";
-
-  const secBg = isDark ? "rgba(255, 255, 255, 0.045)" : "rgba(255, 255, 255, 0.86)";
-  const secText = isDark ? "#f3efe8" : "#162847";
 
   const accent1 = isDark ? "#d8b07a" : "#15664b";
   const accent3 = isDark ? "#b4a7d6" : "#162847";
@@ -849,13 +842,20 @@ export function InteractiveDeskHero() {
         style={{ background: glowGrad }}
       />
 
+      {/* Dynamic clearance when Global Broadcast Banner is open */}
+      <div
+        aria-hidden="true"
+        className="shrink-0 w-full transition-[height] duration-300"
+        style={{ height: "var(--broadcast-h, 0px)" }}
+      />
+
       {/* ==================== MAIN HERO GRID ==================== */}
-      <div className="relative z-10 flex-1 w-full max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-[52px] pb-[60px] md:pt-[86px] md:pb-8 lg:pt-[84px] lg:pb-4 flex items-center">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-[1.12fr_0.88fr] items-center gap-6 sm:gap-7 lg:gap-12 xl:gap-16">
-          {/* Copy Column (Right in RTL on Desktop, Centered on Mobile) */}
+      <div className="relative z-10 flex-1 w-full max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-[58px] pb-[78px] sm:pt-[70px] sm:pb-[84px] md:pt-[86px] md:pb-8 lg:pt-[84px] lg:pb-4 flex items-center">
+        <div className="w-full flex flex-col lg:grid lg:grid-cols-[1.12fr_0.88fr] items-center gap-6 sm:gap-8 lg:gap-12 xl:gap-16">
+          {/* Copy Column (Below Dial on Mobile via order-2 | Right in RTL on Desktop via lg:order-1) */}
           <div
             ref={copyColRef}
-            className="flex flex-col items-center lg:items-start text-center lg:text-right gap-2 sm:gap-3 lg:gap-[18px]"
+            className="order-2 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-right gap-2.5 sm:gap-3.5 lg:gap-[18px]"
           >
             {/* Eyebrow */}
             <div
@@ -913,66 +913,24 @@ export function InteractiveDeskHero() {
               أسئلة وكويزات كثيرة — كل ذلك في مساحة مذاكرة هادئة ومنظّمة.
             </p>
 
-            {/* Primary & Secondary CTAs */}
+            {/* Single Calm Hero CTA — Scrolls smoothly to #interactive-showcase */}
             <div
               data-hero-fade
-              className="w-full max-w-[330px] sm:max-w-none lg:w-auto flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2 lg:gap-3 pt-0.5 lg:pt-1"
+              className="w-full max-w-[310px] sm:max-w-none lg:w-auto flex items-center justify-center lg:justify-start pt-1.5 lg:pt-1"
             >
-              {lastVisited ? (
-                <Link
-                  href={`/courses/${lastVisited.courseSlug}/${lastVisited.lessonId}`}
-                  title={lastVisited.lessonTitle}
-                  className="group w-full sm:w-auto h-[40px] min-[400px]:h-[42px] lg:h-[48px] px-5 lg:px-[26px] rounded-[12px] lg:rounded-[14px] text-[13px] lg:text-[14px] font-extrabold inline-flex items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-0.5 hover:brightness-105 active:scale-[0.98]"
-                  style={{
-                    background: ctaBg,
-                    color: ctaText,
-                    boxShadow: ctaShadow,
-                  }}
-                >
-                  <span>أكمل مذاكرة</span>
-                  <span
-                    dir="ltr"
-                    className="font-mono-code rounded-md px-1.5 py-0.5 text-[11px] lg:text-[11.5px] font-bold"
-                    style={{
-                      background: isDark
-                        ? "rgba(16, 17, 21, 0.16)"
-                        : "rgba(255, 255, 255, 0.16)",
-                    }}
-                  >
-                    {lastVisited.courseCode}
-                  </span>
-                  <ArrowLeft className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:-translate-x-1" />
-                </Link>
-              ) : (
-                <Link
-                  href="/courses"
-                  className="group w-full sm:w-auto h-[40px] min-[400px]:h-[42px] lg:h-[48px] px-5 lg:px-[26px] rounded-[12px] lg:rounded-[14px] text-[13px] lg:text-[14px] font-extrabold inline-flex items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-0.5 hover:brightness-105 active:scale-[0.98]"
-                  style={{
-                    background: ctaBg,
-                    color: ctaText,
-                    boxShadow: ctaShadow,
-                  }}
-                >
-                  <span>ابدأ المذاكرة الآن</span>
-                  <ArrowLeft className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:-translate-x-1" />
-                </Link>
-              )}
-
-              <Link
-                href="/courses"
-                className={`hidden lg:inline-flex h-[48px] px-5 rounded-[14px] text-[13.5px] font-bold items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${
-                  isDark
-                    ? "hover:bg-white/[0.08] hover:border-[#d8b07a]/45"
-                    : "hover:bg-white hover:shadow-[0_10px_24px_rgba(18,28,45,0.08)]"
-                }`}
+              <button
+                type="button"
+                onClick={() => handleJumpToShowcase()}
+                className="group w-full sm:w-auto h-[44px] sm:h-[46px] lg:h-[50px] px-6 lg:px-7 rounded-[13px] lg:rounded-[14px] text-[13px] sm:text-[13.5px] lg:text-[14.5px] font-extrabold inline-flex items-center justify-center gap-2 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:brightness-105 active:scale-[0.98]"
                 style={{
-                  background: secBg,
-                  border: `1px solid ${borderMid}`,
-                  color: secText,
+                  background: ctaBg,
+                  color: ctaText,
+                  boxShadow: ctaShadow,
                 }}
               >
-                <span>تصفّح المقررات</span>
-              </Link>
+                <span>استكشف نظام المذاكرة</span>
+                <ArrowDown className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:translate-y-0.5" />
+              </button>
             </div>
 
             {/* Whisper-Quiet Editorial Trust Strip (Desktop) */}
@@ -1001,10 +959,10 @@ export function InteractiveDeskHero() {
             </div>
           </div>
 
-          {/* Progressive Swiss Study Dial Column */}
+          {/* Progressive Swiss Study Dial Column (Above Copy on Mobile via order-1 | Left in RTL on Desktop via lg:order-2) */}
           <div
             ref={dialColRef}
-            className="flex flex-col items-center mt-2 sm:mt-3 lg:mt-0 lg:justify-self-end gap-2 sm:gap-3 lg:gap-4"
+            className="order-1 lg:order-2 flex flex-col items-center mt-1 sm:mt-2 lg:mt-0 lg:justify-self-end gap-2.5 sm:gap-3.5 lg:gap-4"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => {
               setIsPaused(false);

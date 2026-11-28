@@ -19,7 +19,8 @@ export interface UnlockModalEventDetail {
   courseId: string;
   courseTitle: string;
   courseCode: string;
-  unlockCode: string;
+  unlockCode?: string;
+  price?: number;
 }
 
 function dispatchPortalEvent<T = undefined>(name: PortalEventName, detail?: T): void {
